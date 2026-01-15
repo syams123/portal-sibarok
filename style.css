@@ -1,6 +1,25 @@
 body {
     background-color: #f0f2f5;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Menggunakan tinggi penuh layar */
+    margin: 0;
+    padding: 20px; /* Memberikan spasi agar tidak nempel pinggir saat di HP */
+}
+
+.card {
+    width: 100%;
+    max-width: 400px;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 4. Pastikan class card-body milik kakak punya ruang yang cukup */
+.card-body.p-4 {
+    padding: 1.5rem !important; /* Menjaga konsistensi padding Bootstrap */
 }
 
 .card-student {

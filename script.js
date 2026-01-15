@@ -88,8 +88,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
+    const loader = document.getElementById('loading'); // Simpan di variabel agar rapi
 
-    document.getElementById('loading').classList.remove('d-none');
+    // 1. Tampilkan loader
+    loader.classList.remove('d-none');
     
     try {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
@@ -98,15 +100,34 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const userDoc = await db.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
             const userData = userDoc.data();
+            
+            // Logika cek admin belum di-approve
             if (userData.role === 'admin' && userData.isApproved === false) {
+                // 2. MATIKAN LOADER sebelum alert muncul
+                loader.classList.add('d-none'); 
+                
                 alert("Akun Ustadzah Anda sedang menunggu verifikasi. Silakan hubungi pengelola.");
                 await auth.signOut(); 
                 location.reload();
                 return;
             }
+            
+            // Jika sukses dan approved, halaman akan pindah (otomatis loader hilang)
+            // window.location.href = 'dashboard.html'; // Pastikan ada redirect setelah login sukses
         }
     } catch (error) {
-        alert("Login Gagal: " + error.message);
+        // 3. PENTING: Matikan loader jika email/password salah atau internet mati
+        loader.classList.add('d-none');
+        
+        // Terjemahkan error agar lebih user-friendly (Opsional)
+        let msg = error.message;
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+            msg = "Email atau Password salah!";
+        } else if (error.code === 'auth/network-request-failed') {
+            msg = "Koneksi internet bermasalah!";
+        }
+
+        alert("Login Gagal: " + msg);
     }
 });
 
@@ -1760,5 +1781,33 @@ async function tandaiDibaca(id, type) {
         }
     } catch (error) {
         console.error("Error menandai dibaca:", error);
+    }
+}
+
+async function forgotPassword() {
+    const email = prompt("Masukkan Email terdaftar untuk reset password:");
+    
+    // Jika user menekan cancel atau tidak mengisi email
+    if (!email) return;
+
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.remove('d-none');
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        
+        if (loader) loader.classList.add('d-none');
+        alert("Link reset password telah dikirim ke email Anda. Silakan cek Inbox atau folder Spam.");
+    } catch (error) {
+        if (loader) loader.classList.add('d-none');
+        
+        let msg = "Gagal mengirim email reset.";
+        if (error.code === 'auth/user-not-found') {
+            msg = "Email tidak terdaftar!";
+        } else if (error.code === 'auth/invalid-email') {
+            msg = "Format email salah!";
+        }
+        
+        alert("Error: " + msg);
     }
 }
