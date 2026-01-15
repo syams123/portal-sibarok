@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-light">
+<body class="bg-light" style="margin: 0; padding: 0;">
 
     <div id="loading" class="position-fixed w-100 h-100 top-0 start-0 bg-white d-flex justify-content-center align-items-center" style="z-index: 9999;">
     <div class="text-center">
@@ -38,15 +38,19 @@
     </div>
 </div>
 
-    <section id="loginSection">
-    <div class="card shadow">
-        <div class="card-body p-4">
-            <h3 class="text-center mb-4">Portal SiBarok</h3>
-            <div class="d-flex justify-content-center mb-3">
-                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZjGiHa6jb-uqxRfdARt7NCCUrYTRw6o4DyQvAjZJ0tnKLOO6WcwrKY5WM_l8CnMSZZ9mjoSBnKXWnGd4ECPDnanEetVokHEBHSsVcvaw2QquEhN3_beaKQa54588M8v1OrVj7CrPkft3eYQ7UgBLORI7hI1hCG5EFWs8O_0dJlj37slq0UPdn8zwgpMeE/s1600/TPQ%20Al-Mubarok%20LOGO.png" 
-                     alt="Logo TPQ" 
-                     style="width: 100px; height: 100px; object-fit: contain;">
-            </div>
+    <section id="loginSection" class="container">
+        <div class="row justify-content-center">
+            <div class="col-11 col-md-6 col-lg-4">
+                
+                <div class="card shadow border-0 mt-4 mt-lg-4" style="border-radius: 20px; background: rgba(255, 255, 255, 0.95);">
+                    <div class="card-body p-4">
+                        <h3 class="text-center mb-4 fw-bold">Portal SiBarok</h3>
+                        
+                        <div class="d-flex justify-content-center mb-3">
+                            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZjGiHa6jb-uqxRfdARt7NCCUrYTRw6o4DyQvAjZJ0tnKLOO6WcwrKY5WM_l8CnMSZZ9mjoSBnKXWnGd4ECPDnanEetVokHEBHSsVcvaw2QquEhN3_beaKQa54588M8v1OrVj7CrPkft3eYQ7UgBLORI7hI1hCG5EFWs8O_0dJlj37slq0UPdn8zwgpMeE/s1600/TPQ%20Al-Mubarok%20LOGO.png" 
+                                 alt="Logo TPQ" 
+                                 style="width: 100px; height: 100px; object-fit: contain;">
+                        </div>
                         <form id="loginForm">
                             <div class="mb-3">
                                 <label>Email</label>

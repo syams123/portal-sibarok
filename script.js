@@ -720,23 +720,25 @@ if (reportDiv) {
         // AREA TTD (Struktur Asli Kakak - Digabung ke dalam contentHtml)
         const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
         contentHtml += `
-            <div id="signatureWrapper" class="mt-4">
-                <div class="row text-center align-items-end">
-                    <div class="col-6">
-                        <p class="small mb-0">Mengetahui,</p>
-                        <p class="small fw-bold mb-2">Kepala TPQ</p>
-                        <div style="height: 60px;">
-                            <img src="https://i.imgur.com/APp2Mt6.png" style="height: 55px; width: auto;">
-                        </div>
-                        <p class="small fw-bold mb-0" style="text-decoration: underline;">Hafi Dzotur Rofi'ah, Lc.</p>
-                    </div>
-                    <div class="col-6">
-                        <p class="small mb-1">Sidoarjo, ${tglSekarang}</p>
-                        <p class="small fw-bold mb-2">Wali Santri,</p>
-                        <div id="boxSignatureArea"></div>
-                    </div>
+    <div id="signatureWrapper" class="mt-4">
+        <div class="row text-center align-items-end">
+            <div class="col-6">
+                <p class="small mb-0">Mengetahui,</p>
+                <p class="small fw-bold mb-2">Kepala TPQ</p>
+                <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
+                    <img src="https://i.imgur.com/APp2Mt6.png" 
+                         class="img-fluid" 
+                         style="max-height: 55px; width: auto; max-width: 100%;">
                 </div>
-            </div>`;
+                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.8rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+            </div>
+            <div class="col-6">
+                <p class="small mb-1">Sidoarjo, ${tglSekarang}</p>
+                <p class="small fw-bold mb-2">Wali Santri,</p>
+                <div id="boxSignatureArea" style="min-height: 60px;"></div>
+            </div>
+        </div>
+    </div>`;
 
         // 2. Masukkan semua isi ke reportDiv (Menggunakan "=" bukan "+=" agar reset setiap update)
         reportDiv.innerHTML = contentHtml;
