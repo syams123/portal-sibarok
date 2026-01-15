@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Si Barok - Sistem Manajemen TPQ Al-Mubarok</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta property="og:title" content="Sistem Manajemen TPQ Al-Mubarok" />
+<meta property="og:description" content="Portal Informasi Santri, Laporan Perkembangan, dan Pembayaran Infaq TPQ Al-Mubarok Alana Regency Cemandi Blok BB03 Nomor 09." />
+<meta property="og:image" content="https://i.imgur.com/DTlQReQ.jpeg" />
+<meta property="og:url" content="https://portalsibarok.netlify.app/" />
+<meta property="og:type" content="website" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://i.imgur.com/DTlQReQ.jpeg" />
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+
+    <div id="loading" class="position-fixed w-100 h-100 top-0 start-0 bg-white d-flex justify-content-center align-items-center" style="z-index: 9999;">
+    <div class="text-center">
+        <div class="position-relative d-flex justify-content-center align-items-center mb-3" style="width: 120px; height: 120px; margin: 0 auto;">
+            
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZjGiHa6jb-uqxRfdARt7NCCUrYTRw6o4DyQvAjZJ0tnKLOO6WcwrKY5WM_l8CnMSZZ9mjoSBnKXWnGd4ECPDnanEetVokHEBHSsVcvaw2QquEhN3_beaKQa54588M8v1OrVj7CrPkft3eYQ7UgBLORI7hI1hCG5EFWs8O_0dJlj37slq0UPdn8zwgpMeE/s100/TPQ%20Al-Mubarok%20LOGO.png" 
+                 alt="Logo TPQ" 
+                 class="rounded-circle shadow-sm" 
+                 style="width: 80px; height: 80px; object-fit: cover; position: absolute; z-index: 2; background: white; padding: 4px;">
+            
+            <div class="si-barok-spinner"></div>
+        </div>
+        
+        <h5 class="fw-bold text-success mb-1" style="letter-spacing: 2px;">Si Barok</h5>
+        <small class="text-muted small">Loading...</small>
+    </div>
+</div>
+
+    <section id="loginSection" class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h3 class="text-center mb-4">Portal SiBarok</h3>
+                        <div class="d-flex justify-content-center mb-3">
+                        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZjGiHa6jb-uqxRfdARt7NCCUrYTRw6o4DyQvAjZJ0tnKLOO6WcwrKY5WM_l8CnMSZZ9mjoSBnKXWnGd4ECPDnanEetVokHEBHSsVcvaw2QquEhN3_beaKQa54588M8v1OrVj7CrPkft3eYQ7UgBLORI7hI1hCG5EFWs8O_0dJlj37slq0UPdn8zwgpMeE/s1600/TPQ%20Al-Mubarok%20LOGO.png" 
+                             alt="Logo TPQ" 
+                             style="width: 100px; height: 100px; object-fit: contain;">
+                    </div>
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label>Email</label>
+                                <input type="email" id="loginEmail" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+    <label class="form-label">Password</label>
+    <div class="input-group">
+        <input type="password" id="loginPassword" class="form-control" required="required">
+        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('loginPassword', this)">
+            <i class="fas fa-eye"></i>
+        </button>
+    </div>
+</div>
+                            <button type="submit" class="btn btn-success w-100">Masuk</button>
+                        </form>
+                        <button type="button" class="btn btn-outline-pink w-100 mt-2 py-2" 
+        data-bs-toggle="modal" data-bs-target="#registerAdminModal">
+    Registrasi Ustadzah Baru
+</button>
+
+<div class="modal fade" id="registerAdminModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header" style="background-color: #ff69b4; color: white; border-top-left-radius: 15px; border-top-right-radius: 15px;">
+                <h5 class="modal-title">Daftar Akun Ustadzah</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="registerAdminForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nama Lengkap Ustadzah</label>
+                        <input type="text" id="regAdminNama" class="form-control" placeholder="Nama Ustadzah..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email Resmi</label>
+                        <input type="email" id="regAdminEmail" class="form-control" placeholder="ustadzah@email.com" required>
+                    </div>
+                    <div class="mb-3">
+    <label class="form-label">Password</label>
+    <div class="input-group">
+        <input type="password" id="regAdminPassword" class="form-control" required="required">
+        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('regAdminPassword', this)">
+            <i class="fas fa-eye"></i>
+        </button>
+    </div>
+</div>
+                    
+                    <button type="submit" class="btn btn-outline-pink w-100 py-2 mt-3">
+                        Daftar Sebagai Admin
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+                        <button type="button" class="btn btn-outline-primary w-100 mt-2" onclick="showRegisterModal()">
+
+    Daftar Akun Wali Santri</button><div class="modal fade" id="registerModal" tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">Daftar Akun Wali</h5>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="registerForm">
+
+                    <div class="mb-3">
+                    <label>Nama Lengkap Wali Santri</label>
+                    <input type="text" id="regNama" class="form-control" required>
+                </div>
+
+                    <div class="mb-3">
+
+                        <label>Email (Wajib sama dengan data di TPQ)</label>
+
+                        <input type="email" id="regEmail" class="form-control" required>
+
+                    </div>
+
+                    <div class="mb-3">
+    <label class="form-label">Password</label>
+    <div class="input-group">
+        <input type="password" id="regParentPassword" class="form-control" required="required">
+        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('regParentPassword', this)">
+            <i class="fas fa-eye"></i>
+        </button>
+    </div>
+</div>
+
+                    <button type="submit" class="btn btn-primary w-100">Daftar</button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div></div>
+
+    <div class="mt-4 text-center">
+    <small class="text-muted">
+        Copyright &copy; <span id="currentYear">2026</span> TPQ Al-Mubarok
+    </small>
+</div>  
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-success d-none sticky-top">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand d-flex align-items-center" href="#" style="gap: 12px;">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZTUnovmOq9QQvT4Nc0AI4aJ5hA_yqjj7frwkOyyhUJP-ohR8V2YSXsueIibUipTwU-bjXsDOv-at0dFzcJ_q7-YD50Y9wBcNIE6kFJGuiq-94CCE1aEh80rHBSCIs3DXhcRKZJpyqir3HascTXnuU1fNad19VVRAM8s4RceRIzo5ySEzeHt1CmU_hubc/s1600/TPQ%20Al-Mubarok%20LOGO%20PUTIH.png" alt="Logo" style="width: 45px; height: 45px; object-fit: contain;">
+            <div class="d-flex flex-column" style="line-height: 1.2;">
+                <span class="fw-bold" style="font-size: 1.25rem;">TPQ Al-Mubarok</span>
+                <small style="font-size: 0.7rem; opacity: 0.85;">ARC BB03-09</small>
+            </div>
+        </a>
+
+        <div class="d-flex align-items-center order-lg-3">
+            <div class="position-relative ms-3 me-3 me-lg-0 d-none" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
+                <i class="fas fa-bell fs-5 text-white"></i>
+                <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.65rem; border: 1px solid #198754;">0</span>
+                <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000;">
+                    <div class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Konfirmasi Pembayaran</div>
+                    <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            <button class="navbar-toggler p-1 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+
+        <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
+            <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0">
+                <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
+                <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('profile')">Profil Saya</a></li>
+                <li class="nav-item"><a class="nav-link nav-custom-link text-warning fw-bold" href="#" onclick="logoutUser()">Keluar</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="modal fade" id="registerAdminModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 15px;">
+            <div class="modal-header bg-pink text-white">
+                <h5 class="modal-title">Daftar Akun Ustadzah</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="registerAdminForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nama Lengkap</label>
+                        <input type="text" id="regAdminNama" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email Resmi</label>
+                        <input type="email" id="regAdminEmail" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password</label>
+                        <div class="input-group">
+                            <input type="password" id="regAdminPassword" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('regAdminPassword', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-pink w-100 mt-3">Daftar Sebagai Admin</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="registerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Daftar Akun Wali</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label class="fw-bold">Nama Lengkap Wali</label>
+                        <input type="text" id="regNama" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Email</label>
+                        <input type="email" id="regEmail" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Password</label>
+                        <div class="input-group">
+                            <input type="password" id="regParentPassword" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('regPassword', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Daftar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <section id="adminDashboard" class="container mt-4 d-none">
+        <div class="mb-3" id="bulkActionArea">
+    </div>
+    <div class="mb-3 mt-3">
+    <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+        </span>
+        <input type="text" id="searchSantri" class="form-control border-start-0" placeholder="Cari nama santri..." onkeyup="filterSantri()">
+    </div>
+</div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Data Santri</h4>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+            <i class="fas fa-plus"></i> Tambah Santri
+        </button>
+    </div>
+    
+    <select id="filterClass" class="form-select mb-3" onchange="renderStudents()">
+        <option value="all">Semua Kelas</option>
+        <option value="Pra-TK (Sunan Ampel)">Pra-TK (Sunan Ampel)</option>
+        <option value="TK-SD (Sunan Giri)">TK-SD (Sunan Giri)</option>
+        <option value="TK-SD (Sunan Kalijaga)">TK-SD (Sunan Kalijaga)</option>
+    </select>
+
+    <div id="studentList" class="row g-3">
+        </div>
+
+    <div class="mt-5 mb-4">
+        <h4 class="mb-3">Daftar Ustadzah</h4>
+        <div id="ustadzahList" class="row g-3">
+            </div>
+    </div>
+</div>
+</section>
+
+    <section id="parentDashboard" class="container mt-4 d-none">
+        <div class="card shadow mb-4">
+            <div class="card-body text-center">
+                <img id="childPhotoDisplay" src="" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                <h4 id="childNameDisplay">Nama Santri</h4>
+                <p class="text-muted" id="childClassDisplay">Kelas</p>
+                <span class="badge bg-success" id="childJilidDisplay"></span>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">Rapor Sisipan</div>
+    <div class="card-body" id="childReportCard">
+        </div>
+</div>
+
+
+        <div class="mt-4 px-2">
+    <h6 class="fw-bold mb-3"><i class="fas fa-history me-2 text-success"></i>Riwayat Infaq</h6>
+    <div id="paymentHistoryList" class="list-group shadow-sm border-0 mb-4">
+        <p class="text-muted small p-3 text-center">Memuat riwayat pembayaran...</p>
+    </div>
+</div>
+
+        <div id="cardInfaq" class="card shadow border-danger">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="mb-0">Status Infaq</h6>
+            <small class="text-muted" id="currentMonthDisplay">Memuat bulan...</small>
+    </div>
+        <div class="text-end">
+            <h5 id="childInfaqStatus" class="text-danger fw-bold">Belum Lunas</h5>
+            <button id="btnCetakKuitansi" class="btn btn-sm btn-outline-primary d-none mt-1" onclick="generateKuitansi()">
+                <i class="fas fa-file-pdf"></i> Unduh Kuitansi
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <br>
+        <div class="card shadow-sm border-warning mt-3">
+    <div class="card-body">
+        <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>Konfirmasi Pembayaran</h6>
+        <p class="small text-muted">Pilih metode yang Anda gunakan untuk mempermudah verifikasi Ustadzah.</p>
+        
+        <div class="mb-3">
+            <select id="selectMetodeBayar" class="form-select mb-3" onchange="updatePaymentDetails()">
+                <option value="" disabled selected>-- Pilih Metode --</option>
+                <option value="Transfer Mandiri">Bank Mandiri</option>
+                <option value="Transfer SeaBank">Bank SeaBank</option>
+                <option value="ShopeePay">ShopeePay</option>
+                <option value="DANA">DANA</option>
+                <option value="Tunai">Tunai Langsung</option>
+            </select>
+
+            <div id="rekeningInfo" class="alert alert-info d-none shadow-sm">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-university me-3 fa-lg"></i>
+        <div>
+            <small class="d-block fw-bold text-uppercase" id="bankLabel"></small>
+            <span class="fs-5 fw-bold d-block" id="nomorRekening"></span>
+            <small class="text-muted" id="atasNama"></small>
+        </div>
+    </div>
+</div>
+        </div>
+        
+        <button class="btn btn-warning w-100 fw-bold" onclick="konfirmasiBayar()">
+            <i class="fas fa-paper-plane me-2"></i>Konfirmasi Sekarang
+        </button>
+    </div>
+</div>
+    </section>
+
+    <section id="profileSection" class="container mt-4 d-none">
+    <div id="dynamicProfileCard"></div>
+
+    <div class="card shadow border-0" style="border-radius: 15px;">
+        <div class="card-header bg-white fw-bold py-3" id="headerProfil">Pengaturan Profil</div>
+        <div class="card-body">
+            
+            <div id="areaPhotoProfil" class="mb-4 text-center">
+                <img id="profilePreview" src="https://via.placeholder.com/100" class="rounded-circle shadow-sm mb-2" style="width:100px; height:100px; object-fit:cover; border: 3px solid #eee;">
+                <br>
+                <input type="file" id="profilePhotoInput" class="form-control form-control-sm mt-2 mx-auto" style="max-width: 250px;" onchange="uploadChildPhoto()">
+            </div>
+            
+            <div class="mb-3">
+                <label class="small fw-bold mb-1" id="labelNamaProfil">Nama Santri</label>
+                <input type="text" id="profilNama" class="form-control">
+            </div>
+
+            <div class="mb-3 d-none" id="groupNamaWali">
+                <label class="small fw-bold mb-1">Nama Wali Santri</label>
+                <input type="text" id="profilNamaWali" class="form-control" placeholder="Nama Ayah/Bunda">
+            </div>
+
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Email Akun</label>
+                <input type="email" id="profilEmail" class="form-control" readonly style="background-color: #f8f9fa;">
+            </div>
+
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">No. WhatsApp</label>
+                <input type="tel" id="profilePhone" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Alamat Lengkap</label>
+                <textarea id="profileAddress" class="form-control" rows="2"></textarea>
+            </div>
+
+            <button onclick="saveProfile()" class="btn btn-primary w-100 fw-bold py-2" style="border-radius: 10px;">
+                <i class="fas fa-save me-2"></i>Simpan Perubahan
+            </button>
+        </div>
+    </div>
+</section>
+
+    <div class="modal fade" id="addStudentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Data Santri</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="studentForm">
+                        <input type="hidden" id="studentId">
+                        <div class="mb-3">
+                            <label>Nama Lengkap</label>
+                            <input type="text" id="stdName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Jenis Kelamin</label>
+                            <select id="stdGender" class="form-select" required="required">
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                        <div class="mb-3">
+                            <label>Foto Profil</label>
+                            <input type="file" id="stdPhoto" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Kelas</label>
+                            <select id="stdClass" class="form-select" required>
+                                <option value="Pra-TK (Sunan Ampel)">Pra-TK (Sunan Ampel)</option>
+                                <option value="TK-SD (Sunan Giri)">TK-SD (Sunan Giri)</option>
+                                <option value="TK-SD (Sunan Kalijaga)">TK-SD (Sunan Kalijaga)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Jilid</label>
+                            <select id="stdJilid" class="form-select">
+                                <option value="PAUD">PAUD</option> <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="Al-Quran">Al-Qur'an</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Aktif sebagai Santri (tanggal terdaftar)</label>
+                                <input type="date" id="stdJoinDate" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Ustadzah Pengampu</label>
+                            <select id="stdTeacher" class="form-select">
+                                <option value="Ustadzah Fika">Ustadzah Fika</option>
+                                <option value="Ustadzah Salwa">Ustadzah Salwa</option>
+                                <option value="Ustadzah Lain">Lainnya...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+    <label class="form-label fw-bold small">Email Wali Santri</label>
+    <div class="input-group">
+        <input type="email" id="stdParentEmail" class="form-control shadow-sm" placeholder="email@contoh.com">
+        <button class="btn btn-outline-secondary" type="button" onclick="generateDummyEmail()">
+            <i class="fas fa-magic"></i> Auto
+        </button>
+    </div>
+    <div class="form-text" style="font-size: 0.65rem;">Klik "Auto" untuk membuat email dummy sementara.</div>
+</div>
+                        <div class="mb-3">
+                            <label>No. WhatsApp</label>
+                            <input type="tel" id="stdParentPhone" class="form-control" placeholder="628xxxxxxxxxx">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="saveStudent()">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="gradeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Input Nilai & Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="gradeStudentId">
+                
+                <div class="mb-3">
+                    <label class="form-label">Jilid Santri</label>
+                    <select id="studentLevel" class="form-select">
+                        <option value="Jilid PAUD">Jilid PAUD</option> <option value="Jilid 1">Jilid 1</option>
+                        <option value="Jilid 2">Jilid 2</option>
+                        <option value="Jilid 3">Jilid 3</option>
+                        <option value="Jilid 4">Jilid 4</option>
+                        <option value="Jilid 5">Jilid 5</option>
+                        <option value="Jilid 6">Jilid 6</option>
+                        <option value="Al-Qur'an">Al-Qur'an</option>
+                    </select>
+                </div>
+                <div id="gradeFormContainer">
+                </div>
+                <div class="mb-3 mt-3">
+                    <label>Catatan Ustadzah</label>
+                    <textarea id="gradeNotes" class="form-control"></textarea>
+                </div>
+                <hr>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
+                    <button class="btn btn-warning flex-grow-1" onclick="sendBillWA()">Tagih Infaq (WA)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+  <div id="paymentToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="fas fa-check-circle me-2"></i>
+        Alhamdulillah! Pembayaran Infaq Ananda telah dikonfirmasi oleh Ustadzah.
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
