@@ -298,7 +298,7 @@ setTimeout(() => {
         // LOGIKA OTOMATIS: 
         // Menggunakan window.location.origin agar saat di lokal link-nya localhost, 
         // dan saat di deploy link-nya otomatis netlify.app
-        const blogspotURL = "https://coba-tpqalmubarokarc.blogspot.com"; // Ganti dengan domain blogspot Kakak
+        const blogspotURL = "https://tpqalmubarokarc.blogspot.com"; // Ganti dengan domain blogspot Kakak
         const finalLink = `${blogspotURL}/p/kartu-santri.html?nis=${userData.nis}`;
 
         new QRCode(qrcodeContainer, {
