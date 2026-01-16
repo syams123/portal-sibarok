@@ -33,7 +33,7 @@ auth.onAuthStateChanged(async (user) => {
         currentUser = user;
         
         try {
-            const userDoc = await db.collection('users').doc(user.uid).get();
+            const unsubscribe = db.collection('users').doc(user.uid).onSnapshot(async (userDoc) => {
             
             if (userDoc.exists) {
                 const userData = userDoc.data();
@@ -41,46 +41,63 @@ auth.onAuthStateChanged(async (user) => {
 
                 // FILTER VERIFIKASI ADMIN
                 if (currentRole === 'admin' && userData.isApproved === false) {
-                    alert("Akun Admin Anda belum disetujui.");
+                    if (loader) loader.classList.add('d-none');
+                        const modalDaftar = document.querySelector('.modal.show');
+                        if (modalDaftar) {
+                            const modalInstance = bootstrap.Modal.getInstance(modalDaftar);
+                            if (modalInstance) modalInstance.hide();
+                        }
+
+                        console.log("Status: Menunggu Persetujuan...");
+
+                        return; 
+                    }
+
+                    if (unsubscribe) unsubscribe();
+
+                    // Alert sukses otomatis saat disetujui Superadmin
+                    if (currentRole === 'admin' && userData.isApproved === true) {
+                        const sudahAlert = sessionStorage.getItem('alertApprovedDone');
+
+                        if (!sudahAlert) {
+        alert("Alhamdulillah ustadzah disetujui!");
+        // Berikan tanda agar tidak muncul lagi sampai browser ditutup/login ulang
+        sessionStorage.setItem('alertApprovedDone', 'true');
+    }
+}
+                    
+                    // SEMBUNYIKAN LOGIN, TAMPILKAN NAV
+                    document.getElementById('loginSection').classList.add('d-none');
+                    document.getElementById('mainNavbar').classList.remove('d-none');
+                    
+                    if (currentRole === 'admin' || currentRole === 'superadmin') {
+                        showPage('admin');
+                        await renderStudents();
+                        await renderUstadzah();
+                        if (loader) loader.classList.add('d-none');
+                    } else {
+                        showPage('parent');
+                        await loadChildData(user.email);
+                        await listenPaymentStatus(user.email);
+                        if (loader) loader.classList.add('d-none');
+                    }
+                } else {
+                    alert("Data user tidak ditemukan.");
                     await auth.signOut();
                     if (loader) loader.classList.add('d-none');
-                    return; 
                 }
-                
-                // SEMBUNYIKAN LOGIN, TAMPILKAN NAV
-                document.getElementById('loginSection').classList.add('d-none');
-                document.getElementById('mainNavbar').classList.remove('d-none');
-                
-                if (currentRole === 'admin' || currentRole === 'superadmin') {
-                    showPage('admin');
-                    // Menggunakan await agar loader tidak mati sebelum data muncul
-                    await renderStudents();
-                    await renderUstadzah();
-                } else {
-                    showPage('parent');
-                    // Jalankan fungsi muat data
-                    await loadChildData(user.email);
-                    await listenPaymentStatus(user.email);
-                    
-                    // MATIKAN LOADER SETELAH DATA SELESAI
-                    if (loader) loader.classList.add('d-none');
-                }
-            } else {
-                alert("Data user tidak ditemukan.");
-                await auth.signOut();
-            }
+            });
+
         } catch (error) {
             console.error("Error Auth:", error);
+            if (loader) loader.classList.add('d-none');
         }
     } else {
-        // KONDISI LOGOUT / TIDAK LOGIN
         document.getElementById('loginSection').classList.remove('d-none');
         document.getElementById('mainNavbar').classList.add('d-none');
         hideAllPages();
+        if (loader) loader.classList.add('d-none');
     }
-
-    // MATIKAN LOADER HANYA DI SINI (Setelah semua proses di atas selesai)
-    if (loader) loader.classList.add('d-none');
 });
 
 // Login Function
@@ -94,32 +111,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     loader.classList.remove('d-none');
     
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-            const userData = userDoc.data();
+        await auth.signInWithEmailAndPassword(email, password);
             
-            // Logika cek admin belum di-approve
-            if (userData.role === 'admin' && userData.isApproved === false) {
-                // 2. MATIKAN LOADER sebelum alert muncul
-                loader.classList.add('d-none'); 
-                
-                alert("Akun Ustadzah Anda sedang menunggu verifikasi. Silakan hubungi pengelola.");
-                await auth.signOut(); 
-                location.reload();
-                return;
-            }
-            
-            // Jika sukses dan approved, halaman akan pindah (otomatis loader hilang)
-            // window.location.href = 'dashboard.html'; // Pastikan ada redirect setelah login sukses
-        }
     } catch (error) {
-        // 3. PENTING: Matikan loader jika email/password salah atau internet mati
-        loader.classList.add('d-none');
+        // 2. Matikan loader hanya jika terjadi error (salah password/jaringan)
+        if (loader) loader.classList.add('d-none');
         
-        // Terjemahkan error agar lebih user-friendly (Opsional)
         let msg = error.message;
         if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
             msg = "Email atau Password salah!";
@@ -291,12 +288,18 @@ setTimeout(() => {
     const qrcodeContainer = document.getElementById("qrcode");
     if (qrcodeContainer && userData.nis) {
         qrcodeContainer.innerHTML = ""; // Bersihkan sisa QR lama agar tidak tumpang tindih
+
+        let baseURL = window.location.origin;
+
+        if (baseURL.includes("netlify.app")) {
+            baseURL = "https://coba-tpqalmubarokarc.blogspot.com"; 
+        }
         
         // LOGIKA OTOMATIS: 
         // Menggunakan window.location.origin agar saat di lokal link-nya localhost, 
         // dan saat di deploy link-nya otomatis netlify.app
-        const baseURL = window.location.origin;
-        const finalLink = `${baseURL}/profil-santri.html?nis=${userData.nis}`;
+        const blogspotURL = "https://coba-tpqalmubarokarc.blogspot.com"; // Ganti dengan domain blogspot Kakak
+        const finalLink = `${blogspotURL}/p/profil.html?nis=${userData.nis}`;
 
         new QRCode(qrcodeContainer, {
             text: finalLink,
@@ -319,17 +322,26 @@ setTimeout(() => {
         
         inputNamaSantri.readOnly = false;
         inputNamaSantri.style.backgroundColor = "#ffffff";
-        inputNamaSantri.value = userData.name || "";
+        inputNamaSantri.value = userData.nama || userData.name || "";
         
-        const linkFoto = userData.photo || userData.photoURL || 'https://via.placeholder.com/100';
         const imgPreview = document.getElementById('profilePreview');
-        if (imgPreview) imgPreview.src = linkFoto;
-    }
+        if (imgPreview) {
+            // LOGIKA BARU:
+            // 1. Cek di Firestore (gambar Kakak membuktikan ini kosong/tidak ada)
+            // 2. Cek di Firebase Auth (currentUser.photoURL)
+            // 3. Kalau dua-duanya gak ada, baru inisial
+            const linkFoto = userData.photoURL || currentUser.photoURL || `https://ui-avatars.com/api/?name=${userData.nama || 'U'}`;
+            
+            imgPreview.src = linkFoto;
+            imgPreview.style.objectFit = "cover";
+        }
+    }   
 
+    // --- DATA INI HARUS DI LUAR ELSE AGAR TERISI UNTUK SEMUA ROLE ---
     if(document.getElementById('profilEmail')) document.getElementById('profilEmail').value = currentUser.email || "";
     if(document.getElementById('profilePhone')) document.getElementById('profilePhone').value = userData.phone || "";
     if(document.getElementById('profileAddress')) document.getElementById('profileAddress').value = userData.address || "";
-}
+}   
 
 // --- FITUR ADMIN (USTADZAH) ---
 
@@ -454,7 +466,7 @@ if (currentRole === 'superadmin' && notifList) {
                 <div style="font-size: 0.75rem;">
                     <span class="badge bg-info text-white mb-1">TTD Baru</span><br>
                     <strong>${data.name}</strong><br>
-                    <span class="text-muted" style="font-size: 0.65rem;">Klik untuk hilangkan notif.</span>
+                    <span class="text-muted" style="font-size: 0.65rem;">Klik untuk konfirmasi</span>
                 </div>
             </div>
         </div>`;
@@ -521,7 +533,32 @@ if (currentRole === 'superadmin') {
         // --- UPDATE LONCENG & HIDE LOADER ---
         if (notifCount) {
             notifCount.innerText = pendingCount;
-            notifCount.classList.toggle('d-none', pendingCount === 0);
+            
+            if (pendingCount > 0) {
+                // Tampilkan angka badge
+                notifCount.classList.remove('d-none');
+                
+                // --- PAKSA ANIMASI PULSE MENYALA ---
+                // Kita hapus dulu class-nya, lalu pasang lagi agar browser men-trigger animasi dari awal
+                notifCount.classList.remove('notif-pulse');
+                void notifCount.offsetWidth; // Trik "Reflow" agar animasi me-reset
+                notifCount.classList.add('notif-pulse');
+                
+                // Update Judul Dropdown secara otomatis
+                const notifHeader = document.getElementById('notifHeader');
+                if (notifHeader) notifHeader.innerText = "Pemberitahuan Baru";
+                
+                // Pastikan area lonceng terlihat
+                const notifArea = document.getElementById('notifArea');
+                if (notifArea) notifArea.classList.remove('d-none');
+            } else {
+                // Jika tidak ada notif, sembunyikan angka dan matikan animasi
+                notifCount.classList.add('d-none');
+                notifCount.classList.remove('notif-pulse');
+                
+                const notifHeader = document.getElementById('notifHeader');
+                if (notifHeader) notifHeader.innerText = "Tidak ada Notifikasi";
+            }
         }
         
         const loader = document.getElementById('loader');
@@ -532,7 +569,6 @@ if (currentRole === 'superadmin') {
         if (document.getElementById('loader')) document.getElementById('loader').classList.add('d-none');
     });
 }
-
 // 3. Buka Detail & Input Nilai
 async function openDetail(id) {
     const modal = new bootstrap.Modal(document.getElementById('gradeModal'));
@@ -719,26 +755,46 @@ if (reportDiv) {
 
         // AREA TTD (Struktur Asli Kakak - Digabung ke dalam contentHtml)
         const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-        contentHtml += `
-    <div id="signatureWrapper" class="mt-4">
-        <div class="row text-center align-items-end">
-            <div class="col-6">
-                <p class="small mb-0">Mengetahui,</p>
-                <p class="small fw-bold mb-2">Kepala TPQ</p>
-                <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
-                    <img src="https://i.imgur.com/APp2Mt6.png" 
-                         class="img-fluid" 
-                         style="max-height: 55px; width: auto; max-width: 100%;">
-                </div>
-                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.8rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+
+contentHtml += `
+<div id="signatureWrapper" class="mt-4">
+    <div class="row text-center align-items-end g-0">
+        <div class="col-4">
+            <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
+            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
+            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
+                <img src="https://i.imgur.com/APp2Mt6.png" 
+                     class="img-fluid" 
+                     style="max-height: 50px; width: auto; max-width: 100%;">
             </div>
-            <div class="col-6">
-                <p class="small mb-1">Sidoarjo, ${tglSekarang}</p>
-                <p class="small fw-bold mb-2">Wali Santri,</p>
-                <div id="boxSignatureArea" style="min-height: 60px;"></div>
+            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+        </div>
+
+        <div class="col-4">
+            <p class="small mb-0" style="font-size: 0.7rem;">&nbsp;</p>
+            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
+            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
+                <img src="https://i.imgur.com/pOg9hxn.png" 
+                     class="img-fluid" 
+                     style="max-height: 50px; width: auto; max-width: 100%;">
+            </div>
+            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
+        </div>
+
+        <div class="col-4">
+            <p class="small mb-1" style="font-size: 0.65rem;">Sidoarjo, ${tglSekarang}</p>
+            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
+            
+            <div class="d-flex flex-column align-items-center">
+                <div id="boxSignatureArea" style="min-height: 80px; width: 100%; max-width: 150px; border-radius: 5px;" class="mb-2">
+                    </div>
+                
+                <p class="small fw-bold mb-0" style="font-size: 0.7rem; text-decoration: underline;">
+                    ${data.parentName || "( Nama Wali Santri )"}
+                </p>
             </div>
         </div>
-    </div>`;
+</div>`;
 
         // 2. Masukkan semua isi ke reportDiv (Menggunakan "=" bukan "+=" agar reset setiap update)
         reportDiv.innerHTML = contentHtml;
@@ -825,17 +881,34 @@ if (tglDisplay) {
 }
 
 // Logika Tampilan TTD
-if (data.reportSignature) {
-    // Jika sudah ada TTD di database
-    document.getElementById('boxInputTTD').classList.add('d-none');
-    document.getElementById('boxHasilTTD').classList.remove('d-none');
-    document.getElementById('imgHasilTTD').src = data.reportSignature;
-    document.getElementById('labelNamaWali').innerText = data.parentName || "Sudah Dicek Wali";
-} else {
-    // Jika belum TTD, aktifkan pad
-    document.getElementById('boxInputTTD').classList.remove('d-none');
-    document.getElementById('boxHasilTTD').classList.add('d-none');
-    initSignaturePad(docSnap.id, data.name);
+if (typeof data !== 'undefined' && data) {
+    if (data.reportSignature) {
+        // Jika sudah ada TTD di database
+        const boxInput = document.getElementById('boxInputTTD');
+        const boxHasil = document.getElementById('boxHasilTTD');
+        const imgHasil = document.getElementById('imgHasilTTD');
+        const labelNama = document.getElementById('labelNamaWali');
+
+        if (boxInput) boxInput.classList.add('d-none');
+        if (boxHasil) boxHasil.classList.remove('d-none');
+        if (imgHasil) imgHasil.src = data.reportSignature;
+        if (labelNama) labelNama.innerText = data.parentName || "Sudah Dicek Wali";
+    } else {
+        // Jika belum TTD, aktifkan pad
+        const boxInput = document.getElementById('boxInputTTD');
+        const boxHasil = document.getElementById('boxHasilTTD');
+        
+        if (boxInput) boxInput.classList.remove('d-none');
+        if (boxHasil) boxHasil.classList.add('d-none');
+        
+        // Memastikan fungsi init dan ID dokumen tersedia agar tidak stuck
+        if (typeof initSignaturePad === 'function') {
+            const idDoc = (typeof docSnap !== 'undefined') ? docSnap.id : (typeof doc !== 'undefined' ? doc.id : null);
+            if (idDoc) {
+                initSignaturePad(idDoc, data.name || "");
+            }
+        }
+    }
 }
 
 // Fungsi Pendukung Riwayat Pembayaran
@@ -937,37 +1010,61 @@ async function loadProfile() {
 
 async function saveProfile() {
     const btn = event.target;
+    const originalText = "Simpan Profil"; // Menghindari error originalText undefined
     btn.disabled = true;
     btn.innerText = "Menyimpan...";
 
     const newPhone = document.getElementById('profilePhone').value;
     const newAddress = document.getElementById('profileAddress').value;
+    // Ambil input file berdasarkan ID di HTML Kakak
+    const fileInput = document.getElementById('profilePhotoInput'); 
 
     try {
+        let dataToUpdate = {
+            phone: newPhone,
+            address: newAddress
+        };
+
+        // --- PROSES UPLOAD FOTO JIKA ADA FILE DIPILIH ---
+        if (fileInput && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const storageRef = storage.ref(`profile_photos/${currentUser.uid}`);
+            
+            // 1. Upload file ke Firebase Storage
+            const snapshot = await storageRef.put(file);
+            // 2. Ambil link URL permanennya
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            
+            // 3. Masukkan link asli ke dalam data yang akan diupdate
+            dataToUpdate.photoURL = downloadURL;
+
+            const imgPreview = document.getElementById('profilePreview');
+if (imgPreview) {
+    imgPreview.src = downloadURL; 
+}
+        }
+
         if (currentRole === 'parent') {
             const newParentName = document.getElementById('profilNamaWali').value;
-            // Update di koleksi Students
+            dataToUpdate.parentName = newParentName;
+
             const snap = await db.collection('students').where('parentEmail', '==', currentUser.email).limit(1).get();
             if (!snap.empty) {
-                await db.collection('students').doc(snap.docs[0].id).update({
-                    parentName: newParentName,
-                    phone: newPhone,
-                    address: newAddress
-                });
+                await db.collection('students').doc(snap.docs[0].id).update(dataToUpdate);
             }
         } else {
             const newAdminName = document.getElementById('profilNama').value;
-            // Update di koleksi Users (Admin)
-            await db.collection('users').doc(currentUser.uid).update({
-                name: newAdminName,
-                phone: newPhone,
-                address: newAddress
-            });
+            dataToUpdate.name = newAdminName;
+            dataToUpdate.nama = newAdminName;
+
+            // Update ke koleksi Users (Admin/Ustadzah)
+            await db.collection('users').doc(currentUser.uid).update(dataToUpdate);
         }
+
         alert("Profil Berhasil Diperbarui!");
     } catch (error) {
         console.error(error);
-        alert("Gagal menyimpan data.");
+        alert("Gagal menyimpan data: " + error.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fas fa-save me-2"></i> ${originalText}`;
@@ -1009,7 +1106,7 @@ if (adminRegForm) {
                 nama: nama, email: email, role: 'admin', isApproved: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert("Pendaftaran Berhasil! Menunggu verifikasi.");
+            alert("");
             location.reload();
         } catch (error) { alert("Gagal Daftar Admin: " + error.message); }
     };
@@ -1021,16 +1118,36 @@ async function renderUstadzah() {
     try {
         const snapshot = await db.collection('users').where('role', '==', 'admin').get();
         listContainer.innerHTML = '';
+        
         snapshot.forEach(doc => {
             const data = doc.data();
+            
+            // --- LOGIKA FOTO AVATAR ---
+            // Mengambil foto asli atau inisial jika photoURL kosong
+            const linkFoto = data.photoURL || `https://ui-avatars.com/api/?name=${data.nama || 'U'}&background=random`;
+            
             const deleteBtn = (currentRole === 'superadmin') 
-                ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteUstadzah('${doc.id}', '${data.nama}')"><i class="bi bi-trash"></i> Hapus</button>` : '';
+                ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteUstadzah('${doc.id}', '${data.nama}')"><i class="bi bi-trash"></i> Hapus</button>` 
+                : '';
+
             listContainer.innerHTML += `
-                <div class="col-md-6 col-lg-4">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <div><h6 class="mb-0">${data.nama}</h6><small class="text-muted">${data.email}</small></div>
-                            ${deleteBtn}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card shadow-sm border-0" style="border-radius: 12px;">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="me-3">
+                                <img src="${linkFoto}" 
+                                     class="rounded-circle shadow-sm" 
+                                     style="width: 45px; height: 45px; object-fit: cover; border: 2px solid #f8f9fa;">
+                            </div>
+                            
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold" style="font-size: 0.9rem;">${data.nama}</h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">${data.email}</small>
+                            </div>
+
+                            <div class="ms-2">
+                                ${deleteBtn}
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -1228,8 +1345,11 @@ fetch(scriptUrl, {
     }
 }
 // Tambahkan logika ini di dalam fungsi loadChildData agar tombol cetak muncul
-if (data.infaqStatus) {
-    document.getElementById('btnCetakKuitansi').classList.remove('d-none');
+if (typeof data !== 'undefined' && data && data.infaqStatus) { 
+    const btnCetak = document.getElementById('btnCetakKuitansi');
+    if (btnCetak) {
+        btnCetak.classList.remove('d-none');
+    }
 }
 
 async function konfirmasiBayar() {
@@ -1645,8 +1765,6 @@ function checkSignatureStatus(studentId, data) {
             <div class="mt-2">
                 <img src="${data.reportSignature}" style="height: 60px; width: auto; filter: contrast(150%);">
                 <p class="small fw-bold mb-0 text-success" style="font-size: 10px;">
-                    <i class="fas fa-check-circle"></i> Rapor Diterima
-                </p>
             </div>`;
     } else {
         // Tampilan jika Wali Santri BELUM tanda tangan (Muncul Canvas)
