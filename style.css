@@ -1,7 +1,7 @@
 body {
     background-color: #f0f2f5;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    
+
 }
 
 .card-student {
@@ -94,20 +94,15 @@ body {
 
 /* Animasi Berkedip untuk Lonceng */
 .notif-pulse {
-    animation: pulse-yellow 2s infinite;
-    border-radius: 50%;
+    animation: pulse-yellow 2s infinite !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
 }
 
 @keyframes pulse-yellow {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 15px rgba(255, 193, 7, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
-    }
+    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
 }
 
 /* Spinner Custom Si Barok */
@@ -146,4 +141,24 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Menghindari tombol TTD meluber ke samping kolom */
+#boxSignatureArea canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+
+#signatureWrapper .btn-xs, 
+#signatureWrapper .btn-sm {
+    padding: 2px 5px !important;
+    font-size: 0.6rem !important;
+}
+
+/* Memastikan baris TTD tidak pecah di HP */
+@media (max-width: 576px) {
+    #signatureWrapper .row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+    }
 }
