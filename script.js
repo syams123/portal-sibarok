@@ -291,8 +291,8 @@ setTimeout(() => {
 
         let baseURL = window.location.origin;
 
-        if (baseURL.includes("netlify.app")) {
-            baseURL = "https://coba-tpqalmubarokarc.blogspot.com"; 
+        if (baseURL.includes("github.io")) {
+            baseURL = "tpqalmubarokarc.blogspot.com"; 
         }
         
         // LOGIKA OTOMATIS: 
