@@ -1181,12 +1181,15 @@ async function renderUstadzah() {
 }
 
 async function deleteUstadzah(id, nama) {
+async function deleteUstadzah(id, nama) {
     if (await confirm(`Hapus akun ${nama}?`)) {
         try {
             await db.collection('users').doc(id).delete();
             alert("Akun berhasil dihapus.");
             renderUstadzah();
-        } catch (error) { alert(error.message); }
+        } catch (error) { 
+            alert(error.message); 
+        }
     }
 }
 
@@ -1196,7 +1199,9 @@ async function deleteStudent(id, nama) {
             await db.collection('students').doc(id).delete();
             alert("Data santri berhasil dihapus.");
             renderStudents();
-        } catch (error) { alert(error.message); }
+        } catch (error) { 
+            alert(error.message); 
+        }
     }
 }
 
@@ -1956,12 +1961,3 @@ async function forgotPassword() {
         alert("Error: " + msg);
     }
 }
-
-
-
-
-
-
-
-
-
