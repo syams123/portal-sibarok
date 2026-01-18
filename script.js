@@ -1181,7 +1181,9 @@ async function renderUstadzah() {
 }
 
 async function deleteUstadzah(id, nama) {
-    if (await confirm(`Hapus akun ${nama}?`)) {
+    // Await ini akan menunggu Promise dari penyamar di atas
+    const yakin = await confirm(`Hapus akun ${nama}?`);
+    if (yakin) {
         try {
             await db.collection('users').doc(id).delete();
             alert("Akun berhasil dihapus.");
@@ -1191,7 +1193,9 @@ async function deleteUstadzah(id, nama) {
 }
 
 async function deleteStudent(id, nama) {
-    if (await confirm(`Hapus data santri: ${nama}?`)) {
+    // Await ini akan menunggu Promise dari penyamar di atas
+    const yakin = await confirm(`Hapus data santri: ${nama}?`);
+    if (yakin) {
         try {
             await db.collection('students').doc(id).delete();
             alert("Data santri berhasil dihapus.");
@@ -1963,6 +1967,7 @@ function sendAlert(message, type = "info") {
     "https://tpqalmubarokarc.blogspot.com"
   );
 }
+
 
 
 
