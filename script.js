@@ -15,28 +15,6 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-window.alert = function(message) {
-    Swal.fire({
-        text: message,
-        icon: 'info',
-        confirmButtonColor: '#198754',
-        confirmButtonText: 'OK'
-    });
-};
-
-window.confirm = async function(message) {
-    const result = await Swal.fire({
-        text: message,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, Lanjutkan',
-        cancelButtonText: 'Batal'
-    });
-    return result.isConfirmed; // Mengembalikan true atau false
-};
-
 // Variables Global
 let currentUser = null;
 let currentRole = null; // 'admin' atau 'parent' atau 'superadmin'
@@ -1178,7 +1156,7 @@ async function renderUstadzah() {
 }
 
 async function deleteUstadzah(id, nama) {
-    if (await confirm(`Hapus akun ${nama}?`)) {
+    if (confirm(`Hapus akun ${nama}?`)) {
         try {
             await db.collection('users').doc(id).delete();
             alert("Akun berhasil dihapus.");
@@ -1188,7 +1166,7 @@ async function deleteUstadzah(id, nama) {
 }
 
 async function deleteStudent(id, nama) {
-    if (await confirm(`Hapus data santri: ${nama}?`)) {
+    if (confirm(`Hapus data santri: ${nama}?`)) {
         try {
             await db.collection('students').doc(id).delete();
             alert("Data santri berhasil dihapus.");
@@ -1886,22 +1864,22 @@ async function resetTTD(studentId, studentName) {
         alert("Hanya Superadmin yang dapat mereset tanda tangan.");
         return;
     }
-    // 1. Konfirmasi ke Ustadzah - DITAMBAHKAN 'await' agar tidak langsung tertimpa alert sukses
-    const yakin = await confirm(Apakah Anda yakin ingin menghapus tanda tangan dari ${studentName}?);
+    // 1. Konfirmasi ke Ustadzah
+    const yakin = confirm(`Apakah Anda yakin ingin menghapus tanda tangan dari ${studentName}?`);
     
     if (yakin) {
         try {
             // 2. Update database: Set ke null atau hapus field
             await db.collection('students').doc(studentId).update({
-                reportSignature: null,
-                reportSignedAt: null,
-                ttdNotifRead: false
+            reportSignature: null,
+            reportSignedAt: null,
+            ttdNotifRead: false
             });
 
             // 3. (Opsional) Hapus juga notifikasi terkait jika ada
             // Namun untuk demo, update data santri saja sudah cukup untuk mengosongkan kartu
             
-            alert(Tanda tangan ${studentName} berhasil dikosongkan!);
+            alert(`Tanda tangan ${studentName} berhasil dikosongkan!`);
         } catch (error) {
             console.error("Error reset TTD:", error);
             alert("Gagal mereset TTD: " + error.message);
@@ -1952,11 +1930,4 @@ async function forgotPassword() {
         
         alert("Error: " + msg);
     }
-}
-
-function sendalert(message, type = "info") {
-  window.parent.postMessage(
-    { type: "showAlert", text: message, alertType: type },
-    "https://tpqalmubarokarc.blogspot.com"
-  );
 }
