@@ -1888,7 +1888,7 @@ async function resetTTD(studentId, studentName) {
         return;
     }
     // 1. Konfirmasi ke Ustadzah
-    const yakin = confirm(`Apakah Anda yakin ingin menghapus tanda tangan dari ${studentName}?`);
+    const yakin = await confirm(`Apakah Anda yakin ingin menghapus tanda tangan dari ${studentName}?`);
     
     if (yakin) {
         try {
@@ -1961,3 +1961,4 @@ function sendAlert(message, type = "info") {
     "https://tpqalmubarokarc.blogspot.com"
   );
 }
+
