@@ -1887,16 +1887,16 @@ async function resetTTD(studentId, studentName) {
         alert("Hanya Superadmin yang dapat mereset tanda tangan.");
         return;
     }
-    // 1. Konfirmasi ke Ustadzah
+    // 1. Konfirmasi ke Ustadzah - DITAMBAHKAN 'await' agar tidak langsung tertimpa alert sukses
     const yakin = await confirm(`Apakah Anda yakin ingin menghapus tanda tangan dari ${studentName}?`);
     
     if (yakin) {
         try {
             // 2. Update database: Set ke null atau hapus field
             await db.collection('students').doc(studentId).update({
-            reportSignature: null,
-            reportSignedAt: null,
-            ttdNotifRead: false
+                reportSignature: null,
+                reportSignedAt: null,
+                ttdNotifRead: false
             });
 
             // 3. (Opsional) Hapus juga notifikasi terkait jika ada
@@ -1961,4 +1961,5 @@ function sendAlert(message, type = "info") {
     "https://tpqalmubarokarc.blogspot.com"
   );
 }
+
 
