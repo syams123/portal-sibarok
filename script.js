@@ -1186,9 +1186,7 @@ async function deleteUstadzah(id, nama) {
             await db.collection('users').doc(id).delete();
             alert("Akun berhasil dihapus.");
             renderUstadzah();
-        } catch (error) { 
-            alert(error.message); 
-        }
+        } catch (error) { alert(error.message); }
     }
 }
 
@@ -1198,9 +1196,7 @@ async function deleteStudent(id, nama) {
             await db.collection('students').doc(id).delete();
             alert("Data santri berhasil dihapus.");
             renderStudents();
-        } catch (error) { 
-            alert(error.message); 
-        }
+        } catch (error) { alert(error.message); }
     }
 }
 
@@ -1967,6 +1963,7 @@ function sendAlert(message, type = "info") {
     "https://tpqalmubarokarc.blogspot.com"
   );
 }
+
 
 
 
