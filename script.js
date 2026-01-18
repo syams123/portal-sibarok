@@ -15,6 +15,29 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+window.alert = function(message) {
+    Swal.fire({
+        text: message,
+        icon: 'info',
+        confirmButtonColor: '#198754',
+        confirmButtonText: 'OK'
+    });
+};
+
+// Khusus untuk confirm (seperti hapus data) agar tidak muncul domain github
+window.confirm = async function(message) {
+    const result = await Swal.fire({
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Lanjutkan',
+        cancelButtonText: 'Batal'
+    });
+    return result.isConfirmed; // Mengembalikan true atau false
+};
+
 // Variables Global
 let currentUser = null;
 let currentRole = null; // 'admin' atau 'parent' atau 'superadmin'
@@ -60,7 +83,7 @@ auth.onAuthStateChanged(async (user) => {
                         const sudahAlert = sessionStorage.getItem('alertApprovedDone');
 
                         if (!sudahAlert) {
-        sendAlert("Alhamdulillah ustadzah disetujui!");
+        alert("Alhamdulillah ustadzah disetujui!");
         // Berikan tanda agar tidak muncul lagi sampai browser ditutup/login ulang
         sessionStorage.setItem('alertApprovedDone', 'true');
     }
@@ -82,7 +105,7 @@ auth.onAuthStateChanged(async (user) => {
                         if (loader) loader.classList.add('d-none');
                     }
                 } else {
-                    sendAlert("Data user tidak ditemukan.");
+                    alert("Data user tidak ditemukan.");
                     await auth.signOut();
                     if (loader) loader.classList.add('d-none');
                 }
@@ -124,7 +147,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             msg = "Koneksi internet bermasalah!";
         }
 
-        sendAlert("Login Gagal: " + msg);
+        alert("Login Gagal: " + msg);
     }
 });
 
@@ -361,7 +384,7 @@ async function saveStudent() {
     const joinDateValue = document.getElementById('stdJoinDate').value; 
 
     if (!joinDateValue && !id) {
-        sendAlert("Silakan isi tanggal aktif santri terlebih dahulu!");
+        alert("Silakan isi tanggal aktif santri terlebih dahulu!");
         return;
     }
 
@@ -412,7 +435,7 @@ async function saveStudent() {
         document.getElementById('studentForm').reset();
         
     } catch (error) {
-        sendAlert("Error: " + error.message);
+        alert("Error: " + error.message);
     }
     document.getElementById('loading').classList.add('d-none');
 }
@@ -666,7 +689,7 @@ async function saveGrades() {
         jilid: levelValue // <--- Nama field disamakan jadi 'jilid'
     });
     
-    sendAlert("Nilai dan Jilid berhasil disimpan!");
+    alert("Nilai dan Jilid berhasil disimpan!");
     const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
     modal.hide();
 }
@@ -674,7 +697,7 @@ async function saveGrades() {
 // 5. Tagihan WA (Individual)
 async function sendBillWA() {
     if (currentRole !== 'superadmin') {
-        sendAlert("Hanya Superadmin yang dapat mengirim tagihan.");
+        alert("Hanya Superadmin yang dapat mengirim tagihan.");
         return;
     }
     const id = document.getElementById('gradeStudentId').value;
@@ -682,7 +705,7 @@ async function sendBillWA() {
     const data = doc.data();
 
     if (!data.parentPhone) {
-        sendAlert("Nomor WhatsApp wali belum diisi.");
+        alert("Nomor WhatsApp wali belum diisi.");
         return;
     }
 
@@ -1061,10 +1084,10 @@ if (imgPreview) {
             await db.collection('users').doc(currentUser.uid).update(dataToUpdate);
         }
 
-        sendAlert("Profil Berhasil Diperbarui!");
+        alert("Profil Berhasil Diperbarui!");
     } catch (error) {
         console.error(error);
-        sendAlert("Gagal menyimpan data: " + error.message);
+        alert("Gagal menyimpan data: " + error.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fas fa-save me-2"></i> ${originalText}`;
@@ -1087,9 +1110,9 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             nama: nama, email: email, role: 'parent',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        sendAlert("Pendaftaran Berhasil! Silakan Login.");
+        alert("Pendaftaran Berhasil! Silakan Login.");
         window.location.reload();
-    } catch (error) { sendAlert("Gagal Daftar: " + error.message); }
+    } catch (error) { alert("Gagal Daftar: " + error.message); }
 });
 
 const adminRegForm = document.getElementById('registerAdminForm');
@@ -1106,9 +1129,9 @@ if (adminRegForm) {
                 nama: nama, email: email, role: 'admin', isApproved: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            sendAlert("");
+            alert("");
             location.reload();
-        } catch (error) { sendAlert("Gagal Daftar Admin: " + error.message); }
+        } catch (error) { alert("Gagal Daftar Admin: " + error.message); }
     };
 }
 
@@ -1159,9 +1182,9 @@ async function deleteUstadzah(id, nama) {
     if (confirm(`Hapus akun ${nama}?`)) {
         try {
             await db.collection('users').doc(id).delete();
-            sendAlert("Akun berhasil dihapus.");
+            alert("Akun berhasil dihapus.");
             renderUstadzah();
-        } catch (error) { sendAlert(error.message); }
+        } catch (error) { alert(error.message); }
     }
 }
 
@@ -1169,9 +1192,9 @@ async function deleteStudent(id, nama) {
     if (confirm(`Hapus data santri: ${nama}?`)) {
         try {
             await db.collection('students').doc(id).delete();
-            sendAlert("Data santri berhasil dihapus.");
+            alert("Data santri berhasil dihapus.");
             renderStudents();
-        } catch (error) { sendAlert(error.message); }
+        } catch (error) { alert(error.message); }
     }
 }
 
@@ -1339,7 +1362,7 @@ fetch(scriptUrl, {
 
     } catch (error) {
         console.error(error);
-        sendAlert("Gagal membuat kuitansi. Pastikan koneksi internet stabil untuk memuat gambar.");
+        alert("Gagal membuat kuitansi. Pastikan koneksi internet stabil untuk memuat gambar.");
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1354,7 +1377,7 @@ if (typeof data !== 'undefined' && data && data.infaqStatus) {
 
 async function konfirmasiBayar() {
     const metode = document.getElementById('selectMetodeBayar').value;
-    if (!metode) return sendAlert("Silakan pilih metode pembayaran terlebih dahulu.");
+    if (!metode) return alert("Silakan pilih metode pembayaran terlebih dahulu.");
 
     // 1. MUNCULKAN LOADER (Sama dengan Login/Register)
     const loader = document.getElementById('loading');
@@ -1461,7 +1484,7 @@ async function konfirmasiBayar() {
                 if (loader) loader.classList.add('d-none');
 
                 // Beri pesan sukses (Tanpa kedip loader di belakang)
-                sendAlert("Konfirmasi berhasil! Ustadzah akan segera memverifikasi pembayaran Anda.");
+                alert("Konfirmasi berhasil! Ustadzah akan segera memverifikasi pembayaran Anda.");
 
                 // Reload halaman secara halus setelah alert ditutup
                 setTimeout(() => {
@@ -1471,7 +1494,7 @@ async function konfirmasiBayar() {
         } catch (error) {
             console.error("Master Error:", error);
             if (loader) loader.classList.add('d-none');
-            sendAlert("Terjadi kesalahan: " + error.message);
+            alert("Terjadi kesalahan: " + error.message);
         }
     }, 150);
 }
@@ -1519,14 +1542,14 @@ async function approvePembayaran(id, nama) {
         });
 
         await batch.commit();
-        sendAlert(`Alhamdulillah, pembayaran ${nama} diverifikasi.`);
+        alert(`Alhamdulillah, pembayaran ${nama} diverifikasi.`);
 
         if (typeof renderStudents === "function") await renderStudents();
         const dropdown = document.getElementById('notifDropdown');
         if (dropdown) dropdown.classList.add('d-none');
 
     } catch (error) {
-        sendAlert("Gagal verifikasi: " + error.message);
+        alert("Gagal verifikasi: " + error.message);
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1556,12 +1579,12 @@ async function batalkanVerifikasi(id, nama) {
         batch.delete(historyRef);
 
         await batch.commit();
-        sendAlert("Status " + nama + " dikembalikan ke BELUM LUNAS & Riwayat dihapus.");
+        alert("Status " + nama + " dikembalikan ke BELUM LUNAS & Riwayat dihapus.");
         
         await renderStudents(); 
         
     } catch (error) {
-        sendAlert("Gagal membatalkan: " + error.message);
+        alert("Gagal membatalkan: " + error.message);
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1600,14 +1623,14 @@ async function resetPembayaran(id, nama) {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        sendAlert(`Status ${nama} berhasil dikembalikan ke Belum Lunas.`);
+        alert(`Status ${nama} berhasil dikembalikan ke Belum Lunas.`);
         
         // Refresh daftar agar kartu berubah warna
         renderStudents();
 
     } catch (error) {
         console.error("Gagal reset:", error);
-        sendAlert("Terjadi kesalahan: " + error.message);
+        alert("Terjadi kesalahan: " + error.message);
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1643,7 +1666,7 @@ function generateDummyEmail() {
     const name = document.getElementById('stdName').value;
     
     if (!name) {
-        sendAlert("Isi nama santri terlebih dahulu agar bisa dibuatkan email!");
+        alert("Isi nama santri terlebih dahulu agar bisa dibuatkan email!");
         return;
     }
 
@@ -1789,7 +1812,7 @@ function clearSignature() {
 // Fungsi Simpan TTD ke Firebase
 async function saveSignature(studentId, studentName) {
     if (!window.signaturePad || window.signaturePad.isEmpty()) {
-        return sendAlert("Silakan bubuhkan tanda tangan terlebih dahulu.");
+        return alert("Silakan bubuhkan tanda tangan terlebih dahulu.");
     }
 
     const base64Data = window.signaturePad.toDataURL('image/png');
@@ -1812,11 +1835,11 @@ async function saveSignature(studentId, studentName) {
             status: "unread"
         });
 
-        sendAlert("Alhamdulillah, tanda tangan berhasil terkirim!");
+        alert("Alhamdulillah, tanda tangan berhasil terkirim!");
         // Jangan reload dulu agar data tersinkron sempurna
     } catch (error) {
         console.error("Error:", error);
-        sendAlert("Gagal mengirim tanda tangan.");
+        alert("Gagal mengirim tanda tangan.");
     }
 }
 
@@ -1831,7 +1854,7 @@ function initSignaturePad(studentId, studentName) {
 
     // Fungsi Simpan
     window.saveSignature = async () => {
-        if (signaturePad.isEmpty()) return sendAlert("Silakan tanda tangan terlebih dahulu.");
+        if (signaturePad.isEmpty()) return alert("Silakan tanda tangan terlebih dahulu.");
 
         const base64Data = signaturePad.toDataURL(); // Ambil gambar TTD
         
@@ -1850,9 +1873,9 @@ function initSignaturePad(studentId, studentName) {
                 parentEmail: firebase.auth().currentUser.email
             });
 
-            sendAlert("Tanda tangan berhasil dikirim!");
+            alert("Tanda tangan berhasil dikirim!");
         } catch (err) {
-            sendAlert("Gagal mengirim TTD: " + err.message);
+            alert("Gagal mengirim TTD: " + err.message);
         }
     };
 
@@ -1861,7 +1884,7 @@ function initSignaturePad(studentId, studentName) {
 
 async function resetTTD(studentId, studentName) {
     if (currentRole !== 'superadmin') {
-        sendAlert("Hanya Superadmin yang dapat mereset tanda tangan.");
+        alert("Hanya Superadmin yang dapat mereset tanda tangan.");
         return;
     }
     // 1. Konfirmasi ke Ustadzah
@@ -1879,10 +1902,10 @@ async function resetTTD(studentId, studentName) {
             // 3. (Opsional) Hapus juga notifikasi terkait jika ada
             // Namun untuk demo, update data santri saja sudah cukup untuk mengosongkan kartu
             
-            sendAlert(`Tanda tangan ${studentName} berhasil dikosongkan!`);
+            alert(`Tanda tangan ${studentName} berhasil dikosongkan!`);
         } catch (error) {
             console.error("Error reset TTD:", error);
-            sendAlert("Gagal mereset TTD: " + error.message);
+            alert("Gagal mereset TTD: " + error.message);
         }
     }
 }
@@ -1917,7 +1940,7 @@ async function forgotPassword() {
         await auth.sendPasswordResetEmail(email);
         
         if (loader) loader.classList.add('d-none');
-        sendAlert("Link reset password telah dikirim ke email Anda. Silakan cek Inbox atau folder Spam.");
+        alert("Link reset password telah dikirim ke email Anda. Silakan cek Inbox atau folder Spam.");
     } catch (error) {
         if (loader) loader.classList.add('d-none');
         
@@ -1928,7 +1951,7 @@ async function forgotPassword() {
             msg = "Format email salah!";
         }
         
-        sendAlert("Error: " + msg);
+        alert("Error: " + msg);
     }
 }
 
@@ -1937,5 +1960,4 @@ function sendAlert(message, type = "info") {
     { type: "showAlert", text: message, alertType: type },
     "https://tpqalmubarokarc.blogspot.com"
   );
-
 }
