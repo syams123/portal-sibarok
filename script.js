@@ -1181,7 +1181,6 @@ async function renderUstadzah() {
 }
 
 async function deleteUstadzah(id, nama) {
-async function deleteUstadzah(id, nama) {
     if (await confirm(`Hapus akun ${nama}?`)) {
         try {
             await db.collection('users').doc(id).delete();
@@ -1968,6 +1967,7 @@ function sendAlert(message, type = "info") {
     "https://tpqalmubarokarc.blogspot.com"
   );
 }
+
 
 
 
