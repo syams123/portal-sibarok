@@ -1932,9 +1932,10 @@ async function forgotPassword() {
     }
 }
 
-function sendsendAlert(message, type = "info") {
+function sendAlert(message, type = "info") {
   window.parent.postMessage(
     { type: "showAlert", text: message, alertType: type },
     "https://tpqalmubarokarc.blogspot.com"
   );
+
 }
