@@ -16,6 +16,8 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 
 window.alert = function(message) {
+  return new Promise((resolve) => {
+
     Swal.fire({
         text: message,
         icon: 'info',
@@ -1961,5 +1963,6 @@ function sendAlert(message, type = "info") {
     "https://tpqalmubarokarc.blogspot.com"
   );
 }
+
 
 
