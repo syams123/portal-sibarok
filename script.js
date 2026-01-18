@@ -60,7 +60,7 @@ auth.onAuthStateChanged(async (user) => {
                         const sudahAlert = sessionStorage.getItem('alertApprovedDone');
 
                         if (!sudahAlert) {
-        alert("Alhamdulillah ustadzah disetujui!");
+        sendAlert("Alhamdulillah ustadzah disetujui!");
         // Berikan tanda agar tidak muncul lagi sampai browser ditutup/login ulang
         sessionStorage.setItem('alertApprovedDone', 'true');
     }
@@ -82,7 +82,7 @@ auth.onAuthStateChanged(async (user) => {
                         if (loader) loader.classList.add('d-none');
                     }
                 } else {
-                    alert("Data user tidak ditemukan.");
+                    sendAlert("Data user tidak ditemukan.");
                     await auth.signOut();
                     if (loader) loader.classList.add('d-none');
                 }
@@ -124,7 +124,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             msg = "Koneksi internet bermasalah!";
         }
 
-        alert("Login Gagal: " + msg);
+        sendAlert("Login Gagal: " + msg);
     }
 });
 
@@ -361,7 +361,7 @@ async function saveStudent() {
     const joinDateValue = document.getElementById('stdJoinDate').value; 
 
     if (!joinDateValue && !id) {
-        alert("Silakan isi tanggal aktif santri terlebih dahulu!");
+        sendAlert("Silakan isi tanggal aktif santri terlebih dahulu!");
         return;
     }
 
@@ -412,7 +412,7 @@ async function saveStudent() {
         document.getElementById('studentForm').reset();
         
     } catch (error) {
-        alert("Error: " + error.message);
+        sendAlert("Error: " + error.message);
     }
     document.getElementById('loading').classList.add('d-none');
 }
@@ -666,7 +666,7 @@ async function saveGrades() {
         jilid: levelValue // <--- Nama field disamakan jadi 'jilid'
     });
     
-    alert("Nilai dan Jilid berhasil disimpan!");
+    sendAlert("Nilai dan Jilid berhasil disimpan!");
     const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
     modal.hide();
 }
@@ -674,7 +674,7 @@ async function saveGrades() {
 // 5. Tagihan WA (Individual)
 async function sendBillWA() {
     if (currentRole !== 'superadmin') {
-        alert("Hanya Superadmin yang dapat mengirim tagihan.");
+        sendAlert("Hanya Superadmin yang dapat mengirim tagihan.");
         return;
     }
     const id = document.getElementById('gradeStudentId').value;
@@ -682,7 +682,7 @@ async function sendBillWA() {
     const data = doc.data();
 
     if (!data.parentPhone) {
-        alert("Nomor WhatsApp wali belum diisi.");
+        sendAlert("Nomor WhatsApp wali belum diisi.");
         return;
     }
 
@@ -1061,10 +1061,10 @@ if (imgPreview) {
             await db.collection('users').doc(currentUser.uid).update(dataToUpdate);
         }
 
-        alert("Profil Berhasil Diperbarui!");
+        sendAlert("Profil Berhasil Diperbarui!");
     } catch (error) {
         console.error(error);
-        alert("Gagal menyimpan data: " + error.message);
+        sendAlert("Gagal menyimpan data: " + error.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fas fa-save me-2"></i> ${originalText}`;
@@ -1087,9 +1087,9 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             nama: nama, email: email, role: 'parent',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Pendaftaran Berhasil! Silakan Login.");
+        sendAlert("Pendaftaran Berhasil! Silakan Login.");
         window.location.reload();
-    } catch (error) { alert("Gagal Daftar: " + error.message); }
+    } catch (error) { sendAlert("Gagal Daftar: " + error.message); }
 });
 
 const adminRegForm = document.getElementById('registerAdminForm');
@@ -1106,9 +1106,9 @@ if (adminRegForm) {
                 nama: nama, email: email, role: 'admin', isApproved: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert("");
+            sendAlert("");
             location.reload();
-        } catch (error) { alert("Gagal Daftar Admin: " + error.message); }
+        } catch (error) { sendAlert("Gagal Daftar Admin: " + error.message); }
     };
 }
 
@@ -1159,9 +1159,9 @@ async function deleteUstadzah(id, nama) {
     if (confirm(`Hapus akun ${nama}?`)) {
         try {
             await db.collection('users').doc(id).delete();
-            alert("Akun berhasil dihapus.");
+            sendAlert("Akun berhasil dihapus.");
             renderUstadzah();
-        } catch (error) { alert(error.message); }
+        } catch (error) { sendAlert(error.message); }
     }
 }
 
@@ -1169,9 +1169,9 @@ async function deleteStudent(id, nama) {
     if (confirm(`Hapus data santri: ${nama}?`)) {
         try {
             await db.collection('students').doc(id).delete();
-            alert("Data santri berhasil dihapus.");
+            sendAlert("Data santri berhasil dihapus.");
             renderStudents();
-        } catch (error) { alert(error.message); }
+        } catch (error) { sendAlert(error.message); }
     }
 }
 
@@ -1339,7 +1339,7 @@ fetch(scriptUrl, {
 
     } catch (error) {
         console.error(error);
-        alert("Gagal membuat kuitansi. Pastikan koneksi internet stabil untuk memuat gambar.");
+        sendAlert("Gagal membuat kuitansi. Pastikan koneksi internet stabil untuk memuat gambar.");
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1354,7 +1354,7 @@ if (typeof data !== 'undefined' && data && data.infaqStatus) {
 
 async function konfirmasiBayar() {
     const metode = document.getElementById('selectMetodeBayar').value;
-    if (!metode) return alert("Silakan pilih metode pembayaran terlebih dahulu.");
+    if (!metode) return sendAlert("Silakan pilih metode pembayaran terlebih dahulu.");
 
     // 1. MUNCULKAN LOADER (Sama dengan Login/Register)
     const loader = document.getElementById('loading');
@@ -1461,7 +1461,7 @@ async function konfirmasiBayar() {
                 if (loader) loader.classList.add('d-none');
 
                 // Beri pesan sukses (Tanpa kedip loader di belakang)
-                alert("Konfirmasi berhasil! Ustadzah akan segera memverifikasi pembayaran Anda.");
+                sendAlert("Konfirmasi berhasil! Ustadzah akan segera memverifikasi pembayaran Anda.");
 
                 // Reload halaman secara halus setelah alert ditutup
                 setTimeout(() => {
@@ -1471,7 +1471,7 @@ async function konfirmasiBayar() {
         } catch (error) {
             console.error("Master Error:", error);
             if (loader) loader.classList.add('d-none');
-            alert("Terjadi kesalahan: " + error.message);
+            sendAlert("Terjadi kesalahan: " + error.message);
         }
     }, 150);
 }
@@ -1519,14 +1519,14 @@ async function approvePembayaran(id, nama) {
         });
 
         await batch.commit();
-        alert(`Alhamdulillah, pembayaran ${nama} diverifikasi.`);
+        sendAlert(`Alhamdulillah, pembayaran ${nama} diverifikasi.`);
 
         if (typeof renderStudents === "function") await renderStudents();
         const dropdown = document.getElementById('notifDropdown');
         if (dropdown) dropdown.classList.add('d-none');
 
     } catch (error) {
-        alert("Gagal verifikasi: " + error.message);
+        sendAlert("Gagal verifikasi: " + error.message);
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1556,12 +1556,12 @@ async function batalkanVerifikasi(id, nama) {
         batch.delete(historyRef);
 
         await batch.commit();
-        alert("Status " + nama + " dikembalikan ke BELUM LUNAS & Riwayat dihapus.");
+        sendAlert("Status " + nama + " dikembalikan ke BELUM LUNAS & Riwayat dihapus.");
         
         await renderStudents(); 
         
     } catch (error) {
-        alert("Gagal membatalkan: " + error.message);
+        sendAlert("Gagal membatalkan: " + error.message);
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1600,14 +1600,14 @@ async function resetPembayaran(id, nama) {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        alert(`Status ${nama} berhasil dikembalikan ke Belum Lunas.`);
+        sendAlert(`Status ${nama} berhasil dikembalikan ke Belum Lunas.`);
         
         // Refresh daftar agar kartu berubah warna
         renderStudents();
 
     } catch (error) {
         console.error("Gagal reset:", error);
-        alert("Terjadi kesalahan: " + error.message);
+        sendAlert("Terjadi kesalahan: " + error.message);
     } finally {
         document.getElementById('loading').classList.add('d-none');
     }
@@ -1643,7 +1643,7 @@ function generateDummyEmail() {
     const name = document.getElementById('stdName').value;
     
     if (!name) {
-        alert("Isi nama santri terlebih dahulu agar bisa dibuatkan email!");
+        sendAlert("Isi nama santri terlebih dahulu agar bisa dibuatkan email!");
         return;
     }
 
@@ -1789,7 +1789,7 @@ function clearSignature() {
 // Fungsi Simpan TTD ke Firebase
 async function saveSignature(studentId, studentName) {
     if (!window.signaturePad || window.signaturePad.isEmpty()) {
-        return alert("Silakan bubuhkan tanda tangan terlebih dahulu.");
+        return sendAlert("Silakan bubuhkan tanda tangan terlebih dahulu.");
     }
 
     const base64Data = window.signaturePad.toDataURL('image/png');
@@ -1812,11 +1812,11 @@ async function saveSignature(studentId, studentName) {
             status: "unread"
         });
 
-        alert("Alhamdulillah, tanda tangan berhasil terkirim!");
+        sendAlert("Alhamdulillah, tanda tangan berhasil terkirim!");
         // Jangan reload dulu agar data tersinkron sempurna
     } catch (error) {
         console.error("Error:", error);
-        alert("Gagal mengirim tanda tangan.");
+        sendAlert("Gagal mengirim tanda tangan.");
     }
 }
 
@@ -1831,7 +1831,7 @@ function initSignaturePad(studentId, studentName) {
 
     // Fungsi Simpan
     window.saveSignature = async () => {
-        if (signaturePad.isEmpty()) return alert("Silakan tanda tangan terlebih dahulu.");
+        if (signaturePad.isEmpty()) return sendAlert("Silakan tanda tangan terlebih dahulu.");
 
         const base64Data = signaturePad.toDataURL(); // Ambil gambar TTD
         
@@ -1850,9 +1850,9 @@ function initSignaturePad(studentId, studentName) {
                 parentEmail: firebase.auth().currentUser.email
             });
 
-            alert("Tanda tangan berhasil dikirim!");
+            sendAlert("Tanda tangan berhasil dikirim!");
         } catch (err) {
-            alert("Gagal mengirim TTD: " + err.message);
+            sendAlert("Gagal mengirim TTD: " + err.message);
         }
     };
 
@@ -1861,7 +1861,7 @@ function initSignaturePad(studentId, studentName) {
 
 async function resetTTD(studentId, studentName) {
     if (currentRole !== 'superadmin') {
-        alert("Hanya Superadmin yang dapat mereset tanda tangan.");
+        sendAlert("Hanya Superadmin yang dapat mereset tanda tangan.");
         return;
     }
     // 1. Konfirmasi ke Ustadzah
@@ -1879,10 +1879,10 @@ async function resetTTD(studentId, studentName) {
             // 3. (Opsional) Hapus juga notifikasi terkait jika ada
             // Namun untuk demo, update data santri saja sudah cukup untuk mengosongkan kartu
             
-            alert(`Tanda tangan ${studentName} berhasil dikosongkan!`);
+            sendAlert(`Tanda tangan ${studentName} berhasil dikosongkan!`);
         } catch (error) {
             console.error("Error reset TTD:", error);
-            alert("Gagal mereset TTD: " + error.message);
+            sendAlert("Gagal mereset TTD: " + error.message);
         }
     }
 }
@@ -1917,7 +1917,7 @@ async function forgotPassword() {
         await auth.sendPasswordResetEmail(email);
         
         if (loader) loader.classList.add('d-none');
-        alert("Link reset password telah dikirim ke email Anda. Silakan cek Inbox atau folder Spam.");
+        sendAlert("Link reset password telah dikirim ke email Anda. Silakan cek Inbox atau folder Spam.");
     } catch (error) {
         if (loader) loader.classList.add('d-none');
         
@@ -1928,6 +1928,13 @@ async function forgotPassword() {
             msg = "Format email salah!";
         }
         
-        alert("Error: " + msg);
+        sendAlert("Error: " + msg);
     }
+}
+
+function sendsendAlert(message, type = "info") {
+  window.parent.postMessage(
+    { type: "showAlert", text: message, alertType: type },
+    "https://tpqalmubarokarc.blogspot.com"
+  );
 }
