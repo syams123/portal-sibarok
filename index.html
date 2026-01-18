@@ -568,5 +568,17 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
+<script>
+  function triggerAlert() {
+    // Kirim pesan ke parent (Blogspot)
+    window.parent.postMessage(
+      { type: "showAlert", text: "Halo dari portal-sibarok!" },
+      "https://tpqalmubarokarc.blogspot.com" // target Blogspot kamu
+    );
+  }
+</script>
+
+<button onclick="triggerAlert()">Kirim Alert ke Blogspot</button>
+
 </body>
 </html>
