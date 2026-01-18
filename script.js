@@ -1181,26 +1181,32 @@ async function renderUstadzah() {
 }
 
 async function deleteUstadzah(id, nama) {
-    // Await ini akan menunggu Promise dari penyamar di atas
+    // Gunakan variabel const untuk menampung hasil konfirmasi agar lebih stabil
     const yakin = await confirm(`Hapus akun ${nama}?`);
-    if (yakin) {
+    
+    if (yakin === true) { // Hanya eksekusi jika tombol 'Ya' ditekan
         try {
             await db.collection('users').doc(id).delete();
             alert("Akun berhasil dihapus.");
-            renderUstadzah();
-        } catch (error) { alert(error.message); }
+            if (typeof renderUstadzah === "function") renderUstadzah();
+        } catch (error) { 
+            alert(error.message); 
+        }
     }
 }
 
 async function deleteStudent(id, nama) {
-    // Await ini akan menunggu Promise dari penyamar di atas
+    // Gunakan variabel const untuk menampung hasil konfirmasi
     const yakin = await confirm(`Hapus data santri: ${nama}?`);
-    if (yakin) {
+    
+    if (yakin === true) { // Hanya eksekusi jika tombol 'Ya' ditekan
         try {
             await db.collection('students').doc(id).delete();
             alert("Data santri berhasil dihapus.");
-            renderStudents();
-        } catch (error) { alert(error.message); }
+            if (typeof renderStudents === "function") renderStudents();
+        } catch (error) { 
+            alert(error.message); 
+        }
     }
 }
 
@@ -1967,6 +1973,7 @@ function sendAlert(message, type = "info") {
     "https://tpqalmubarokarc.blogspot.com"
   );
 }
+
 
 
 
