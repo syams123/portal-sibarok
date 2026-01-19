@@ -778,25 +778,32 @@ if (reportDiv) {
         // 1. Tentukan variabel TTD Wali Kelas secara dinamis
 let waliKelasHtml = "";
 
-// Cek apakah santri dari kelas Sunan Giri
+// Cek Kelas untuk menentukan TTD dan Nama Wali Kelas
 if (data.class === "Sunan Giri") {
+    // Khusus Sunan Giri: Ustadzah Salwa
     waliKelasHtml = `
         <img src="https://i.imgur.com/pOg9hxn.png" 
              class="img-fluid" 
              style="max-height: 50px; width: auto; max-width: 100%;">
         <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
     `;
-} else {
-    // Untuk Sunan Ampel & Sunan Kalijaga (Tanpa Gambar TTD, hanya Nama Kepala TPQ)
+} else if (data.class === "Sunan Ampel" || data.class === "Sunan Kalijaga") {
+    // Sunan Ampel & Kalijaga: TTD Sama dengan Kepala TPQ (Ibu Hafi)
     waliKelasHtml = `
-<img src="https://i.imgur.com/APp2Mt6.png" 
-                     class="img-fluid" 
-                     style="max-height: 50px; width: auto; max-width: 100%;">
+        <img src="https://i.imgur.com/APp2Mt6.png" 
+             class="img-fluid" 
+             style="max-height: 50px; width: auto; max-width: 100%;">
         <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+    `;
+} else {
+    // Jika ada kelas lain, kolom TTD dikosongkan dulu
+    waliKelasHtml = `
+        <div style="min-height: 50px;"></div>
+        <p class="small fw-bold mb-0" style="font-size: 0.7rem;">( Wali Kelas )</p>
     `;
 }
 
-// 2. Masukkan ke dalam struktur HTML Kakak
+// 2. Struktur HTML Kakak (Bagian Wali Kelas sudah menggunakan variabel di atas)
 const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
 contentHtml += `
@@ -816,7 +823,7 @@ contentHtml += `
         <div class="col-4">
             <p class="small mb-0" style="font-size: 0.7rem;">&nbsp;</p>
             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
-            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
+            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center flex-column">
                 ${waliKelasHtml} 
             </div>
         </div>
@@ -825,7 +832,7 @@ contentHtml += `
             <p class="small mb-1" style="font-size: 0.65rem;">Sidoarjo, ${tglSekarang}</p>
             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
             <div class="d-flex flex-column align-items-center">
-                <div id="boxSignatureArea" style="min-height: 80px; width: 100%; max-width: 150px; border-radius: 5px;" class="mb-2">
+                <div id="boxSignatureArea" style="min-height: 80px; width: 100%; max-width: 150px;" class="mb-2">
                     </div>
                 <p class="small fw-bold mb-0" style="font-size: 0.7rem; text-decoration: underline;">
                     ${data.parentName || "( Nama Wali Santri )"}
