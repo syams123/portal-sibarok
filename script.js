@@ -64,67 +64,78 @@ auth.onAuthStateChanged(async (user) => {
                 const userData = userDoc.data();
                 currentRole = userData.role;
 
-                const namaDariDB = userData.name || "User"; 
+                const namaUser = userData.nama || userData.name || "Ustadzah";
+                displayGreeting(namaUser);
 
-    if (currentRole === 'parent') {
-        window.parentName = namaDariDB;
-    } else {
-        window.userName = namaDariDB;
-    }
+                if (currentRole === 'parent') {
+                    window.parentName = namaUser;
+                } else {
+                    window.userName = namaUser;
+                }
 
-    // Tampilkan Dashboard & Sapaan
-    showPage('home'); 
+                // Tampilkan Dashboard & Sapaan
+                showPage('home'); 
 
-    if (loader) loader.classList.add('d-none');
+                if (loader) loader.classList.add('d-none');
 
                 // FILTER VERIFIKASI ADMIN
                 if (currentRole === 'admin' && userData.isApproved === false) {
+                    // Reset tanda jika status berubah jadi tidak disetujui
+                    localStorage.removeItem(`alertApprovedDone_${userData.email}`);
+                    
                     if (loader) loader.classList.add('d-none');
-                        const modalDaftar = document.querySelector('.modal.show');
-                        if (modalDaftar) {
-                            const modalInstance = bootstrap.Modal.getInstance(modalDaftar);
-                            if (modalInstance) modalInstance.hide();
-                        }
-
-                        console.log("Status: Menunggu Persetujuan...");
-
-                        return; 
+                    const modalDaftar = document.querySelector('.modal.show');
+                    if (modalDaftar) {
+                        const modalInstance = bootstrap.Modal.getInstance(modalDaftar);
+                        if (modalInstance) modalInstance.hide();
                     }
 
-                    if (unsubscribe) unsubscribe();
+                    console.log("Status: Menunggu Persetujuan...");
+                    return; 
+                }
 
-                    // Alert sukses otomatis saat disetujui Superadmin
-                    if (currentRole === 'admin' && userData.isApproved === true) {
-                        const sudahAlert = sessionStorage.getItem('alertApprovedDone');
+                // Alert sukses otomatis saat disetujui Superadmin
+                if (currentRole === 'admin' && userData.isApproved === true) {
+                    const alertKey = `alertApprovedDone_${userData.email}`;
+                    const sudahAlert = localStorage.getItem(alertKey);
 
-                        if (!sudahAlert) {
-        Swal.fire("Berhasil", "Alhamdulillah ustadzah disetujui!", "success");
-        // Berikan tanda agar tidak muncul lagi sampai browser ditutup/login ulang
-        sessionStorage.setItem('alertApprovedDone', 'true');
-    }
-}
-                    
-                    // SEMBUNYIKAN LOGIN, TAMPILKAN NAV
-                    document.getElementById('loginSection').classList.add('d-none');
-                    document.getElementById('mainNavbar').classList.remove('d-none');
-                    
-                    if (currentRole === 'admin' || currentRole === 'superadmin') {
-                        showPage('admin');
-                        await renderStudents();
-                        await renderUstadzah();
-                        if (loader) loader.classList.add('d-none');
-                    } else {
-                        showPage('parent');
-                        await loadChildData(user.email);
-                        await listenPaymentStatus(user.email);
-                        if (loader) loader.classList.add('d-none');
+                    if (!sudahAlert) {
+                        // Kunci status di memori browser SEBELUM memanggil Swal agar tidak muncul berulang
+                        localStorage.setItem(alertKey, 'true');
+                        
+                        Swal.fire({
+                            title: "Berhasil",
+                            text: "Alhamdulillah ustadzah disetujui!",
+                            icon: "success",
+                            confirmButtonColor: '#198754'
+                        });
                     }
+                }
+
+                // --- BAGIAN PENTING: MATIKAN LISTENER AGAR TIDAK LOOP ---
+                if (unsubscribe) unsubscribe();
+                
+                // SEMBUNYIKAN LOGIN, TAMPILKAN NAV
+                document.getElementById('loginSection').classList.add('d-none');
+                document.getElementById('mainNavbar').classList.remove('d-none');
+                
+                if (currentRole === 'admin' || currentRole === 'superadmin') {
+                    showPage('admin');
+                    await renderStudents();
+                    await renderUstadzah();
+                    if (loader) loader.classList.add('d-none');
                 } else {
-                    Swal.fire("Error", "Data user tidak ditemukan.", "error");
-                    await auth.signOut();
+                    showPage('parent');
+                    await loadChildData(user.email);
+                    await listenPaymentStatus(user.email);
                     if (loader) loader.classList.add('d-none');
                 }
-            });
+            } else {
+                Swal.fire("Error", "Data user tidak ditemukan.", "error");
+                await auth.signOut();
+                if (loader) loader.classList.add('d-none');
+            }
+        });
 
         } catch (error) {
             console.error("Error Auth:", error);
@@ -198,7 +209,7 @@ async function showPage(page) {
     if (page === 'home' || page === 'admin' || page === 'parent') {
         let nameToDisplay = "";
 
-        if (currentRole === 'superadmin' || currentRole === 'ustadzah') {
+        if (currentRole === 'superadmin' || currentRole === 'admin') {
             // Jika variabel window.userName belum ada isinya, beri default "Pengajar"
             nameToDisplay = window.userName || "Pengajar"; 
         } else if (currentRole === 'parent') {
@@ -2202,32 +2213,27 @@ function displayGreeting(name) {
     const greetingElement = document.getElementById('greetingArea');
     if (!greetingElement) return;
 
-    const now = new Date();
-    const hours = now.getHours();
-    let timeGreeting = "";
+    const hours = new Date().getHours();
+    let timeGreeting = (hours < 11) ? "Selamat Pagi" : 
+                       (hours < 15) ? "Selamat Siang" : 
+                       (hours < 18) ? "Selamat Sore" : "Selamat Malam";
 
-    // Logika Sapaan Waktu
-    if (hours >= 5 && hours < 11) {
-        timeGreeting = "Selamat Pagi";
-    } else if (hours >= 11 && hours < 15) {
-        timeGreeting = "Selamat Siang";
-    } else if (hours >= 15 && hours < 18) {
-        timeGreeting = "Selamat Sore";
-    } else {
-        timeGreeting = "Selamat Malam";
-    }
-
-    // Penentuan Sapaan Berdasarkan Role
     let roleGreeting = "";
-    if (currentRole === 'superadmin' || currentRole === 'ustadzah') {
-        roleGreeting = `Ustadzah ${name || 'Pengajar'}`;
+    
+    if (currentRole === 'superadmin' || currentRole === 'admin') {
+        // Ambil nama depan saja (Contoh: "Salwa Kamilatuz..." jadi "Salwa")
+        const namaPanggilan = name ? name.split(' ')[0] : "Pengajar";
+        roleGreeting = `Ustadzah ${namaPanggilan}`; 
     } else if (currentRole === 'parent') {
-        roleGreeting = name || "Wali Santri";
+        // Untuk wali santri, ambil nama depannya saja
+        const namaWali = name ? name.split(' ')[0] : "Wali Santri";
+        roleGreeting = namaWali;
     } else {
-        roleGreeting = name || "User";
+        roleGreeting = name ? name.split(' ')[0] : "User";
     }
 
-    greetingElement.innerHTML = `<h6 class="fw mb-0">${timeGreeting} ${roleGreeting} ✨</h6>`;
+    // Render hasil akhir: "Selamat Malam, Ustadzah Salwa"
+    greetingElement.innerHTML = `<h6 class="fw-bold mb-0">${timeGreeting}, ${roleGreeting} ✨</h6>`;
 }
 
 function toggleDarkMode() {

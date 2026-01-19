@@ -224,7 +224,7 @@ body {
 @media (max-width: 576px) {
     #notifDropdown {
         /* Menggeser agar pas di pojok kanan layar HP */
-        right: -40px !important; 
+        right: -25px !important; 
         width: 260px !important;
         top: 45px !important;
     }
@@ -421,12 +421,21 @@ body {
 }
 
 /* Mengatur ukuran toggler agar tidak terlalu lebar di Opera */
-.navbar-toggler {
-    width: 34px !important;
-    height: 34px !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+@media (max-width: 991.98px) {
+    .navbar-toggler {
+        width: 34px !important;
+        height: 34px !important;
+        display: flex !important; /* Sekarang hanya flex di HP */
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Sembunyikan paksa jika di layar Desktop (992px ke atas) */
+@media (min-width: 992px) {
+    .navbar-toggler {
+        display: none !important;
+    }
 }
 
 /* Penyesuaian ikon agar simetris */
