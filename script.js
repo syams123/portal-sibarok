@@ -789,7 +789,9 @@ if (data.class === "Sunan Giri") {
 } else {
     // Untuk Sunan Ampel & Sunan Kalijaga (Tanpa Gambar TTD, hanya Nama Kepala TPQ)
     waliKelasHtml = `
-        <div style="min-height: 50px;"></div> 
+<img src="https://i.imgur.com/APp2Mt6.png" 
+                     class="img-fluid" 
+                     style="max-height: 50px; width: auto; max-width: 100%;">
         <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
     `;
 }
