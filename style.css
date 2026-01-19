@@ -224,8 +224,142 @@ body {
 @media (max-width: 576px) {
     #notifDropdown {
         /* Menggeser agar pas di pojok kanan layar HP */
-        right: auto !important; 
+        right: -65px !important; 
         width: 260px !important;
         top: 45px !important;
     }
+}
+
+/* Menyesuaikan jarak ikon di header mobile */
+@media (max-width: 991px) {
+    .order-lg-3 .me-3 {
+        margin-right: 1rem !important;
+    }
+    
+    /* Memastikan ikon tetap terlihat putih di navbar hijau */
+    #darkModeIcon {
+        vertical-align: middle;
+    }
+}
+
+/* Warna standar saat Dark Mode aktif */
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-mode .card, 
+.dark-mode .list-group-item, 
+.dark-mode .modal-content,
+.dark-mode .card-header {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #333 !important;
+}
+
+.dark-mode .input-group-text, 
+.dark-mode .form-control {
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+}
+
+/* Warna placeholder (Cari nama santri...) saat Dark Mode */
+.dark-mode .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important; /* Putih agak transparan agar estetik */
+}
+
+/* Memastikan icon search juga ikut terang */
+.dark-mode .input-group-text i {
+    color: #ffffff !important;
+    opacity: 0.8;
+}
+
+.dark-mode .text-dark, 
+.dark-mode h4 {
+    color: #ffffff !important;
+}
+
+/* Mengubah background dropdown agar tidak putih mencolok */
+.dark-mode select, 
+.dark-mode .form-select {
+    background-color: #2b2b2b !important; /* Warna abu gelap seperti input cari */
+    color: #ffffff !important; /* Teks putih */
+    border-color: #444 !important;
+}
+
+/* Memastikan ikon panah dropdown di Bootstrap tetap terlihat putih */
+.dark-mode .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+/* Mengubah semua tombol putih menjadi gelap saat Dark Mode */
+.dark-mode .btn-light, 
+.dark-mode .btn-outline-secondary,
+.dark-mode .list-group-item {
+    background-color: #2b2b2b !important; /* Warna abu-abu gelap */
+    color: #ffffff !important; /* Teks putih */
+    border-color: #444 !important; /* Border tipis agar tetap terlihat dimensinya */
+}
+
+/* Khusus untuk tombol yang statusnya masih 'putih' secara manual */
+.dark-mode [style*="background-color: white"],
+.dark-mode [style*="background-color: #fff"] {
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
+}
+
+/* Efek saat tombol ditekan (Hover) agar tetap terlihat interaktif */
+.dark-mode .btn-light:hover {
+    background-color: #3d3d3d !important;
+}
+
+/* Menargetkan badge bg-light agar menjadi gelap */
+.dark-mode .badge.bg-light {
+    background-color: #2b2b2b !important; /* Hitam abu-abu */
+    color: #ffffff !important; /* Teks putih terang */
+    border-color: #444 !important; /* Border supaya tetap terlihat batasnya */
+}
+
+/* Mengubah text-muted (abu-abu tua) menjadi putih transparan agar terbaca */
+.dark-mode .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Jika Kakak ingin teks di dalam badge "Belum Bayar" benar-benar putih bersih */
+.dark-mode .badge.text-muted {
+    color: #ffffff !important;
+}
+
+/* Menghitamkan kotak Email Login Wali Santri */
+.dark-mode .bg-light.rounded.border {
+    background-color: #2b2b2b !important; /* Abu gelap konsisten */
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+/* Memastikan label Email tetap hijau tapi terbaca */
+.dark-mode .text-success {
+    color: #2ecc71 !important; /* Hijau yang sedikit lebih terang agar kontras */
+}
+
+/* Memastikan teks kecil di bawah input (Ganti email...) tetap putih transparan */
+.dark-mode .form-text {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Meratakan judul kecil (h6) Input Nilai Rapor */
+.dark-mode h6 {
+    color: #ffffff !important;
+}
+
+/* Garis pemisah (hr) agar tidak terlalu putih */
+.dark-mode hr {
+    border-top: 1px solid #444 !important;
+    opacity: 1;
+}
+
+/* Transisi halus saat ganti warna */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
 }

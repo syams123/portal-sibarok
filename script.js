@@ -15,6 +15,10 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+window.userName = ""; 
+window.parentName = "";
+window.currentRole = "";
+
 window.confirm = async function(message) {
     const result = await Swal.fire({
         text: message,
@@ -59,6 +63,19 @@ auth.onAuthStateChanged(async (user) => {
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 currentRole = userData.role;
+
+                const namaDariDB = userData.name || "User"; 
+
+    if (currentRole === 'parent') {
+        window.parentName = namaDariDB;
+    } else {
+        window.userName = namaDariDB;
+    }
+
+    // Tampilkan Dashboard & Sapaan
+    showPage('home'); 
+
+    if (loader) loader.classList.add('d-none');
 
                 // FILTER VERIFIKASI ADMIN
                 if (currentRole === 'admin' && userData.isApproved === false) {
@@ -174,6 +191,22 @@ async function showPage(page) {
         } else {
             notifArea.classList.add('d-none');
         }
+    }
+
+    // --- 2. PANGGIL SAPAAN DISINI ---
+    // Kita panggil fungsi greeting setiap kali halaman 'home', 'admin', atau 'parent' dibuka
+    if (page === 'home' || page === 'admin' || page === 'parent') {
+        let nameToDisplay = "";
+
+        if (currentRole === 'superadmin' || currentRole === 'ustadzah') {
+            // Jika variabel window.userName belum ada isinya, beri default "Pengajar"
+            nameToDisplay = window.userName || "Pengajar"; 
+        } else if (currentRole === 'parent') {
+            // Mengambil nama Wali yang login
+            nameToDisplay = window.parentName || "Wali Santri";
+        }
+
+        displayGreeting(nameToDisplay);
     }
 
     // --- 2. NAVIGASI HALAMAN ---
@@ -2150,3 +2183,59 @@ function closeZoom() {
         document.body.style.overflow = 'auto'; 
     }, 400);
 }
+
+function displayGreeting(name) {
+    const greetingElement = document.getElementById('greetingArea');
+    if (!greetingElement) return;
+
+    const now = new Date();
+    const hours = now.getHours();
+    let timeGreeting = "";
+
+    // Logika Sapaan Waktu
+    if (hours >= 5 && hours < 11) {
+        timeGreeting = "Selamat Pagi";
+    } else if (hours >= 11 && hours < 15) {
+        timeGreeting = "Selamat Siang";
+    } else if (hours >= 15 && hours < 18) {
+        timeGreeting = "Selamat Sore";
+    } else {
+        timeGreeting = "Selamat Malam";
+    }
+
+    // Penentuan Sapaan Berdasarkan Role
+    let roleGreeting = "";
+    if (currentRole === 'superadmin' || currentRole === 'ustadzah') {
+        roleGreeting = `Ustadzah ${name || 'Pengajar'}`;
+    } else if (currentRole === 'parent') {
+        roleGreeting = name || "Wali Santri";
+    } else {
+        roleGreeting = name || "User";
+    }
+
+    greetingElement.innerHTML = `<h6 class="fw mb-0">${timeGreeting} ${roleGreeting} ✨</h6>`;
+}
+
+function toggleDarkMode() {
+    const body = document.body;
+    const icon = document.getElementById('darkModeIcon');
+    
+    body.classList.toggle('dark-mode');
+    
+    if (body.classList.contains('dark-mode')) {
+        icon.classList.replace('fa-moon', 'fa-sun');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+// Cek pilihan user saat halaman pertama kali dibuka
+(function checkTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('darkModeIcon').classList.replace('fa-moon', 'fa-sun');
+    }
+})();

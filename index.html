@@ -34,7 +34,7 @@
         </div>
         
         <h5 class="fw-bold text-success mb-1" style="letter-spacing: 2px;">Si Barok</h5>
-        <small class="text-muted small">Loading...</small>
+        <small class="text-muted small">Bismillahirrahmanirrahim...</small>
     </div>
 </div>
 
@@ -185,28 +185,31 @@
         </a>
 
         <div class="d-flex align-items-center order-lg-3">
-            <div class="position-relative ms-3 me-2 me-lg-0 d-none" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
-                <i class="fas fa-bell fs-5 text-white"></i>
-                <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.65rem; border: 1px solid #198754;">0</span>
-                <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
-                    <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Konfirmasi Pembayaran</div>
-                    <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
-                </div>
-            </div>
+    <div class="ms-3" style="cursor: pointer;" onclick="toggleDarkMode()">
+        <i id="darkModeIcon" class="fas fa-moon fs-5 text-white"></i>
+    </div>
 
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
-
-        <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
-            <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0">
-                <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
-                <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('profile')">Profil</a></li>
-                <li class="nav-item"><a class="nav-link nav-custom-link text-warning fw-bold" href="#" onclick="logoutUser()">Keluar</a></li>
-            </ul>
+    <div class="position-relative ms-3 me-2 me-lg-0 d-none" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
+        <i class="fas fa-bell fs-5 text-white"></i>
+        <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.65rem; border: 1px solid #198754;">0</span>
+        <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
+            <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Konfirmasi Pembayaran</div>
+            <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
         </div>
     </div>
+
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="collapse navbar-collapse order-lg-2" id="navbarNav">
+    <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0">
+        <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
+        <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('profile')">Profil</a></li>
+        <li class="nav-item"><a class="nav-link nav-custom-link text-warning fw-bold" href="#" onclick="logoutUser()">Keluar</a></li>
+    </ul>
+</div>
 </nav>
 
 <div class="modal fade" id="registerAdminModal" tabindex="-1">
@@ -235,7 +238,7 @@
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-outline-pink w-100 mt-3">Daftar Sebagai Admin</button>
+                    <button type="submit" class="btn btn-outline-pink w-100 mt-3">Daftar</button>
                 </form>
             </div>
         </div>
@@ -276,16 +279,19 @@
 </div>
 
     <section id="adminDashboard" class="container mt-4 d-none">
-        <div class="mb-3" id="bulkActionArea">
+    <div class="mb-3" id="bulkActionArea"></div>
+    
+    <div id="greetingArea" class="mb-2 ms-1 fw" style="font-size: 0.9rem; line-height: 1.4;">
+        </div>
+
+    <div class="mb-3 mt-1">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="fas fa-search text-muted"></i>
+            </span>
+            <input type="text" id="searchSantri" class="form-control border-start-0" placeholder="Cari nama santri..." onkeyup="filterSantri()">
+        </div>
     </div>
-    <div class="mb-3 mt-3">
-    <div class="input-group">
-        <span class="input-group-text bg-white border-end-0">
-            <i class="fas fa-search text-muted"></i>
-        </span>
-        <input type="text" id="searchSantri" class="form-control border-start-0" placeholder="Cari nama santri..." onkeyup="filterSantri()">
-    </div>
-</div>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Data Santri</h4>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
