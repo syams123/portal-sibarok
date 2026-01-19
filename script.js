@@ -224,7 +224,7 @@ function setupProfilePage(role, userData, studentId = null) {
         // --- TAMPILAN WALI SANTRI ---
         areaPhoto.classList.add('d-none'); // Sembunyikan upload foto admin
         groupNamaWali.classList.remove('d-none');
-        labelNama.innerText = "Nama Santri (Identitas Resmi)";
+        labelNama.innerText = "Nama Santri";
         
         inputNamaSantri.readOnly = true;
         inputNamaSantri.style.backgroundColor = "#e9ecef";
@@ -699,6 +699,7 @@ async function sendBillWA() {
         Swal.fire("Peringatan", "Hanya Superadmin yang dapat mengirim tagihan.", "warning");
         return;
     }
+    
     const id = document.getElementById('gradeStudentId').value;
     const doc = await db.collection('students').doc(id).get();
     const data = doc.data();
@@ -708,8 +709,30 @@ async function sendBillWA() {
         return;
     }
 
-    const message = `Assalamu'alaikum, Bapak/Ibu Wali Santri dari *${data.name}*. \n\nMohon bantuannya untuk pelunasan Infaq bulan ini sebesar *Rp 100.000*. \n\nPembayaran dapat melalui transfer atau tunai ke Ustadzah. Terima kasih.`;
-    window.open(`https://wa.me/${data.parentPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    // Link Portal Kakak
+    const linkPortal = "https://tpqalmubarokarc.blogspot.com/p/portal-si-barok.html";
+
+    // Pesan dengan Edukasi Login
+    const message = `*Assalamu'alaikum Warahmatullahi Wabarakatuh*\n\n` +
+        `Ayah/Bunda dari Ananda *${data.name}*,\n` +
+        `Semoga senantiasa dalam keadaan sehat dan penuh keberkahan.\n\n` +
+        `Kami informasikan terkait administrasi *Infaq Bulanan* periode ini sebesar *Rp 100.000*.\n\n` +
+        `Untuk kemudahan Bapak/Ibu, detail tagihan dan metode pembayaran dapat diakses melalui *Portal SI-BAROK* pada link berikut:\n` +
+        `${linkPortal}\n\n` +
+        `*Cara Akses Portal:*\n` +
+        `1. Klik link di atas.\n` +
+        `2. Masukkan *Email* dan *Password* yang telah didaftarkan.\n` +
+        `3. Pilih menu Tagihan/Infaq untuk melakukan pembayaran.\n\n` +
+        `Kontribusi Ayah/Bunda sangat berarti bagi pendidikan Al-Qur'an santri di TPQ Al-Mubarok. Jazakumullah Khairan Katsiran.\n\n` +
+        `*Admin TPQ Al-Mubarok*`;
+
+    // Format nomor WhatsApp (Hapus karakter non-angka dan ubah 0 ke 62)
+    let phone = data.parentPhone.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+        phone = '62' + phone.substring(1);
+    }
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
 // --- FITUR WALI SANTRI ---
@@ -770,53 +793,66 @@ if (reportDiv) {
                 </div>`;
         }
 
-        // Tampilkan Catatan (Struktur Asli Kakak)
-        if(data.notes) {
-            contentHtml += `<div class="mt-2 p-2 bg-light rounded"><small><strong>Catatan:</strong> ${data.notes}</small></div>`;
-        }
+        // 1. Tentukan variabel Wali Kelas (Kosongkan dulu atau beri default)
+let namaWaliKelas = "";
+let linkTtdWaliKelas = "";
 
-        // AREA TTD (Struktur Asli Kakak - Digabung ke dalam contentHtml)
-        const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+// Mengambil data kelas dan memastikan tidak error jika data kosong
+const kelasSantri = data.class || "";
+
+// Menggunakan .includes agar tetap terbaca meski ada teks tambahan seperti "TK-SD"
+if (kelasSantri.includes("Sunan Giri")) {
+    namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+    linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
+} 
+else if (kelasSantri.includes("Sunan Ampel") || kelasSantri.includes("Sunan Kalijaga")) {
+    namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
+    linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
+} 
+else {
+    // Default jika kelas tidak dikenali
+    namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
+    linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
+}
+
+const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
 contentHtml += `
 <div id="signatureWrapper" class="mt-4">
-    <div class="row text-center align-items-end g-0">
+    <div class="row text-center align-items-start g-0">
         <div class="col-4">
             <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
-            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
-                <img src="https://i.imgur.com/APp2Mt6.png" 
-                     class="img-fluid" 
-                     style="max-height: 50px; width: auto; max-width: 100%;">
+            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto; max-width: 100%;">
             </div>
-            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
         </div>
 
         <div class="col-4">
             <p class="small mb-0" style="font-size: 0.7rem;">&nbsp;</p>
             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
-            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
-                <img src="https://i.imgur.com/pOg9hxn.png" 
-                     class="img-fluid" 
-                     style="max-height: 50px; width: auto; max-width: 100%;">
+            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto; max-width: 100%;">
             </div>
-            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
+            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
         </div>
 
         <div class="col-4">
-            <p class="small mb-1" style="font-size: 0.65rem;">Sidoarjo, ${tglSekarang}</p>
+            <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
-            
-            <div class="d-flex flex-column align-items-center">
-                <div id="boxSignatureArea" style="min-height: 80px; width: 100%; max-width: 150px; border-radius: 5px;" class="mb-2">
-                    </div>
-                
-                <p class="small fw-bold mb-0" style="font-size: 0.7rem; text-decoration: underline;">
-                    ${data.parentName || "( Nama Wali Santri )"}
-                </p>
+            <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto; max-width: 100%; filter: contrast(150%);">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
             </div>
+            <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">
+                ${data.parentName || "( Nama Wali Santri )"}
+            </p>
         </div>
-</div>`;
+    </div>
+</div>
+
+<div id="signatureInputArea"></div>
+`;
 
         // 2. Masukkan semua isi ke reportDiv (Menggunakan "=" bukan "+=" agar reset setiap update)
         reportDiv.innerHTML = contentHtml;
@@ -1137,20 +1173,48 @@ if (adminRegForm) {
 async function renderUstadzah() {
     const listContainer = document.getElementById('ustadzahList');
     if (!listContainer) return;
+    
+    // 1. Ambil data user yang sedang login saat ini
+    const currentUser = firebase.auth().currentUser;
+    const currentUserEmail = currentUser ? currentUser.email : null;
+
     try {
-        const snapshot = await db.collection('users').where('role', '==', 'admin').get();
+        // Ambil data user yang login dari database untuk memastikan ROLE-nya apa
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const myRole = userDoc.exists ? userDoc.data().role : 'admin';
+
+        const snapshot = await db.collection('users')
+            .where('role', 'in', ['admin', 'superadmin'])
+            .get();
+            
         listContainer.innerHTML = '';
         
         snapshot.forEach(doc => {
             const data = doc.data();
             
-            // --- LOGIKA FOTO AVATAR ---
-            // Mengambil foto asli atau inisial jika photoURL kosong
-            const linkFoto = data.photoURL || `https://ui-avatars.com/api/?name=${data.nama || 'U'}&background=random`;
-            
-            const deleteBtn = (currentRole === 'superadmin') 
-                ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteUstadzah('${doc.id}', '${data.nama}')"><i class="bi bi-trash"></i> Hapus</button>` 
+            // 2. Sembunyikan diri sendiri agar tidak menghapus akun sendiri secara tidak sengaja
+            if (currentUserEmail && data.email === currentUserEmail) {
+                return; 
+            }
+
+            // --- LOGIKA DINAMIS JABATAN ---
+            let keteranganJabatan = "Ustadzah";
+            if (data.email === "el.hadee98@gmail.com") {
+                keteranganJabatan = "IT Manajemen";
+            } else if (data.email === "phiecha.miph@gmail.com") {
+                keteranganJabatan = "Kepala TPQ / Ustadzah";
+            } else if (data.email === "salwa.kamilatuzz@gmail.com") {
+                keteranganJabatan = "Ustadzah";
+            }
+
+            // 3. LOGIKA TOMBOL HAPUS (Hanya muncul jika yang login adalah superadmin)
+            const deleteBtn = (myRole === 'superadmin') 
+                ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteUstadzah('${doc.id}', '${data.nama}')">
+                    <i class="bi bi-trash"></i> Hapus
+                   </button>` 
                 : '';
+
+            const linkFoto = data.photoURL || `https://ui-avatars.com/api/?name=${data.nama || 'U'}&background=random`;
 
             listContainer.innerHTML += `
                 <div class="col-md-6 col-lg-4 mb-3">
@@ -1164,7 +1228,10 @@ async function renderUstadzah() {
                             
                             <div class="flex-grow-1">
                                 <h6 class="mb-0 fw-bold" style="font-size: 0.9rem;">${data.nama}</h6>
-                                <small class="text-muted" style="font-size: 0.75rem;">${data.email}</small>
+                                <p class="text-muted mb-0" style="font-size: 0.75rem;">${data.email}</p>
+                                <span class="badge bg-light text-dark border mt-1" style="font-size: 0.65rem; font-weight: 500;">
+                                    <i class="bi bi-person-badge me-1"></i>${keteranganJabatan}
+                                </span>
                             </div>
 
                             <div class="ms-2">
@@ -1178,7 +1245,7 @@ async function renderUstadzah() {
 }
 
 async function deleteUstadzah(id, nama) {
-    if (await confirm(`Hapus akun ${nama}?`)) {
+    if (await confirm(`Hapus ${nama}?`)) {
         try {
             await db.collection('users').doc(id).delete();
             Swal.fire("Berhasil", "Akun berhasil dihapus.", "success");
@@ -1848,35 +1915,30 @@ function filterSantri() {
     });
 }
 
-// --- FUNGSI TAMBAHAN UNTUK LOGIKA TTD ---
+// --- FUNGSI TAMBAHAN UNTUK LOGIKA TTD (UPDATE) ---
 function checkSignatureStatus(studentId, data) {
-    const area = document.getElementById('boxSignatureArea');
-    if (!area) return;
-    
-    // Bersihkan area agar tidak dobel saat onSnapshot update
-    area.innerHTML = '';
+    const inputArea = document.getElementById('signatureInputArea');
+    if (!inputArea) return;
 
-    if (data.reportSignature) {
-        // Tampilan jika Wali Santri SUDAH tanda tangan
-        area.innerHTML = `
-            <div class="mt-2">
-                <img src="${data.reportSignature}" style="height: 60px; width: auto; filter: contrast(150%);">
-                <p class="small fw-bold mb-0 text-success" style="font-size: 10px;">
-            </div>`;
-    } else {
-        // Tampilan jika Wali Santri BELUM tanda tangan (Muncul Canvas)
-        area.innerHTML = `
-            <canvas id="signature-pad" class="bg-white border rounded shadow-sm w-100" style="height: 80px; touch-action: none;"></canvas>
-            <div class="d-flex gap-1 mt-2">
-                <button class="btn btn-light btn-sm flex-grow-1" style="font-size: 9px; border: 1px solid #ddd;" onclick="clearSignature()">Hapus</button>
-                <button class="btn btn-success btn-sm flex-grow-1" style="font-size: 9px;" onclick="saveSignature('${studentId}', '${data.name}')">Kirim TTD</button>
+    if (!data.reportSignature) {
+        inputArea.innerHTML = `
+            <div class="mt-4 p-2 border rounded bg-light" style="border: 1px solid #198754 !important;">
+                <p class="small fw-bold text-center mb-1" style="font-size: 11px;">Silakan Tanda Tangan di Bawah Ini:</p>
+                <div style="background: white; border: 1px dashed #ccc; border-radius: 5px;">
+                    <canvas id="signature-pad" style="width: 100%; height: 130px; touch-action: none;"></canvas>
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-sm btn-outline-danger w-100" style="font-size: 10px;" onclick="clearSignature()">Hapus</button>
+                    <button class="btn btn-sm btn-success w-100" style="font-size: 10px;" onclick="saveSignature('${studentId}', '${data.name}')">Kirim TTD</button>
+                </div>
             </div>`;
         
-        // Inisialisasi library SignaturePad pada canvas yang baru dibuat
         const canvas = document.getElementById('signature-pad');
-        window.signaturePad = new SignaturePad(canvas);
+        if (canvas) window.signaturePad = new SignaturePad(canvas);
+    } else {
+        inputArea.innerHTML = ''; // Hilangkan area input jika sudah TTD
     }
-}
+}   
 
 // Fungsi Menghapus Goresan TTD
 function clearSignature() {
@@ -1998,6 +2060,11 @@ async function tandaiDibaca(id, type, nama) {
             confirmButtonText: 'Ya, Verifikasi',
             cancelButtonText: 'Batal'
         });
+
+        if (!result.isConfirmed) {
+                return;
+            }
+
             await db.collection('students').doc(id).update({
                 ttdNotifRead: true // Field penanda agar tidak muncul lagi di lonceng
             });
@@ -2045,4 +2112,41 @@ function matikanLoader() {
     if (loader) {
         loader.style.display = 'none';
     }
+}
+
+function openZoom(source) {
+    const container = document.getElementById('zoomContainer');
+    const img = document.getElementById('zoomImage');
+    
+    // 1. Masukkan sumber foto dulu
+    img.src = source;
+
+    // 2. Pastikan gambar sudah siap sebelum ditampilkan
+    img.onload = function() {
+        container.style.display = 'flex';
+        
+        // Beri jeda sangat singkat agar browser sempat merender display flex
+        setTimeout(() => {
+            container.style.opacity = '1';
+            img.style.opacity = '1';
+            img.style.transform = 'scale(1)';
+        }, 20);
+    };
+
+    document.body.style.overflow = 'hidden'; 
+}
+
+function closeZoom() {
+    const container = document.getElementById('zoomContainer');
+    const img = document.getElementById('zoomImage');
+    
+    // Balikkan animasi (Fade Out & Scale Down)
+    container.style.opacity = '0';
+    img.style.opacity = '0';
+    img.style.transform = 'scale(0.5)';
+    
+    setTimeout(() => {
+        container.style.display = 'none';
+        document.body.style.overflow = 'auto'; 
+    }, 400);
 }

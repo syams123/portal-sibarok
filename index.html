@@ -188,7 +188,7 @@
             <div class="position-relative ms-3 me-2 me-lg-0 d-none" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
                 <i class="fas fa-bell fs-5 text-white"></i>
                 <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.65rem; border: 1px solid #198754;">0</span>
-                <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000;">
+                <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
                     <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Konfirmasi Pembayaran</div>
                     <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
                 </div>
@@ -304,7 +304,7 @@
         </div>
 
     <div class="mt-5 mb-4">
-        <h4 class="mb-3">Daftar Ustadzah</h4>
+        <h4 class="mb-3">Kepengurusan TPQ</h4>
         <div id="ustadzahList" class="row g-3">
             </div>
     </div>
@@ -314,7 +314,7 @@
     <section id="parentDashboard" class="container mt-4 d-none">
         <div class="card shadow mb-4">
             <div class="card-body text-center">
-                <img id="childPhotoDisplay" src="" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                <img id="childPhotoDisplay" src="" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;" onclick="openZoom(this.src)">
                 <h4 id="childNameDisplay">Nama Santri</h4>
                 <p class="text-muted" id="childClassDisplay">Kelas</p>
                 <span class="badge bg-success" id="childJilidDisplay"></span>
@@ -559,6 +559,10 @@
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
   </div>
+</div>
+
+<div id="zoomContainer" onclick="closeZoom()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; backdrop-filter: blur(8px); justify-content: center; align-items: center;">
+    <img id="zoomImage" src="" style="width: 280px; height: 280px; border-radius: 50%; object-fit: cover; transform: scale(0); transition: transform 0.3s ease;">
 </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
