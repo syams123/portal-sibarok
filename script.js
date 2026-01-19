@@ -775,8 +775,27 @@ if (reportDiv) {
             contentHtml += `<div class="mt-2 p-2 bg-light rounded"><small><strong>Catatan:</strong> ${data.notes}</small></div>`;
         }
 
-        // AREA TTD (Struktur Asli Kakak - Digabung ke dalam contentHtml)
-        const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        // 1. Tentukan variabel TTD Wali Kelas secara dinamis
+let waliKelasHtml = "";
+
+// Cek apakah santri dari kelas Sunan Giri
+if (data.class === "Sunan Giri") {
+    waliKelasHtml = `
+        <img src="https://i.imgur.com/pOg9hxn.png" 
+             class="img-fluid" 
+             style="max-height: 50px; width: auto; max-width: 100%;">
+        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
+    `;
+} else {
+    // Untuk Sunan Ampel & Sunan Kalijaga (Tanpa Gambar TTD, hanya Nama Kepala TPQ)
+    waliKelasHtml = `
+        <div style="min-height: 50px;"></div> 
+        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+    `;
+}
+
+// 2. Masukkan ke dalam struktur HTML Kakak
+const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
 contentHtml += `
 <div id="signatureWrapper" class="mt-4">
@@ -796,26 +815,22 @@ contentHtml += `
             <p class="small mb-0" style="font-size: 0.7rem;">&nbsp;</p>
             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
             <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
-                <img src="https://i.imgur.com/pOg9hxn.png" 
-                     class="img-fluid" 
-                     style="max-height: 50px; width: auto; max-width: 100%;">
+                ${waliKelasHtml} 
             </div>
-            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
         </div>
 
         <div class="col-4">
             <p class="small mb-1" style="font-size: 0.65rem;">Sidoarjo, ${tglSekarang}</p>
             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
-            
             <div class="d-flex flex-column align-items-center">
                 <div id="boxSignatureArea" style="min-height: 80px; width: 100%; max-width: 150px; border-radius: 5px;" class="mb-2">
                     </div>
-                
                 <p class="small fw-bold mb-0" style="font-size: 0.7rem; text-decoration: underline;">
                     ${data.parentName || "( Nama Wali Santri )"}
                 </p>
             </div>
         </div>
+    </div>
 </div>`;
 
         // 2. Masukkan semua isi ke reportDiv (Menggunakan "=" bukan "+=" agar reset setiap update)
