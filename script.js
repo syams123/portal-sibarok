@@ -775,69 +775,48 @@ if (reportDiv) {
             contentHtml += `<div class="mt-2 p-2 bg-light rounded"><small><strong>Catatan:</strong> ${data.notes}</small></div>`;
         }
 
-        // 1. Tentukan variabel TTD Wali Kelas secara dinamis
-let waliKelasHtml = "";
-
-// Cek Kelas untuk menentukan TTD dan Nama Wali Kelas
-if (data.class === "Sunan Giri") {
-    // Khusus Sunan Giri: Ustadzah Salwa
-    waliKelasHtml = `
-        <img src="https://i.imgur.com/pOg9hxn.png" 
-             class="img-fluid" 
-             style="max-height: 50px; width: auto; max-width: 100%;">
-        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
-    `;
-} else if (data.class === "Sunan Ampel" || data.class === "Sunan Kalijaga") {
-    // Sunan Ampel & Kalijaga: TTD Sama dengan Kepala TPQ (Ibu Hafi)
-    waliKelasHtml = `
-        <img src="https://i.imgur.com/APp2Mt6.png" 
-             class="img-fluid" 
-             style="max-height: 50px; width: auto; max-width: 100%;">
-        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
-    `;
-} else {
-    // Jika ada kelas lain, kolom TTD dikosongkan dulu
-    waliKelasHtml = `
-        <div style="min-height: 50px;"></div>
-        <p class="small fw-bold mb-0" style="font-size: 0.7rem;">( Wali Kelas )</p>
-    `;
-}
-
-// 2. Struktur HTML Kakak (Bagian Wali Kelas sudah menggunakan variabel di atas)
-const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        // AREA TTD (Struktur Asli Kakak - Digabung ke dalam contentHtml)
+        const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
 contentHtml += `
-<div id="signatureWrapper" class="mt-4" style="border-top: 1px solid #eee; padding-top: 15px;">
-    <div class="row text-center g-0" style="align-items: flex-start;">
-        
+<div id="signatureWrapper" class="mt-4">
+    <div class="row text-center align-items-end g-0">
         <div class="col-4">
-            <p style="font-size: 0.55rem; margin-bottom: 2px;">Mengetahui,</p>
-            <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 5px;">Kepala TPQ</p>
-            <div style="height: 45px;" class="d-flex align-items-center justify-content-center mb-1">
-                <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 40px; width: auto; max-width: 90%;">
+            <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
+            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
+            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
+                <img src="https://i.imgur.com/APp2Mt6.png" 
+                     class="img-fluid" 
+                     style="max-height: 50px; width: auto; max-width: 100%;">
             </div>
-            <p class="fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem; line-height: 1.1;">Hafi Dzotur Rofi'ah, Lc.</p>
+            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
         </div>
 
         <div class="col-4">
-            <p style="font-size: 0.55rem; margin-bottom: 2px;">&nbsp;</p>
-            <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 5px;">Wali Kelas</p>
-            ${isiKolomWaliKelas}
+            <p class="small mb-0" style="font-size: 0.7rem;">&nbsp;</p>
+            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
+            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
+                <img src="https://i.imgur.com/pOg9hxn.png" 
+                     class="img-fluid" 
+                     style="max-height: 50px; width: auto; max-width: 100%;">
+            </div>
+            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
         </div>
 
         <div class="col-4">
-            <p style="font-size: 0.55rem; margin-bottom: 2px;">Sidoarjo, ${tglSekarang}</p>
-            <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 5px;">Wali Santri,</p>
-            <div style="height: 45px;" class="d-flex align-items-center justify-content-center mb-1">
-                <div id="displaySignatureResult">
+            <p class="small mb-1" style="font-size: 0.65rem;">Sidoarjo, ${tglSekarang}</p>
+            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
+            
+            <div class="d-flex flex-column align-items-center">
+                <div id="boxSignatureArea" style="min-height: 80px; width: 100%; max-width: 150px; border-radius: 5px;" class="mb-2">
                     </div>
+                
+                <p class="small fw-bold mb-0" style="font-size: 0.7rem; text-decoration: underline;">
+                    ${data.parentName || "( Nama Wali Santri )"}
+                </p>
             </div>
-            <p class="fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem; line-height: 1.1;">
-                ${data.parentName || "( Nama Wali )"}
-            </p>
         </div>
-    </div>
-</div>
+</div>`;
 
         // 2. Masukkan semua isi ke reportDiv (Menggunakan "=" bukan "+=" agar reset setiap update)
         reportDiv.innerHTML = contentHtml;
@@ -1878,40 +1857,25 @@ function checkSignatureStatus(studentId, data) {
     area.innerHTML = '';
 
     if (data.reportSignature) {
-    // 1. Tampilan jika Wali Santri SUDAH tanda tangan (Hasil TTD Sejajar)
-    area.innerHTML = `
-        <div class="d-flex flex-column align-items-center justify-content-center" style="height: 50px;">
-            <img src="${data.reportSignature}" style="max-height: 45px; width: auto; max-width: 100%; filter: contrast(150%);">
-        </div>`;
-} else {
-    // 2. Tampilan jika Wali Santri BELUM tanda tangan
-    // Kita buat kolom di atas "Bersih" (hanya placeholder), lalu Canvas di bawahnya
-    area.innerHTML = `
-        <div class="d-flex align-items-center justify-content-center" style="height: 50px; border: 1px dashed #ccc; border-radius: 4px; background: #fafafa;">
-            <span style="font-size: 8px; color: #999;">TTD di bawah ↓</span>
-        </div>
-        
-        <div class="mt-3 p-2 bg-white border rounded shadow-sm" style="position: absolute; width: 200px; right: 0; z-index: 100; border: 1px solid #198754 !important;">
-            <p class="mb-1 fw-bold text-center" style="font-size: 9px;">Sentuh & Tanda Tangan:</p>
-            <canvas id="signature-pad" class="bg-light" style="width: 100%; height: 120px; touch-action: none; border-radius: 4px;"></canvas>
+        // Tampilan jika Wali Santri SUDAH tanda tangan
+        area.innerHTML = `
+            <div class="mt-2">
+                <img src="${data.reportSignature}" style="height: 60px; width: auto; filter: contrast(150%);">
+                <p class="small fw-bold mb-0 text-success" style="font-size: 10px;">
+            </div>`;
+    } else {
+        // Tampilan jika Wali Santri BELUM tanda tangan (Muncul Canvas)
+        area.innerHTML = `
+            <canvas id="signature-pad" class="bg-white border rounded shadow-sm w-100" style="height: 80px; touch-action: none;"></canvas>
             <div class="d-flex gap-1 mt-2">
                 <button class="btn btn-light btn-sm flex-grow-1" style="font-size: 9px; border: 1px solid #ddd;" onclick="clearSignature()">Hapus</button>
                 <button class="btn btn-success btn-sm flex-grow-1" style="font-size: 9px;" onclick="saveSignature('${studentId}', '${data.name}')">Kirim TTD</button>
-            </div>
-        </div>`;
-    
-    // Inisialisasi SignaturePad
-    setTimeout(() => {
+            </div>`;
+        
+        // Inisialisasi library SignaturePad pada canvas yang baru dibuat
         const canvas = document.getElementById('signature-pad');
-        if (canvas) {
-            // Menyesuaikan ukuran canvas secara internal agar TTD tidak pecah
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-            window.signaturePad = new SignaturePad(canvas);
-        }
-    }, 100);
+        window.signaturePad = new SignaturePad(canvas);
+    }
 }
 
 // Fungsi Menghapus Goresan TTD
