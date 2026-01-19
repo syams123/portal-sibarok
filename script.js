@@ -775,45 +775,37 @@ if (reportDiv) {
             contentHtml += `<div class="mt-2 p-2 bg-light rounded"><small><strong>Catatan:</strong> ${data.notes}</small></div>`;
         }
 
-        // 1. Tentukan variabel TTD Wali Kelas secara dinamis
-let waliKelasHtml = "";
+        // 1. Pastikan logika penentuan isi kolom Wali Kelas sudah benar
+let isiKolomWaliKelas = "";
 
-// Cek Kelas untuk menentukan TTD dan Nama Wali Kelas
 if (data.class === "Sunan Giri") {
-    // Khusus Sunan Giri: Ustadzah Salwa
-    waliKelasHtml = `
-        <img src="https://i.imgur.com/pOg9hxn.png" 
-             class="img-fluid" 
-             style="max-height: 50px; width: auto; max-width: 100%;">
-        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Salwa Kamilatuz Zakiyah</p>
-    `;
-} else if (data.class === "Sunan Ampel" || data.class === "Sunan Kalijaga") {
-    // Sunan Ampel & Kalijaga: TTD Sama dengan Kepala TPQ (Ibu Hafi)
-    waliKelasHtml = `
-        <img src="https://i.imgur.com/APp2Mt6.png" 
-             class="img-fluid" 
-             style="max-height: 50px; width: auto; max-width: 100%;">
-        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+    isiKolomWaliKelas = `
+        <div style="height: 50px;" class="d-flex align-items-center justify-content-center">
+            <img src="https://i.imgur.com/pOg9hxn.png" style="max-height: 45px; width: auto; max-width: 100%;">
+        </div>
+        <p class="fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem; line-height: 1.2;">Salwa Kamilatuz Zakiyah</p>
     `;
 } else {
-    // Jika ada kelas lain, kolom TTD dikosongkan dulu
-    waliKelasHtml = `
-        <div style="min-height: 50px;"></div>
-        <p class="small fw-bold mb-0" style="font-size: 0.7rem;">( Wali Kelas )</p>
+    // Sunan Ampel & Sunan Kalijaga menggunakan TTD Ibu Hafi
+    isiKolomWaliKelas = `
+        <div style="height: 50px;" class="d-flex align-items-center justify-content-center">
+            <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto; max-width: 100%;">
+        </div>
+        <p class="fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem; line-height: 1.2;">Hafi Dzotur Rofi'ah, Lc.</p>
     `;
 }
 
-// 2. Struktur HTML Kakak (Bagian Wali Kelas sudah menggunakan variabel di atas)
-const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-
+// 2. Struktur HTML Utama
 contentHtml += `
 <div id="signatureWrapper" class="mt-4" style="border-top: 1px solid #eee; padding-top: 10px;">
-    <div class="row text-center align-items-start g-0"> <div class="col-4 px-1">
+    <div class="row text-center align-items-start g-0">
+        
+        <div class="col-4 px-1">
             <p style="font-size: 0.55rem; margin-bottom: 2px;">Mengetahui,</p>
             <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 8px;">Kepala TPQ</p>
             <div style="height: 50px;" class="d-flex align-items-center justify-content-center">
                 <img src="https://i.imgur.com/APp2Mt6.png" 
-                     style="max-height: 45px; width: auto; object-fit: contain;">
+                     style="max-height: 45px; width: auto; max-width: 100%; object-fit: contain;">
             </div>
             <p class="fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem; line-height: 1.2;">
                 Hafi Dzotur Rofi'ah, Lc.
@@ -822,9 +814,7 @@ contentHtml += `
 
         <div class="col-4 px-1">
             <p style="font-size: 0.55rem; margin-bottom: 2px;">&nbsp;</p> <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 8px;">Wali Kelas</p>
-            <div style="height: 50px;" class="d-flex align-items-center justify-content-center">
-                ${waliKelasHtml} 
-            </div>
+            ${isiKolomWaliKelas}
         </div>
 
         <div class="col-4 px-1">
@@ -838,6 +828,7 @@ contentHtml += `
                 </p>
             </div>
         </div>
+
     </div>
 </div>`;
 
