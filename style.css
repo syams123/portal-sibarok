@@ -224,7 +224,7 @@ body {
 @media (max-width: 576px) {
     #notifDropdown {
         /* Menggeser agar pas di pojok kanan layar HP */
-        right: -65px !important; 
+        right: -40px !important; 
         width: 260px !important;
         top: 45px !important;
     }
