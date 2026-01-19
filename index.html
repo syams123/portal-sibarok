@@ -185,20 +185,23 @@
         </a>
 
         <div class="d-flex align-items-center order-lg-3">
-    <div class="ms-3" style="cursor: pointer;" onclick="toggleDarkMode()">
-        <i id="darkModeIcon" class="fas fa-moon fs-5 text-white"></i>
-    </div>
+    <div class="d-flex align-items-center me-2">
+        <div class="px-2" style="cursor: pointer;" onclick="toggleDarkMode()">
+            <i id="darkModeIcon" class="fas fa-moon fs-5 text-white"></i>
+        </div>
 
-    <div class="position-relative ms-3 me-2 me-lg-0 d-none" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
-        <i class="fas fa-bell fs-5 text-white"></i>
-        <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.65rem; border: 1px solid #198754;">0</span>
-        <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
-            <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Konfirmasi Pembayaran</div>
-            <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
+        <div class="position-relative px-2 d-none" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
+            <i class="fas fa-bell fs-5 text-white"></i>
+            <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.65rem; border: 1px solid #198754;">0</span>
+            
+            <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
+                <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Konfirmasi Pembayaran</div>
+                <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
+            </div>
         </div>
     </div>
 
-    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <button class="navbar-toggler border-0 shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
     </button>
 </div>

@@ -411,3 +411,25 @@ body.dark-mode {
 body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* Memaksa elemen di header kanan tetap horizontal di semua browser */
+.order-lg-3 {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important; /* Mencegah ikon turun ke bawah */
+}
+
+/* Mengatur ukuran toggler agar tidak terlalu lebar di Opera */
+.navbar-toggler {
+    width: 34px !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Penyesuaian ikon agar simetris */
+#darkModeIcon, .fa-bell {
+    vertical-align: middle;
+}
