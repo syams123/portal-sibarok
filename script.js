@@ -297,39 +297,44 @@ db.collection('students').doc(studentId).onSnapshot((doc) => {
     const avatar = userData.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg';
 
     // Masukkan HTML Kartu ke Container (Menggunakan "=" agar me-reset isi setiap update data)
-    cardContainer.innerHTML = `
-        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-left: 5px solid #28a745;">
-            <div class="card-body p-4 text-start">
-                <div class="row align-items-center">
-                    <div class="col-4 text-center">
-                        <img src="${userData.photo || avatar}" class="rounded-circle shadow-sm" style="width: 85px; height: 85px; object-fit: cover; border: 3px solid #198754;">
-                        <div class="mt-2">
-                            <small class="text-muted d-block" style="font-size: 0.6rem; font-weight: bold;">NIS: ${userData.nis || '-'}</small>
-                        </div>
-                    </div>
-                    <div class="col-5">
-                        <h5 class="fw-bold mb-0 text-dark">${userData.name}</h5>
-                        <small class="text-success fw-bold d-block mb-2">Otw Al-Qur'an! 📖</small>
-                        <div class="progress" style="height: 8px; border-radius: 10px; background-color: #e9ecef;">
-                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
-                                 role="progressbar" 
-                                 style="width: ${progress}%" 
-                                 aria-valuenow="${progress}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-1 small text-muted" style="font-size: 0.7rem;">
-                            <span>${displayJilid}</span>
-                            <span>Al-Qur'an</span>
-                        </div>
-                    </div>
-                    <div class="col-3 text-center">
-                        <div id="qrcode" class="bg-white p-1 d-inline-block shadow-sm" style="border-radius: 8px;"></div>
+    const isDark = document.body.classList.contains('dark-mode');
+
+cardContainer.innerHTML = `
+    <div class="card shadow-sm mb-4 border-0 card-santri-dynamic" 
+         style="border-radius: 15px; 
+                background: ${isDark ? 'linear-gradient(135deg, #1e1e1e 0%, #142b1a 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)'}; 
+                border-left: 5px solid #28a745;">
+        <div class="card-body p-4 text-start">
+            <div class="row align-items-center">
+                <div class="col-4 text-center">
+                    <img src="${userData.photo || avatar}" class="rounded-circle shadow-sm" style="width: 85px; height: 85px; object-fit: cover; border: 3px solid #198754;">
+                    <div class="mt-2">
+                        <small class="${isDark ? 'text-light' : 'text-muted'} d-block" style="font-size: 0.6rem; font-weight: bold;">NIS: ${userData.nis || '-'}</small>
                     </div>
                 </div>
+                <div class="col-5">
+                    <h5 class="fw-bold mb-0 ${isDark ? 'text-white' : 'text-dark'}">${userData.name}</h5>
+                    <small class="text-success fw-bold d-block mb-2">Otw Al-Qur'an! 📖</small>
+                    <div class="progress" style="height: 8px; border-radius: 10px; background-color: ${isDark ? '#333' : '#e9ecef'};">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             style="width: ${progress}%" 
+                             aria-valuenow="${progress}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1 small ${isDark ? 'text-light' : 'text-muted'}" style="font-size: 0.7rem;">
+                        <span>${displayJilid}</span>
+                        <span>Al-Qur'an</span>
+                    </div>
+                </div>
+                <div class="col-3 text-center">
+                    <div id="qrcode" class="bg-white p-1 d-inline-block shadow-sm" style="border-radius: 8px;"></div>
+                </div>
             </div>
-        </div>`;
+        </div>
+    </div>`;
 
     // Re-generate QR Code setelah HTML kartu diupdate (jika menggunakan library qrcode)
     if (typeof generateQRCode === "function") {

@@ -359,6 +359,54 @@ body.dark-mode {
     opacity: 1;
 }
 
+/* Warna kartu santri saat Dark Mode */
+.dark-mode .card-santri-dynamic {
+    background: linear-gradient(135deg, #1e1e1e 0%, #142b1a 100%) !important;
+}
+
+.dark-mode .card-santri-dynamic h5 {
+    color: #ffffff !important;
+}
+
+.dark-mode .card-santri-dynamic small, 
+.dark-mode .card-santri-dynamic span {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Background Progress Bar agar tidak terlalu terang */
+.dark-mode .card-santri-dynamic .progress {
+    background-color: #333 !important;
+}
+
+/* QR Code tetap background putih sedikit agar mudah di-scan */
+.dark-mode #qrcode {
+    background-color: #ffffff !important;
+    padding: 4px;
+}
+
+/* --- MODE TERANG (Default) --- */
+.card-santri-dynamic {
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+}
+.text-card-title { color: #212529 !important; } /* Hitam saat terang */
+.text-card-muted { color: #6c757d !important; } /* Abu-abu saat terang */
+.custom-progress { background-color: #e9ecef !important; }
+.qrcode-wrapper { background-color: #ffffff !important; }
+
+/* --- MODE GELAP --- */
+.dark-mode .card-santri-dynamic {
+    background: linear-gradient(135deg, #1e1e1e 0%, #142b1a 100%) !important;
+}
+.dark-mode .text-card-title { 
+    color: #ffffff !important; /* Putih saat gelap */
+}
+.dark-mode .text-card-muted { 
+    color: rgba(255, 255, 255, 0.7) !important; /* Putih pudar saat gelap */
+}
+.dark-mode .custom-progress { 
+    background-color: #333 !important; 
+}
+
 /* Transisi halus saat ganti warna */
 body {
     transition: background-color 0.3s ease, color 0.3s ease;
