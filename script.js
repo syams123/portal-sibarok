@@ -2112,8 +2112,21 @@ async function tandaiDibaca(id, type, nama) {
 }
 
 async function forgotPassword() {
-    const email = prompt("Masukkan Email terdaftar untuk reset password:");
-    
+    // 1. Ganti prompt() dengan Swal.fire input
+    const { value: email } = await Swal.fire({
+        title: 'Lupa Password?',
+        text: 'Masukkan Email terdaftar untuk reset password:',
+        input: 'email', // Validasi format email otomatis
+        inputPlaceholder: 'nama@email.com',
+        showCancelButton: true,
+        confirmButtonText: 'Kirim Link Reset',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#198754', // Hijau menyesuaikan TPQ Al-Mubarok
+        // Pastikan SweetAlert mengikuti Dark Mode jika sedang aktif
+        background: document.body.classList.contains('dark-mode') ? '#1e1e1e' : '#fff',
+        color: document.body.classList.contains('dark-mode') ? '#fff' : '#000',
+    });
+
     // Jika user menekan cancel atau tidak mengisi email
     if (!email) return;
 
@@ -2124,7 +2137,12 @@ async function forgotPassword() {
         await auth.sendPasswordResetEmail(email);
         
         if (loader) loader.classList.add('d-none');
-        Swal.fire("Berhasil", "Link reset password telah dikirim ke email.", "success");
+        Swal.fire({
+            title: "Berhasil",
+            text: "Link reset password telah dikirim ke email. Silakan cek Inbox atau folder Spam.",
+            icon: "success",
+            confirmButtonColor: '#198754'
+        });
     } catch (error) {
         if (loader) loader.classList.add('d-none');
         
@@ -2135,7 +2153,7 @@ async function forgotPassword() {
             msg = "Format email salah!";
         }
         
-        Swal.fire("Error", "Error: " + error.message, "error");
+        Swal.fire("Error", msg, "error");
     }
 }
 
