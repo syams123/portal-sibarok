@@ -807,35 +807,35 @@ if (data.class === "Sunan Giri") {
 const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
 contentHtml += `
-<div id="signatureWrapper" class="mt-4">
-    <div class="row text-center align-items-end g-0">
-        <div class="col-4">
-            <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
-            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
-            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center">
+<div id="signatureWrapper" class="mt-4" style="border-top: 1px solid #eee; pt-3;">
+    <div class="row text-center align-items-end g-1"> <div class="col-4 px-1">
+            <p style="font-size: 0.6rem; margin-bottom: 2px;">Mengetahui,</p>
+            <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 5px;">Kepala TPQ</p>
+            <div style="height: 45px;" class="d-flex align-items-center justify-content-center">
                 <img src="https://i.imgur.com/APp2Mt6.png" 
-                     class="img-fluid" 
-                     style="max-height: 50px; width: auto; max-width: 100%;">
+                     style="max-height: 40px; width: auto; object-fit: contain;">
             </div>
-            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.7rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+            <p class="fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem; line-height: 1.1;">
+                Hafi Dzotur Rofi'ah, Lc.
+            </p>
         </div>
 
-        <div class="col-4">
-            <p class="small mb-0" style="font-size: 0.7rem;">&nbsp;</p>
-            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
-            <div style="min-height: 60px;" class="d-flex align-items-center justify-content-center flex-column">
+        <div class="col-4 px-1">
+            <p style="font-size: 0.6rem; margin-bottom: 2px;">&nbsp;</p>
+            <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 5px;">Wali Kelas</p>
+            <div style="height: 45px;" class="d-flex align-items-center justify-content-center">
                 ${waliKelasHtml} 
             </div>
-        </div>
+            </div>
 
-        <div class="col-4">
-            <p class="small mb-1" style="font-size: 0.65rem;">Sidoarjo, ${tglSekarang}</p>
-            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
+        <div class="col-4 px-1">
+            <p style="font-size: 0.55rem; margin-bottom: 2px;">Sidoarjo, ${tglSekarang}</p>
+            <p class="fw-bold" style="font-size: 0.65rem; margin-bottom: 5px;">Wali Santri,</p>
             <div class="d-flex flex-column align-items-center">
-                <div id="boxSignatureArea" style="min-height: 80px; width: 100%; max-width: 150px;" class="mb-2">
+                <div id="boxSignatureArea" style="min-height: 45px; width: 100%; border: 1px dashed #ccc; border-radius: 4px;" class="mb-1">
                     </div>
-                <p class="small fw-bold mb-0" style="font-size: 0.7rem; text-decoration: underline;">
-                    ${data.parentName || "( Nama Wali Santri )"}
+                <p class="fw-bold mb-0" style="font-size: 0.6rem; text-decoration: underline; line-height: 1.1;">
+                    ${data.parentName || "( Nama Wali )"}
                 </p>
             </div>
         </div>
