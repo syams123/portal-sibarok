@@ -95,58 +95,42 @@ auth.onAuthStateChanged(async (user) => {
                 }
 
                 // Alert sukses otomatis saat disetujui Superadmin
-                if (currentRole === 'admin' && userData.isApproved === true) {
-                    const alertKey = `alertApprovedDone_${userData.email}`;
-                    const sudahAlert = localStorage.getItem(alertKey);
+if (currentRole === 'admin' && userData.isApproved === true) {
+    const alertKey = `alertApprovedDone_${userData.email}`;
+    const sudahAlert = localStorage.getItem(alertKey);
 
-                    if (!sudahAlert) {
-                        // Kunci status di memori browser SEBELUM memanggil Swal agar tidak muncul berulang
-                        localStorage.setItem(alertKey, 'true');
-                        
-                        Swal.fire({
-                            title: "Berhasil",
-                            text: "Alhamdulillah ustadzah disetujui!",
-                            icon: "success",
-                            confirmButtonColor: '#198754'
-                        });
-                    }
-                }
-
-                // --- BAGIAN PENTING: MATIKAN LISTENER AGAR TIDAK LOOP ---
-                if (unsubscribe) unsubscribe();
-                
-                // SEMBUNYIKAN LOGIN, TAMPILKAN NAV
-                document.getElementById('loginSection').classList.add('d-none');
-                document.getElementById('mainNavbar').classList.remove('d-none');
-                
-                if (currentRole === 'admin' || currentRole === 'superadmin') {
-                    showPage('admin');
-                    await renderStudents();
-                    await renderUstadzah();
-                    if (loader) loader.classList.add('d-none');
-                } else {
-                    showPage('parent');
-                    await loadChildData(user.email);
-                    await listenPaymentStatus(user.email);
-                    if (loader) loader.classList.add('d-none');
-                }
-            } else {
-                Swal.fire("Error", "Data user tidak ditemukan.", "error");
-                await auth.signOut();
-                if (loader) loader.classList.add('d-none');
-            }
+    if (!sudahAlert) {
+        // Kunci status di memori browser SEBELUM memanggil Swal agar tidak muncul berulang
+        localStorage.setItem(alertKey, 'true');
+        
+        // Menggunakan userData.gelar agar otomatis memanggil Ustadz atau Ustadzah
+        Swal.fire({
+            title: "Berhasil",
+            text: `Alhamdulillah ${userData.gelar || 'ustadzah'} disetujui!`,
+            icon: "success",
+            confirmButtonColor: '#198754'
         });
-
-        } catch (error) {
-            console.error("Error Auth:", error);
-            if (loader) loader.classList.add('d-none');
-        }
-    } else {
-        document.getElementById('loginSection').classList.remove('d-none');
-        document.getElementById('mainNavbar').classList.add('d-none');
-        hideAllPages();
-        if (loader) loader.classList.add('d-none');
     }
+}
+
+// --- BAGIAN PENTING: MATIKAN LISTENER AGAR TIDAK LOOP ---
+if (unsubscribe) unsubscribe();
+
+// SEMBUNYIKAN LOGIN, TAMPILKAN NAV
+document.getElementById('loginSection').classList.add('d-none');
+document.getElementById('mainNavbar').classList.remove('d-none');
+
+if (currentRole === 'admin' || currentRole === 'superadmin') {
+    showPage('admin');
+    await renderStudents();
+    await renderUstadzah();
+    if (loader) loader.classList.add('d-none');
+} else {
+    showPage('parent');
+    await loadChildData(user.email);
+    await listenPaymentStatus(user.email);
+    if (loader) loader.classList.add('d-none');
+}
 });
 
 // Login Function
@@ -1234,14 +1218,22 @@ if (adminRegForm) {
         const nama = document.getElementById('regAdminNama').value;
         const email = document.getElementById('regAdminEmail').value;
         const password = document.getElementById('regAdminPassword').value;
+        // Tambahkan pengambilan nilai jenis kelamin
+        const jenisKelamin = document.getElementById('regAdminGender').value; 
+        const gelar = (jenisKelamin === 'Pria') ? 'Ustadz' : 'Ustadzah';
 
         try {
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             await db.collection('users').doc(userCredential.user.uid).set({
-                nama: nama, email: email, role: 'admin', isApproved: false,
+                nama: nama, 
+                email: email, 
+                jenisKelamin: jenisKelamin, // Data baru tersimpan
+                gelar: gelar,               // Gelar otomatis tersimpan
+                role: 'admin', 
+                isApproved: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            Swal.fire("");
+            Swal.fire("Berhasil", "Pendaftaran berhasil, tunggu persetujuan Superadmin.", "success");
             location.reload();
         } catch (error) { Swal.fire("Error", "Gagal Daftar Admin: " + error.message, "error"); }
     };
