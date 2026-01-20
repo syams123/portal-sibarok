@@ -81,7 +81,7 @@ auth.onAuthStateChanged(async (user) => {
                 // FILTER VERIFIKASI ADMIN
                 if (currentRole === 'admin' && userData.isApproved === false) {
                     // Reset tanda jika status berubah jadi tidak disetujui
-                    localStorage.removeItem(`alertApprovedDone_${userData.email}`);
+                    //localStorage.removeItem(`alertApprovedDone_${userData.email}`);
                     
                     if (loader) loader.classList.add('d-none');
                     const modalDaftar = document.querySelector('.modal.show');
@@ -644,27 +644,48 @@ async function openDetail(id) {
     
     const formContainer = document.getElementById('gradeFormContainer');
     formContainer.innerHTML = `
-        <div class="d-flex align-items-center mb-3">
-            <div style="width: 50px; height: 65px; overflow: hidden; border-radius: 5px; margin-right: 15px; border: 1px solid #ddd;">
-                <img src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
-                     style="width: 100%; height: 100%; object-fit: cover;">
-            </div>
-            <div>
-                <h6 class="mb-0 fw-bold">${data.name}</h6>
-                <p class="small text-muted mb-0">Kelas: ${data.class} | Guru: ${data.teacher}</p>
-            </div>
+    <div class="d-flex align-items-center mb-3">
+        <div style="width: 50px; height: 65px; overflow: hidden; border-radius: 5px; margin-right: 15px; border: 1px solid #ddd;">
+            <img src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
+                 style="width: 100%; height: 100%; object-fit: cover;">
         </div>
-
-        <div class="mb-4 p-3 bg-light rounded border">
-            <label class="form-label small fw-bold text-success"><i class="fas fa-envelope me-1"></i> Email Login Wali Santri</label>
-            <input type="email" id="updateParentEmail" class="form-control form-control-sm" 
-                   value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
-            <div class="form-text" style="font-size: 0.65rem;">Ganti email asli jika sudah ada</div>
+        <div>
+            <h6 class="mb-0 fw-bold">${data.name}</h6>
+            <p class="small text-muted mb-0">Kelas: ${data.class} | Guru: ${data.teacher}</p>
         </div>
+    </div>
 
-        <hr>
-        <h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
-    `;
+    <div class="mb-4 p-3 bg-light rounded border">
+        <label class="form-label small fw-bold text-success"><i class="fas fa-envelope me-1"></i> Email Login Wali Santri</label>
+        <input type="email" id="updateParentEmail" class="form-control form-control-sm" 
+               value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
+        <div class="form-text" style="font-size: 0.65rem;">Ganti email asli jika sudah ada</div>
+    </div>
+
+    <hr>
+    
+    <h6 class="fw-bold mb-3">Daftar Kehadiran Santri:</h6>
+    <div class="row g-2 mb-4">
+        <div class="col-4 text-center">
+            <label class="form-label small fw-bold text-danger">Sakit</label>
+            <input type="number" id="absensiSakit" class="form-control form-control-sm text-center" 
+                   value="${data.absensiSakit || 0}" min="0">
+        </div>
+        <div class="col-4 text-center">
+            <label class="form-label small fw-bold text-warning">Izin</label>
+            <input type="number" id="absensiIzin" class="form-control form-control-sm text-center" 
+                   value="${data.absensiIzin || 0}" min="0">
+        </div>
+        <div class="col-4 text-center">
+            <label class="form-label small fw-bold text-secondary">Lain-lain</label>
+            <input type="number" id="absensiLain" class="form-control form-control-sm text-center" 
+                   value="${data.absensiLain || 0}" min="0">
+        </div>
+    </div>
+
+    <hr>
+    <h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
+`;
 
     let subjects = data.class.includes("Pra-TK") 
         ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
@@ -712,23 +733,31 @@ async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
     const inputs = document.querySelectorAll('.grade-input');
     const notes = document.getElementById('gradeNotes').value;
-    
-    // Mengambil nilai dari dropdown jilid
     const levelValue = document.getElementById('studentLevel').value;
+    
+    // --- AMBIL NILAI ABSENSI DARI INPUT ---
+    // Pastikan ID input di HTML Kakak sesuai (contoh: absensiSakit, absensiIzin, absensiLain)
+    const sakit = document.getElementById('absensiSakit').value || 0;
+    const izin = document.getElementById('absensiIzin').value || 0;
+    const lain = document.getElementById('absensiLain').value || 0;
     
     let gradesObj = {};
     inputs.forEach(input => {
         gradesObj[input.dataset.subject] = input.value;
     });
 
-    // Kita gunakan nama field 'jilid' agar sama dengan dashboard wali
+    // --- UPDATE DATABASE ---
     await db.collection('students').doc(id).update({
         grades: gradesObj,
         notes: notes,
-        jilid: levelValue // <--- Nama field disamakan jadi 'jilid'
+        jilid: levelValue,
+        // Tambahkan field ini agar tersimpan di database:
+        absensiSakit: parseInt(sakit),
+        absensiIzin: parseInt(izin),
+        absensiLain: parseInt(lain)
     });
     
-    Swal.fire("Berhasil", "Nilai dan Jilid berhasil disimpan!", "success");
+    Swal.fire("Berhasil", "Nilai, Jilid, dan Absensi berhasil disimpan!", "success");
     const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
     modal.hide();
 }
@@ -806,25 +835,24 @@ async function loadChildData(email) {
             }
 
             // --- A. Sinkronisasi Foto & Profil ---
-            const avatarLaki = 'https://i.imgur.com/HPPr16Q.jpeg';
-            const avatarPerempuan = 'https://i.imgur.com/NcNQ9R3.jpeg';
-            const defaultAvatar = data.gender === 'Perempuan' ? avatarPerempuan : avatarLaki;
+const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
 
-            document.getElementById('childPhotoDisplay').src = data.photo || defaultAvatar;
-            document.getElementById('childNameDisplay').innerText = data.name;
-            document.getElementById('childClassDisplay').innerText = data.class;
+if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = fotoSantri;
+if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
+if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
 
-            let teksJilid = (data.jilid || "-").replace("Jilid ", "");
-            document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
-            
-            // --- B. Sinkronisasi Nilai Rapor Otomatis ---
-            const reportDiv = document.getElementById('childReportCard');
+let teksJilid = (data.jilid || "-").toString().replace("Jilid ", "");
+if (document.getElementById('childJilidDisplay')) {
+    document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
+}
+
+// --- B. Sinkronisasi Nilai, Absensi, & TTD ---
+const reportDiv = document.getElementById('childReportCard');
 if (reportDiv) {
-    // 1. Buat variabel penampung agar tidak langsung "+=" ke HTML (mencegah double)
-    let contentHtml = ''; 
-    
+    let contentHtml = ''; // Variabel ini harus menampung SEMUANYA
+
+    // 1. Tambah Nilai
     if (data.grades) {
-        // Tampilkan Nilai (Struktur Asli Kakak)
         for (const [subj, grade] of Object.entries(data.grades)) {
             contentHtml += `
                 <div class="grade-row d-flex justify-content-between border-bottom py-2">
@@ -832,79 +860,88 @@ if (reportDiv) {
                     <span class="badge bg-primary badge-grade">${grade}</span>
                 </div>`;
         }
+    }
 
-        // 1. Tentukan variabel Wali Kelas (Kosongkan dulu atau beri default)
-let namaWaliKelas = "";
-let linkTtdWaliKelas = "";
-
-// Mengambil data kelas dan memastikan tidak error jika data kosong
-const kelasSantri = data.class || "";
-
-// Menggunakan .includes agar tetap terbaca meski ada teks tambahan seperti "TK-SD"
-if (kelasSantri.includes("Sunan Giri")) {
-    namaWaliKelas = "Salwa Kamilatuz Zakiyah";
-    linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
-} 
-else if (kelasSantri.includes("Sunan Ampel") || kelasSantri.includes("Sunan Kalijaga")) {
-    namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
-    linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
-} 
-else {
-    // Default jika kelas tidak dikenali
-    namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
-    linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
-}
-
-const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-
-contentHtml += `
-<div id="signatureWrapper" class="mt-4">
-    <div class="row text-center align-items-start g-0">
-        <div class="col-4">
-            <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
-            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
-            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto; max-width: 100%;">
+    // 2. Tambah Absensi (Sesuai keinginan Kakak)
+    contentHtml += `
+        <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
+            <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
+                <h6 class="fw-bold mb-0 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
+                    Kehadiran Santri
+                </h6>
             </div>
-            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+        </div>`;
+
+    contentHtml += `
+        <div class="grade-row d-flex justify-content-between border-bottom py-2">
+            <span>Sakit</span>
+            <span class="badge bg-danger">${data.absensiSakit || 0}</span>
         </div>
-
-        <div class="col-4">
-            <p class="small mb-0" style="font-size: 0.7rem;">&nbsp;</p>
-            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
-            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto; max-width: 100%;">
-            </div>
-            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
+        <div class="grade-row d-flex justify-content-between border-bottom py-2">
+            <span>Izin</span>
+            <span class="badge bg-warning text-dark">${data.absensiIzin || 0}</span>
         </div>
+        <div class="grade-row d-flex justify-content-between border-bottom py-2">
+            <span>Lain-lain</span>
+            <span class="badge bg-secondary">${data.absensiLain || 0}</span>
+        </div>`;
 
-        <div class="col-4">
-            <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
-            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
-            <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto; max-width: 100%; filter: contrast(150%);">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
+    // 3. Logika Wali Kelas
+    let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
+    let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
+    const kelasSantri = data.class || "";
+
+    if (kelasSantri.includes("Sunan Giri")) {
+        namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+        linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
+    }
+
+    const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // 4. Tambah Bagian TTD (Digabung ke contentHtml)
+    contentHtml += `
+    <div id="signatureWrapper" class="mt-4">
+        <div class="row text-center align-items-start g-0">
+            <div class="col-4">
+                <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
+                <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
+                <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                    <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto;">
+                </div>
+                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
             </div>
-            <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">
-                ${data.parentName || "( Nama Wali Santri )"}
-            </p>
+            <div class="col-4">
+                <p class="small mb-0">&nbsp;</p>
+                <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
+                <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                    <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto;">
+                </div>
+                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
+            </div>
+            <div class="col-4">
+                <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
+                <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
+                <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                    ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
+                </div>
+                <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">${data.parentName || "( Nama Wali Santri )"}</p>
+            </div>
         </div>
     </div>
-</div>
+    <div id="signatureInputArea"></div>`;
 
-<div id="signatureInputArea"></div>
-`;
+    // 5. Masukkan SEMUA ke dalam HTML sekaligus
+    reportDiv.innerHTML = contentHtml;
 
-        // 2. Masukkan semua isi ke reportDiv (Menggunakan "=" bukan "+=" agar reset setiap update)
-        reportDiv.innerHTML = contentHtml;
-        
-        // 3. Jalankan pengecekan status TTD
+    // 6. Jalankan fungsi TTD
+    if (typeof checkSignatureStatus === 'function') {
         checkSignatureStatus(docSnap.id, data);
-
-    } else {
-        reportDiv.innerHTML = '<p class="text-muted text-center">Belum ada nilai laporan.</p>';
     }
 }
 
+// --- AKHIR ---
+const ldr = document.getElementById('loading');
+if (ldr) ldr.classList.add('d-none');
             // --- C. Sinkronisasi Status Infaq Otomatis ---
             const statusText = document.getElementById('childInfaqStatus');
             const btnCetak = document.getElementById('btnCetakKuitansi');
