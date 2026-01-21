@@ -442,3 +442,47 @@ body {
 #darkModeIcon, .fa-bell {
     vertical-align: middle;
 }
+
+.navbar-toggler:active,
+.navbar-toggler:focus {
+    /* Memberikan outline lembut berwarna putih agar kontras dengan bg-success */
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Efek yang sama untuk ikon lonceng dan dark mode agar seragam */
+.px-2:active i, 
+#notifArea:active i {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}
+
+/* TAMPILAN NORMAL (HIJAU) */
+.header-kepengurusan {
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+    transition: all 0.3s ease;
+}
+
+.stats-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+/* TAMPILAN SAAT DARK MODE AKTIF */
+body.dark-mode .header-kepengurusan {
+    /* Warna gelap elegan untuk dark mode */
+    background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .stats-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: #20c997; /* Memberi aksen hijau tipis pada teks angka */
+}
+
+/* Pastikan card list di bawahnya juga ikut gelap jika belum */
+body.dark-mode .card {
+    background-color: #1e1e1e !important;
+    color: white !important;
+    border: 1px solid #333 !important;
+}

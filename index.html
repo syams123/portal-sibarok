@@ -22,9 +22,11 @@
 </head>
 <body class="bg-light" style="margin: 0; padding: 0;">
 
-    <div id="loading" class="position-fixed w-100 h-100 top-0 start-0 bg-white d-flex justify-content-center align-items-center" style="z-index: 9999;">
+    <div id="loading" class="position-fixed w-100 h-100 top-0 start-0 bg-white" 
+     style="z-index: 9999; display: flex; justify-content: center; align-items: center;">
     <div class="text-center">
-        <div class="position-relative d-flex justify-content-center align-items-center mb-3" style="width: 120px; height: 120px; margin: 0 auto;">
+        <div class="position-relative d-flex justify-content-center align-items-center mb-3" 
+             style="width: 120px; height: 120px; margin: 0 auto;">
             
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZjGiHa6jb-uqxRfdARt7NCCUrYTRw6o4DyQvAjZJ0tnKLOO6WcwrKY5WM_l8CnMSZZ9mjoSBnKXWnGd4ECPDnanEetVokHEBHSsVcvaw2QquEhN3_beaKQa54588M8v1OrVj7CrPkft3eYQ7UgBLORI7hI1hCG5EFWs8O_0dJlj37slq0UPdn8zwgpMeE/s100/TPQ%20Al-Mubarok%20LOGO.png" 
                  alt="Logo TPQ" 
@@ -73,7 +75,7 @@
 </div>
                         <button type="button" class="btn btn-outline-pink w-100 mt-2 py-2" 
         data-bs-toggle="modal" data-bs-target="#registerAdminModal">
-    Registrasi Ustadzah Baru
+    Registrasi Ustadz/ah
 </button>
 
 <div class="modal fade" id="registerAdminModal" tabindex="-1">
@@ -86,9 +88,17 @@
             <div class="modal-body p-4">
                 <form id="registerAdminForm">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Nama Lengkap Ustadzah</label>
-                        <input type="text" id="regAdminNama" class="form-control" placeholder="Nama Ustadzah..." required>
+                        <label class="form-label fw-bold">Nama Lengkap</label>
+                        <input type="text" id="regAdminNama" class="form-control" placeholder="Nama Ustadz/ah..." required>
                     </div>
+                    <div class="mb-3">
+    <label class="form-label small fw-bold">Jenis Kelamin</label>
+    <select class="form-select" id="regAdminGender" required>
+        <option value="" selected disabled>Pilih Jenis Kelamin</option>
+        <option value="Pria">Pria</option>
+        <option value="Wanita">Wanita</option>
+    </select>
+</div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Email</label>
                         <input type="email" id="regAdminEmail" class="form-control" placeholder="ustadzah@email.com" required>
@@ -113,7 +123,7 @@
 </div>
                         <button type="button" class="btn btn-outline-primary w-100 mt-2" onclick="showRegisterModal()">
 
-    Daftar Akun Wali Santri</button><div class="modal fade" id="registerModal" tabindex="-1">
+    Registrasi Wali Santri</button><div class="modal fade" id="registerModal" tabindex="-1">
 
     <div class="modal-dialog">
 
@@ -174,6 +184,33 @@
             </div>
         </div>
     </section>
+
+<section id="waitingRoom" class="container d-none">
+    <div class="row justify-content-center">
+        <div class="col-11 col-md-6 text-center">
+            <div class="card shadow border-0 mt-5" style="border-radius: 20px; background: white;">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <div class="spinner-grow text-success" role="status" style="width: 1rem; height: 1rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold text-success mb-3" id="waitingName">Assalamu'alaikum</h3>
+                    <p class="text-muted mb-4">Akun Anda sedang dalam tahap verifikasi oleh Kepala TPQ. Mohon ditunggu ya, halaman ini akan terbuka otomatis dan mengarah ke dasbor Anda jika sudah disetujui.</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="https://wa.me/6285775583016" target="_blank" class="btn btn-outline-success btn-lg" style="border-radius: 15px;">
+                            <i class="fab fa-whatsapp me-2"></i>Hubungi Admin
+                        </a>
+                        <button onclick="auth.signOut()" class="btn btn-warning btn-sm mt-3 fw" style="border-radius: 10px;">
+    <i class="fas fa-sign-out-alt me-1"></i>Keluar & Coba Lagi</button>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-4 text-muted small">Portal SiBarok &copy; <script>document.write(new Date().getFullYear());</script></p>
+        </div>
+    </div>
+</section>
 
 <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-success d-none sticky-top">
     <div class="container d-flex justify-content-between align-items-center">
@@ -313,11 +350,29 @@
     <div id="studentList" class="row g-3">
         </div>
 
-    <div class="mt-5 mb-4">
-        <h4 class="mb-3">Kepengurusan TPQ</h4>
-        <div id="ustadzahList" class="row g-3">
-            </div>
+    <div class="container mt-5 mb-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="p-4 rounded-4 shadow-sm border-0 position-relative overflow-hidden text-white mb-3 header-kepengurusan">
+    <div class="position-absolute top-0 end-0 p-3 opacity-25">
+        <i class="fas fa-mosque fa-4x text-white"></i>
     </div>
+    <div class="position-relative">
+        <h4 class="fw-bold mb-1">Kepengurusan TPQ Al-Mubarok</h4>
+        <p class="text-white text-opacity-75 mb-3 small">Asatidz & Manajemen IT</p>
+        
+        <div class="d-inline-flex align-items-center stats-badge px-3 py-1 rounded-pill">
+            <i class="fas fa-user-check me-2 small"></i>
+            <span class="small fw-bold">Total Pengurus: </span>
+            <span id="totalPengurus" class="ms-1 fw-bold">0</span>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <div id="ustadzahList" class="row g-3 mt-2">
+        </div>
 </div>
 </section>
 
