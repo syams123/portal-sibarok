@@ -2338,3 +2338,58 @@ function toggleDarkMode() {
         document.getElementById('darkModeIcon').classList.replace('fa-moon', 'fa-sun');
     }
 })();
+
+async function uploadFotoSantri(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // 1. Tampilkan Loading
+    Swal.fire({
+        title: 'Memproses Foto...',
+        text: 'Sedang mengompres & mengunggah',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+        // 2. KOMPRESI FOTO (Maksimal 100 KB)
+        const options = {
+            maxSizeMB: 0.1, // Ini setara 100 KB
+            maxWidthOrHeight: 500, // Ukuran dimensi gambar diperkecil agar ringan
+            useWebWorker: true
+        };
+        
+        // Asumsi: Kakak menggunakan library browser-image-compression
+        // Jika tidak ingin pakai library, saya bisa beri versi Canvas manual
+        const compressedFile = await imageCompression(file, options);
+
+        // 3. PROSES UPLOAD (Contoh ke Firebase Storage)
+        const studentId = document.getElementById('gradeStudentId').value;
+        const storageRef = storage.ref(`santri/${studentId}_${Date.now()}`);
+        await storageRef.put(compressedFile);
+        const downloadURL = await storageRef.getDownloadURL();
+
+        // 4. UPDATE FIRESTORE
+        await db.collection('students').doc(studentId).update({
+            photo: downloadURL
+        });
+
+        // 5. UPDATE TAMPILAN FOTO DI MODAL SECARA OTOMATIS
+        const imgElement = document.getElementById('detailFotoSantri');
+        if (imgElement) {
+            imgElement.src = downloadURL;
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Foto berhasil diperbarui (Ukuran < 100KB)',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error(error);
+        Swal.fire("Gagal", "Error: " + error.message, "error");
+    }
+}
