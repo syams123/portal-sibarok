@@ -486,3 +486,38 @@ body.dark-mode .card {
     color: white !important;
     border: 1px solid #333 !important;
 }
+
+/* --- DARK MODE MODAL & PROFIL --- */
+body.dark-mode .modal-content {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .modal-header {
+    background-color: #333 !important; /* Hijau lebih gelap */
+}
+
+/* Background form profil santri agar tidak silau */
+body.dark-mode .bg-light {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+}
+
+/* Border foto santri di dark mode */
+body.dark-mode #detailFotoSantri {
+    border-color: #1e1e1e !important;
+}
+
+/* Input email dan nilai di dark mode */
+body.dark-mode .form-control, 
+body.dark-mode .form-select {
+    background-color: #262626 !important;
+    border-color: #444 !important;
+    color: white !important;
+}
+
+body.dark-mode .swal2-popup {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #333 !important;
+}

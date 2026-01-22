@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Si Barok - Sistem Manajemen TPQ Al-Mubarok</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <meta property="og:title" content="Sistem Manajemen TPQ Al-Mubarok" />
@@ -584,6 +584,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <button id="btnEditFoto" class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle d-none" 
+                                onclick="document.getElementById('inputFotoSantri').click()">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" id="inputFotoSantri" class="d-none" accept="image/*" onchange="uploadFotoSantri(this)">
                 <input type="hidden" id="gradeStudentId">
                 
                 <div class="mb-3">

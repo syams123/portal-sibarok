@@ -639,14 +639,19 @@ async function openDetail(id) {
     
     const formContainer = document.getElementById('gradeFormContainer');
     formContainer.innerHTML = `
-    <div class="d-flex align-items-center mb-3">
-        <div style="width: 50px; height: 65px; overflow: hidden; border-radius: 5px; margin-right: 15px; border: 1px solid #ddd;">
-            <img src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
-                 style="width: 100%; height: 100%; object-fit: cover;">
+    <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
+        <div class="position-relative">
+            <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
+                 class="rounded-circle border border-2 border-white shadow-sm"
+                 style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' ? 'pointer' : 'default'};"
+                 onclick="${currentRole === 'superadmin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
+            
+            ${currentRole === 'superadmin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
         </div>
-        <div>
-            <h6 class="mb-0 fw-bold">${data.name}</h6>
-            <p class="small text-muted mb-0">Kelas: ${data.class} | Guru: ${data.teacher}</p>
+        <div class="ms-3">
+            <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
+            <small class="text-muted fw-bold">${data.class}</small>
+            <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
         </div>
     </div>
 
@@ -1304,11 +1309,16 @@ async function renderUstadzah() {
             }
 
             // 3. LOGIKA TOMBOL HAPUS (Hanya muncul jika yang login adalah superadmin)
-            const deleteBtn = (myRole === 'superadmin') 
-                ? `<button class="btn btn-sm btn-outline-danger border-0" onclick="deleteUstadzah('${doc.id}', '${data.nama}')">
-                    <i class="bi bi-trash"></i> Hapus
-                   </button>` 
-                : '';
+
+            // Menggunakan double quotes (") untuk membungkus data.nama agar dikirim sebagai string
+const deleteBtn = (myRole === 'superadmin' && data.email !== currentUserEmail) 
+    ? `<button class="btn btn-sm btn-outline-danger border-0 btn-hapus-ustadzah" 
+               data-id="${doc.id}" 
+               data-nama="${data.nama}"
+               onclick="handleHapus(this)">
+        <i class="bi bi-trash"></i> Hapus
+       </button>` 
+    : '';
 
             const linkFoto = data.photoURL || `https://ui-avatars.com/api/?name=${data.nama || 'U'}&background=random`;
 
@@ -1340,13 +1350,23 @@ async function renderUstadzah() {
     } catch (error) { console.error(error); }
 }
 
+function handleHapus(btn) {
+    const id = btn.getAttribute('data-id');
+    const nama = btn.getAttribute('data-nama');
+    
+    // Memanggil fungsi Kakak dengan parameter yang sudah bersih
+    deleteUstadzah(id, nama);
+}
+
 async function deleteUstadzah(id, nama) {
     if (await confirm(`Hapus ${nama}?`)) {
         try {
             await db.collection('users').doc(id).delete();
             Swal.fire("Berhasil", "Akun berhasil dihapus.", "success");
             renderUstadzah();
-        } catch (error) { Swal.fire("Error", "Error: " + error.message, "error"); }
+        } catch (error) { 
+            Swal.fire("Error", "Error: " + error.message, "error"); 
+        }
     }
 }
 
