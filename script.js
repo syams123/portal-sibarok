@@ -2357,7 +2357,7 @@ async function uploadFotoSantri(input) {
     // 1. Tampilkan Loading
     Swal.fire({
         title: 'Memproses Foto...',
-        text: 'Sedang mengompres & mengunggah',
+        text: 'Mengunggah',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
@@ -2394,7 +2394,7 @@ async function uploadFotoSantri(input) {
         Swal.fire({
             icon: 'success',
             title: 'Berhasil',
-            text: 'Foto berhasil diperbarui (Ukuran < 100KB)',
+            text: 'Foto berhasil diperbarui',
             timer: 1500,
             showConfirmButton: false
         });
@@ -2403,4 +2403,5 @@ async function uploadFotoSantri(input) {
         console.error(error);
         Swal.fire("Gagal", "Error: " + error.message, "error");
     }
+
 }
