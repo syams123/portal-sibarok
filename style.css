@@ -551,44 +551,31 @@ body.dark-mode .status-banner-santri .count-banner {
 
 body.dark-mode .status-banner-santri .subtitle-banner {
     color: #b7e4c7 !important; /* Hijau sangat muda/pudar untuk teks kecil */
-
 }
 
-.nama-santri-detail {
-    font-size: 1.25rem; 
+/* Styling transisi */
+.filter-container-adaptive {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-@media (max-width: 576px) {
-    .nama-santri-detail {
-        font-size: 0.95rem !important; /* Ukuran lebih kecil untuk HP */
-        line-height: 1.2;
-    }
+/* --- FIX DARK MODE --- */
+body.dark-mode .filter-container-adaptive {
+    background-color: #121212 !important; /* Warna gelap background utama */
+    border-bottom: 1px solid #2d2d2d !important;
 }
 
-@media (max-width: 576px) {
-    .nama-santri-detail {
-        display: block;
-        max-width: 180px; /* Sesuaikan lebar layar HP */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis; /* Akan muncul titik-titik (...) jika nama kepanjangan */
-    }
-}
-
-body.dark-mode .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%);
-}
-
-/* Mode Gelap untuk Tombol Choose File */
-body.dark-mode input[type="file"]::file-selector-button {
-    background-color: #2d2d2d !important;
+body.dark-mode .title-adaptive {
     color: #ffffff !important;
-    border: 1px solid #444 !important;
 }
 
-/* Efek saat tombol ditekan di mode gelap */
-body.dark-mode input[type="file"]::file-selector-button:hover {
-    background-color: #3d3d3d !important;
+body.dark-mode .border-adaptive {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+    color: white !important;
 }
 
-
+body.dark-mode .select-adaptive {
+    background-color: #1e1e1e !important;
+    color: white !important;
+    border-color: #333 !important;
+}
