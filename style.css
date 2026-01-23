@@ -551,4 +551,16 @@ body.dark-mode .status-banner-santri .count-banner {
 
 body.dark-mode .status-banner-santri .subtitle-banner {
     color: #b7e4c7 !important; /* Hijau sangat muda/pudar untuk teks kecil */
+
+}
+
+.nama-santri-detail {
+    font-size: 1.25rem; 
+}
+
+@media (max-width: 576px) {
+    .nama-santri-detail {
+        font-size: 0.95rem !important; /* Ukuran lebih kecil untuk HP */
+        line-height: 1.2;
+    }
 }
