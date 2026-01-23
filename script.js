@@ -408,13 +408,17 @@ async function saveStudent() {
     const gender = document.getElementById('stdGender').value;
     const sClass = document.getElementById('stdClass').value;
     const jilid = document.getElementById('stdJilid').value;
-    const teacher = document.getElementById('stdTeacher').value;
     const parentEmail = document.getElementById('stdParentEmail').value;
     const parentPhone = document.getElementById('stdParentPhone').value;
     const photoFile = document.getElementById('stdPhoto').files[0];
-    
-    // Ambil nilai tanggal aktif dari input baru
-    const joinDateValue = document.getElementById('stdJoinDate').value; 
+    const joinDateValue = document.getElementById('stdJoinDate').value;
+
+    let teacher = "";
+    if (sClass === "TK-SD (Sunan Giri)") {
+        teacher = "Ustadzah Salwa";
+    } else if (sClass === "Pra-TK (Sunan Ampel)" || sClass === "TK-SD (Sunan Kalijaga)") {
+        teacher = "Ustadzah Fika";
+    } 
 
     if (!joinDateValue && !id) {
         Swal.fire("Peringatan", "Silakan isi tanggal aktif santri terlebih dahulu!", "warning");
@@ -430,10 +434,10 @@ async function saveStudent() {
             photoUrl = await storageRef.getDownloadURL();
         }
 
-        // Data dasar
         const studentData = {
-            name, gender, class: sClass, jilid, teacher, parentEmail, parentPhone,
-            joinDate: joinDateValue, // Simpan tanggal aktif ke database
+            name, gender, class: sClass, jilid, teacher, // teacher sudah otomatis
+            parentEmail, parentPhone,
+            joinDate: joinDateValue,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
@@ -483,10 +487,17 @@ function renderStudents() {
     let query = db.collection('students');
     if (filter !== 'all') query = query.where('class', '==', filter);
 
+    query = query.orderBy('name', 'asc');
+
     query.onSnapshot((snapshot) => {
         listDiv.innerHTML = '';
         if (notifList) notifList.innerHTML = ''; 
         let pendingCount = 0;
+
+        const totalSantriElement = document.getElementById('totalSantriCount');
+        if (totalSantriElement) {
+            totalSantriElement.innerText = snapshot.size; 
+        } 
 
         snapshot.forEach(doc => {
             const data = doc.data();
@@ -2346,7 +2357,7 @@ async function uploadFotoSantri(input) {
     // 1. Tampilkan Loading
     Swal.fire({
         title: 'Memproses Foto...',
-        text: 'Sedang mengunggah',
+        text: 'Sedang mengompres & mengunggah',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
@@ -2383,7 +2394,7 @@ async function uploadFotoSantri(input) {
         Swal.fire({
             icon: 'success',
             title: 'Berhasil',
-            text: 'Foto berhasil diperbarui',
+            text: 'Foto berhasil diperbarui (Ukuran < 100KB)',
             timer: 1500,
             showConfirmButton: false
         });

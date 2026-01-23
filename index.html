@@ -8,7 +8,7 @@
     <meta property="og:title" content="Sistem Manajemen TPQ Al-Mubarok" />
 <meta property="og:description" content="Portal Informasi Santri, Laporan Perkembangan, dan Pembayaran Infaq TPQ Al-Mubarok Alana Regency Cemandi Blok BB03 Nomor 09." />
 <meta property="og:image" content="https://i.imgur.com/DTlQReQ.jpeg" />
-<meta property="og:url" content="https://syams123.github.io/portal-sibarok/" />
+<meta property="og:url" content="https://syams123.github.io/portal-sibarok" />
 <meta property="og:type" content="website" />
 
 <meta name="twitter:card" content="summary_large_image" />
@@ -362,15 +362,29 @@
         <h4 class="fw-bold mb-1">Kepengurusan TPQ Al-Mubarok</h4>
         <p class="text-white text-opacity-75 mb-3 small">Asatidz & Manajemen IT</p>
         
-        <div class="d-inline-flex align-items-center stats-badge px-3 py-1 rounded-pill">
+        <div class="mt-2 badge bg-white bg-opacity-25 rounded-pill p-2 px-3">
             <i class="fas fa-user-check me-2 small"></i>
             <span class="small fw-bold">Total Pengurus: </span>
-            <span id="totalPengurus" class="ms-1 fw-bold">0</span>
+            <span id="totalPengurus" class="fw-bold">0</span>
         </div>
     </div>
 </div>
+<div class="card border-0 shadow-sm mb-4 status-banner-santri" style="background: linear-gradient(45deg, #2ecc71, #27ae60); border-radius: 15px;">
+    <div class="card-body p-3 text-white d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="mb-0 fw-bold">Data Seluruh Santri</h4>
+            <div class="mt-2 badge bg-white bg-opacity-25 rounded-pill p-2 px-3">
+                <i class="fas fa-users me-2"></i> 
+                Total Santri: <span id="totalSantriCount" class="fw-bold">0</span>
+            </div>
+        </div>
+        <div class="opacity-25">
+            <i class="fas fa-user-graduate fa-3x"></i>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 
     <div id="ustadzahList" class="row g-3 mt-2">
         </div>
@@ -545,14 +559,6 @@
                         <div class="mb-3">
                             <label class="form-label">Aktif sebagai Santri (tanggal terdaftar)</label>
                                 <input type="date" id="stdJoinDate" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label>Ustadzah Pengampu</label>
-                            <select id="stdTeacher" class="form-select">
-                                <option value="Ustadzah Fika">Ustadzah Fika</option>
-                                <option value="Ustadzah Salwa">Ustadzah Salwa</option>
-                                <option value="Ustadzah Lain">Lainnya...</option>
-                            </select>
                         </div>
                         <div class="mb-3">
     <label class="form-label fw-bold small">Email Wali Santri</label>

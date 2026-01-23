@@ -521,3 +521,34 @@ body.dark-mode .swal2-popup {
     color: #ffffff !important;
     border: 1px solid #333 !important;
 }
+
+/* Warna Default (Terang) */
+.status-banner-santri {
+    background: linear-gradient(45deg, #2ecc71, #27ae60) !important;
+}
+.icon-box-santri {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* --- FIX DARK MODE --- */
+/* Gunakan body.dark-mode di depan setiap selector */
+
+body.dark-mode .status-banner-santri {
+    background: #1b4332 !important; /* Hijau hutan gelap agar tidak silau */
+    border: 1px solid #2d6a4f !important;
+}
+
+body.dark-mode .status-banner-santri .icon-box-santri {
+    background: rgba(0, 0, 0, 0.3) !important;
+}
+
+body.dark-mode .status-banner-santri .title-banner,
+body.dark-mode .status-banner-santri .count-banner {
+    color: #ffffff !important;
+}
+
+body.dark-mode .status-banner-santri .subtitle-banner {
+    color: #b7e4c7 !important; /* Hijau sangat muda/pudar untuk teks kecil */
+}
