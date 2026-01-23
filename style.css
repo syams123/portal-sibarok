@@ -575,3 +575,8 @@ body.dark-mode .status-banner-santri .subtitle-banner {
     }
 }
 
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+
