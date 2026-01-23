@@ -607,3 +607,8 @@ body.dark-mode .nama-santri-detail {
     }
 }
 
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+
