@@ -277,19 +277,12 @@ async function showPage(page) {
 
 let filterTimeout;
 
-// Fungsi untuk Memunculkan Filter
-function triggerFilter() {
+function showFilterAction() {
     const filterArea = document.getElementById('filterArea');
-  const isNavbar = e.target.closest('.navbar'); 
-    if (isNavbar) return;
     if (window.currentPage === 'home' && (currentRole === 'admin' || currentRole === 'superadmin')) {
         if (filterArea) {
             filterArea.classList.add('show-filter');
-
-            // Hapus timer lama
             clearTimeout(filterTimeout);
-
-            // Sembunyikan lagi setelah 2 detik diam
             filterTimeout = setTimeout(() => {
                 filterArea.classList.remove('show-filter');
             }, 2000);
@@ -297,11 +290,21 @@ function triggerFilter() {
     }
 }
 
-// Deteksi Scroll
-window.addEventListener('scroll', triggerFilter);
+// 1. JIKA SCROLL: Langsung jalankan (Scroll tidak mungkin klik tombol navbar)
+window.addEventListener('scroll', () => {
+    // Tambahkan syarat: Jangan muncul kalau posisi di paling atas banget (opsional)
+    if (window.scrollY > 10) {
+        showFilterAction();
+    }
+});
 
-// Deteksi Sentuhan Layar (Untuk HP agar lebih responsif)
-window.addEventListener('touchmove', triggerFilter);
+// 2. JIKA SENTUH & GESER (TOUCHMOVE): Cek apakah dari navbar
+window.addEventListener('touchmove', (e) => {
+    // Jika geseran jari berasal dari dalam navbar, jangan munculkan filter
+    if (e.target.closest('.navbar')) return;
+    
+    showFilterAction();
+});
 
 // --- 4. FUNGSI PEMBANTU (PASTIKAN KODE INI ADA DI SCRIPT.JS) ---
 function setupProfilePage(role, userData, studentId = null) {
@@ -2458,3 +2461,4 @@ async function uploadFotoSantri(input) {
     }
 
 }
+
