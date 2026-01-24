@@ -290,6 +290,17 @@ function showFilterAction() {
     }
 }
 
+// Deteksi Gerakan (Scroll & Touch)
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 10) showFilterAction();
+});
+
+window.addEventListener('touchmove', (e) => {
+    // KUNCINYA: Jika jempol nyentuh area atas (Navbar), jangan keluarin filter
+    if (e.touches[0].clientY < 70) return; 
+    showFilterAction();
+});
+
 // 1. JIKA SCROLL: Langsung jalankan (Scroll tidak mungkin klik tombol navbar)
 window.addEventListener('scroll', () => {
     // Tambahkan syarat: Jangan muncul kalau posisi di paling atas banget (opsional)
@@ -2461,4 +2472,5 @@ async function uploadFotoSantri(input) {
     }
 
 }
+
 
