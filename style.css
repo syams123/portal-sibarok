@@ -607,4 +607,31 @@ body.dark-mode #filterArea {
     background-color: #121212 !important;
     border-bottom: 1px solid #333;
 }
+
+/* Ukuran default untuk Laptop/Tablet */
+.nama-santri-detail {
+    font-size: 1.25rem; 
+}
+
+/* KHUSUS TAMPILAN HP (Layar di bawah 576px) */
+@media (max-width: 576px) {
+    .nama-santri-detail {
+        font-size: 0.95rem !important; /* Ukuran lebih kecil untuk HP */
+        line-height: 1.2;
+    }
+}
+
+/* Dark Mode tetap aman karena kita hanya mengubah ukuran font */
+body.dark-mode .nama-santri-detail {
+    color: #2ecf94 !important; /* Hijau yang lebih terang untuk Dark Mode */
+}
+
+@media (max-width: 576px) {
+    .nama-santri-detail {
+        display: block;
+        max-width: 180px; /* Sesuaikan lebar layar HP */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Akan muncul titik-titik (...) jika nama kepanjangan */
+    }
 }
