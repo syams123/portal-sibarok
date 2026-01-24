@@ -299,7 +299,7 @@ function triggerFilter() {
 window.addEventListener('scroll', triggerFilter);
 
 // Deteksi Sentuhan Layar (Untuk HP agar lebih responsif)
-window.addEventListener('touchstart', triggerFilter);
+window.addEventListener('touchmove', triggerFilter);
 
 // --- 4. FUNGSI PEMBANTU (PASTIKAN KODE INI ADA DI SCRIPT.JS) ---
 function setupProfilePage(role, userData, studentId = null) {
