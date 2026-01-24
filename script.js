@@ -280,6 +280,8 @@ let filterTimeout;
 // Fungsi untuk Memunculkan Filter
 function triggerFilter() {
     const filterArea = document.getElementById('filterArea');
+  const isNavbar = e.target.closest('.navbar'); 
+    if (isNavbar) return;
     if (window.currentPage === 'home' && (currentRole === 'admin' || currentRole === 'superadmin')) {
         if (filterArea) {
             filterArea.classList.add('show-filter');
@@ -2454,4 +2456,5 @@ async function uploadFotoSantri(input) {
         console.error(error);
         Swal.fire("Gagal", "Error: " + error.message, "error");
     }
+
 }
