@@ -61,6 +61,10 @@ let statusSebelumnya = null;
                     const userData = userDoc.data();
                     currentRole = userData.role;
 
+                    setTimeout(() => {
+    showPage('home');
+}, 100);
+
                     // --- PEMBERSIHAN TOTAL (Mencegah "Ustadzah Ustadz") ---
                     // 1. Ambil nama asli saja. JANGAN tambahkan default "Ustadzah" di sini
                     let namaMurni = userData.nama || userData.name || "Pengajar";
@@ -186,7 +190,28 @@ function hideAllPages() {
 }
 
 async function showPage(page) {
+    window.currentPage = page;
     hideAllPages();
+
+    const filterArea = document.getElementById('filterArea');
+    if (filterArea) {
+        filterArea.classList.remove('show-filter');
+        if (page === 'home' && (currentRole === 'superadmin' || currentRole === 'admin')) {
+            filterArea.style.setProperty('display', 'block', 'important');
+        } else {
+            // PAKSA SEMBUNYI di profil atau halaman lainnya
+            filterArea.style.setProperty('display', 'none', 'important');
+        }
+    }
+
+    const targetPage = document.getElementById(page + 'Page');
+    if (targetPage) {
+        targetPage.style.display = 'block';
+    }
+
+    // --- TAMBAHAN: Efek Smooth Scroll ke Atas ---
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     
     // --- 1. LOGIKA LONCENG (Tetap Sesuai Kode Kakak) ---
     const notifArea = document.getElementById('notifArea');
@@ -249,6 +274,32 @@ async function showPage(page) {
         }
     }
 }
+
+let filterTimeout;
+
+// Fungsi untuk Memunculkan Filter
+function triggerFilter() {
+    const filterArea = document.getElementById('filterArea');
+    if (window.currentPage === 'home' && (currentRole === 'admin' || currentRole === 'superadmin')) {
+        if (filterArea) {
+            filterArea.classList.add('show-filter');
+
+            // Hapus timer lama
+            clearTimeout(filterTimeout);
+
+            // Sembunyikan lagi setelah 2 detik diam
+            filterTimeout = setTimeout(() => {
+                filterArea.classList.remove('show-filter');
+            }, 2000);
+        }
+    }
+}
+
+// Deteksi Scroll
+window.addEventListener('scroll', triggerFilter);
+
+// Deteksi Sentuhan Layar (Untuk HP agar lebih responsif)
+window.addEventListener('touchstart', triggerFilter);
 
 // --- 4. FUNGSI PEMBANTU (PASTIKAN KODE INI ADA DI SCRIPT.JS) ---
 function setupProfilePage(role, userData, studentId = null) {
@@ -660,7 +711,7 @@ async function openDetail(id) {
             ${currentRole === 'superadmin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
         </div>
         <div class="ms-3">
-            <h5 class="mb-0 fw-bold text-success nama-santri-detail">${data.name}</h5>
+            <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
             <small class="text-muted fw-bold">${data.class}</small>
             <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
         </div>
@@ -2357,7 +2408,7 @@ async function uploadFotoSantri(input) {
     // 1. Tampilkan Loading
     Swal.fire({
         title: 'Memproses Foto...',
-        text: 'Mengunggah',
+        text: 'Sedang mengompres & mengunggah',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
@@ -2394,7 +2445,7 @@ async function uploadFotoSantri(input) {
         Swal.fire({
             icon: 'success',
             title: 'Berhasil',
-            text: 'Foto berhasil diperbarui',
+            text: 'Foto berhasil diperbarui (Ukuran < 100KB)',
             timer: 1500,
             showConfirmButton: false
         });
@@ -2403,6 +2454,4 @@ async function uploadFotoSantri(input) {
         console.error(error);
         Swal.fire("Gagal", "Error: " + error.message, "error");
     }
-
 }
-

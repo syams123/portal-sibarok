@@ -147,16 +147,14 @@ body {
         }
     }
 
-/* Tambahkan di file CSS Kakak */
-#parentDashboard {
-    animation: fadeIn 0.4s ease-in-out;
-}
-
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
+#profileSection, #adminDashboard, #parentDashboard {
+    animation: fadeIn 0.4s ease-in-out;
+}
 /* Menghindari tombol TTD meluber ke samping kolom */
 #boxSignatureArea canvas {
     width: 100% !important;
@@ -580,35 +578,33 @@ body.dark-mode .select-adaptive {
     border-color: #333 !important;
 }
 
-.nama-santri-detail {
-    font-size: 1.25rem; 
+#filterArea {
+    position: fixed; 
+    top: 60px; /* Jarak dari navbar */
+    left: 0;
+    width: 100%;
+    z-index: 1018;
+    background-color: white; /* Wajib ada agar tidak transparan */
+    padding: 15px;
+    
+    /* DEFAULT: Sembunyi (Tarik ke atas) */
+    transform: translateY(-150%); 
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
+    pointer-events: none;
 }
 
-/* KHUSUS TAMPILAN HP (Layar di bawah 576px) */
-@media (max-width: 576px) {
-    .nama-santri-detail {
-        font-size: 0.95rem !important; /* Ukuran lebih kecil untuk HP */
-        line-height: 1.2;
-    }
+/* KELAS PEMUNCUL: Saat user gerak */
+#filterArea.show-filter {
+    transform: translateY(0); /* Slide Down */
+    opacity: 1;
+    pointer-events: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* Dark Mode tetap aman karena kita hanya mengubah ukuran font */
-body.dark-mode .nama-santri-detail {
-    color: #2ecf94 !important; /* Hijau yang lebih terang untuk Dark Mode */
+/* Dark Mode Fix */
+body.dark-mode #filterArea {
+    background-color: #121212 !important;
+    border-bottom: 1px solid #333;
 }
-
-@media (max-width: 576px) {
-    .nama-santri-detail {
-        display: block;
-        max-width: 180px; /* Sesuaikan lebar layar HP */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis; /* Akan muncul titik-titik (...) jika nama kepanjangan */
-    }
 }
-
-body.dark-mode .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%);
-}
-
-
