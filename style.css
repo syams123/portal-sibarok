@@ -599,13 +599,14 @@ body.dark-mode .select-adaptive {
     transform: translateY(0); /* Slide Down */
     opacity: 1;
     pointer-events: auto;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
 }
 
 /* Dark Mode Fix */
 body.dark-mode #filterArea {
     background-color: #121212 !important;
     border-bottom: 1px solid #333;
+}
 }
 
 /* Ukuran default untuk Laptop/Tablet */
@@ -634,4 +635,62 @@ body.dark-mode .nama-santri-detail {
         overflow: hidden;
         text-overflow: ellipsis; /* Akan muncul titik-titik (...) jika nama kepanjangan */
     }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#backToTop:hover {
+    transform: scale(1.1);
+    background-color: #157347; /* Warna hijau yang lebih gelap saat hover */
+}
+
+/* --- PERBAIKAN VISUAL DARK MODE (ANTI SAKIT MATA) --- */
+
+body.dark-mode .badge {
+    /* Memberikan sedikit transparansi agar tidak terlalu neon */
+    opacity: 0.85; 
+    /* Memberikan border halus agar badge tidak terlihat "melayang" di background hitam */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    /* Menghaluskan bayangan */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 1. Badge Nilai (Biru) */
+body.dark-mode .bg-primary {
+    background-color: #0d6efd !important; /* Biru yang sedikit lebih dalam */
+}
+
+/* 2. Badge Sakit (Merah) */
+body.dark-mode .bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* 3. Badge Izin (Kuning) - Paling krusial agar tidak menyilaukan */
+body.dark-mode .bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important; /* Teks tetap hitam agar kontras tinggi tetap terjaga */
+}
+
+/* 4. Badge Lain-lain (Abu-abu) */
+body.dark-mode .bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* 5. Baris Pemisah Rapor */
+body.dark-mode .border-bottom {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 6. Teks Nama Mapel & Label Sakit/Izin */
+body.dark-mode .grade-row span {
+    color: #e9ecef !important;
+}
+
+/* 7. Header "Kehadiran Santri" agar tidak kontras putih */
+body.dark-mode .bg-secondary.bg-opacity-25 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
 }

@@ -254,18 +254,9 @@
 </div>
 </nav>
 
-<div id="filterArea" class="sticky-top bg-white shadow-sm p-3 filter-container-adaptive" style="top: 65px; z-index: 1019;">
+<div id="headerArea" class="bg-white p-3 filter-container-adaptive pb-0">
     <div class="container p-0">
         <div id="greetingArea" class="mb-2 ms-1 fw" style="font-size: 0.9rem; line-height: 1.4;"></div>
-
-        <div class="mb-3 mt-1">
-            <div class="input-group shadow-sm">
-                <span class="input-group-text bg-white border-end-0 border-adaptive">
-                    <i class="fas fa-search text-muted"></i>
-                </span>
-                <input type="text" id="searchSantri" class="form-control border-start-0 border-adaptive bg-white" placeholder="Cari nama santri..." onkeyup="filterSantri()">
-            </div>
-        </div>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0 fw-bold title-adaptive">Data Santri</h4>
@@ -273,7 +264,23 @@
                 <i class="fas fa-plus"></i> Tambah Santri
             </button>
         </div>
-        
+    </div>
+</div>
+
+<div id="searchAreaSticky" class="sticky-top p-3 filter-container-adaptive pt-1 pb-2" style="top: 80px; z-index: 1019;">
+    <div class="container p-0">
+        <div class="input-group shadow-sm">
+            <span class="input-group-text bg-white border-end-0 border-adaptive">
+                <i class="fas fa-search text-muted"></i>
+            </span>
+            <input type="text" id="searchSantri" class="form-control border-start-0 border-adaptive bg-white" 
+                   placeholder="Cari nama santri..." onkeyup="filterSantri()">
+        </div>
+    </div>
+</div>
+
+<div id="filterClassArea" class="p-3 filter-container-adaptive pt-2">
+    <div class="container p-0">
         <select id="filterClass" class="form-select shadow-sm border-adaptive select-adaptive" onchange="renderStudents()">
             <option value="all">Semua Kelas</option>
             <option value="Pra-TK (Sunan Ampel)">Pra-TK (Sunan Ampel)</option>
@@ -396,20 +403,29 @@
 </section>
 
     <section id="parentDashboard" class="container mt-4 d-none">
-        <div class="card shadow mb-4">
-            <div class="card-body text-center">
-                <img id="childPhotoDisplay" src="" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;" onclick="openZoom(this.src)">
-                <h4 id="childNameDisplay">Nama Santri</h4>
-                <p class="text-muted" id="childClassDisplay">Kelas</p>
-                <span class="badge bg-success" id="childJilidDisplay"></span>
-            </div>
+    <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px; background: #f8f9fa;">
+        <div class="card-body p-3">
+            <label class="small fw-bold mb-2 text-success">
+                <i class="fas fa-users me-1"></i> Pilih Data Anak:
+            </label>
+            <select id="selectChildBeranda" class="form-select shadow-sm" onchange="updateBerandaData(this.value)" style="border-radius: 10px; border: 2px solid #28a745;">
+                </select>
         </div>
+    </div>
+    <div class="card shadow mb-4">
+        <div class="card-body text-center">
+            <img id="childPhotoDisplay" src="" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;" onclick="openZoom(this.src)">
+            <h4 id="childNameDisplay">Nama Santri</h4>
+            <p class="text-muted" id="childClassDisplay">Kelas</p>
+            <span class="badge bg-success" id="childJilidDisplay"></span>
+        </div>
+    </div>
 
-        <div class="card shadow mb-4">
-    <div class="card-header bg-warning text-dark">Rapor Sisipan</div>
-    <div class="card-body" id="childReportCard">
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">Rapor Sisipan</div>
+        <div class="card-body" id="childReportCard">
         </div>
-</div>
+    </div>
 
 
         <div class="mt-4 px-2">
@@ -645,6 +661,11 @@
 <div id="zoomContainer" onclick="closeZoom()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; backdrop-filter: blur(8px); justify-content: center; align-items: center;">
     <img id="zoomImage" src="" style="width: 280px; height: 280px; border-radius: 50%; object-fit: cover; transform: scale(0); transition: transform 0.3s ease;">
 </div>
+
+<button id="backToTop" class="btn btn-success shadow-lg" 
+        style="position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; border-radius: 50%; display: none; z-index: 2000; transition: 0.3s;">
+    <i class="fas fa-chevron-up"></i>
+</button>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>

@@ -193,17 +193,35 @@ async function showPage(page) {
     window.currentPage = page;
     hideAllPages();
 
-    const filterArea = document.getElementById('filterArea');
-    if (filterArea) {
-        filterArea.classList.remove('show-filter');
-        if (page === 'home' && (currentRole === 'superadmin' || currentRole === 'admin')) {
-            filterArea.style.setProperty('display', 'block', 'important');
-        } else {
-            // PAKSA SEMBUNYI di profil atau halaman lainnya
-            filterArea.style.setProperty('display', 'none', 'important');
-        }
+    // --- 1. IDENTIFIKASI SEMUA ELEMEN HEADER & FILTER (SESUAI HTML KAKAK) ---
+    const headerArea = document.getElementById('headerArea');
+    const searchAreaSticky = document.getElementById('searchAreaSticky');
+    const filterClassArea = document.getElementById('filterClassArea');
+    const greetingArea = document.getElementById('greetingArea');
+    const btnBackToTop = document.getElementById('backToTop');
+
+    // --- 2. LOGIKA PAKSA SEMBUNYI TOTAL SAAT DI PROFIL ---
+    if (page === 'profile') {
+        // Jika sedang di profil, semua elemen pencarian & judul harus hilang
+        if (headerArea) headerArea.style.setProperty('display', 'none', 'important');
+        if (searchAreaSticky) searchAreaSticky.style.setProperty('display', 'none', 'important');
+        if (filterClassArea) filterClassArea.style.setProperty('display', 'none', 'important');
+        if (greetingArea) greetingArea.style.setProperty('display', 'none', 'important');
+        if (btnBackToTop) btnBackToTop.style.setProperty('display', 'none', 'important');
+    } else if (page === 'home' && (currentRole === 'superadmin' || currentRole === 'admin')) {
+        // Jika kembali ke home admin, munculkan kembali semuanya
+        if (headerArea) headerArea.style.setProperty('display', 'block', 'important');
+        if (searchAreaSticky) searchAreaSticky.style.setProperty('display', 'block', 'important');
+        if (filterClassArea) filterClassArea.style.setProperty('display', 'block', 'important');
+        if (greetingArea) greetingArea.style.setProperty('display', 'block', 'important');
+    } else {
+        // Untuk halaman lain (misal home Wali Santri), sembunyikan filter admin
+        if (headerArea) headerArea.style.setProperty('display', 'none', 'important');
+        if (searchAreaSticky) searchAreaSticky.style.setProperty('display', 'none', 'important');
+        if (filterClassArea) filterClassArea.style.setProperty('display', 'none', 'important');
     }
 
+    // --- 3. TAMPILKAN HALAMAN TARGET ---
     const targetPage = document.getElementById(page + 'Page');
     if (targetPage) {
         targetPage.style.display = 'block';
@@ -212,61 +230,69 @@ async function showPage(page) {
     // --- TAMBAHAN: Efek Smooth Scroll ke Atas ---
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    
-    // --- 1. LOGIKA LONCENG (Tetap Sesuai Kode Kakak) ---
+    // --- 4. LOGIKA LONCENG (Tetap Sesuai Kode Kakak) ---
     const notifArea = document.getElementById('notifArea');
     if (notifArea) {
         if (currentRole === 'superadmin') { 
-            // Saya tambahkan 'parent' agar wali juga bisa lihat lonceng jika ada notif
             notifArea.classList.remove('d-none');
         } else {
             notifArea.classList.add('d-none');
         }
     }
 
-    // --- 2. PANGGIL SAPAAN DISINI ---
-    // Kita panggil fungsi greeting setiap kali halaman 'home', 'admin', atau 'parent' dibuka
-    if (page === 'home' || page === 'admin' || page === 'parent') {
+    // --- 5. PANGGIL SAPAAN (HANYA JIKA BUKAN PROFIL) ---
+    // Agar sapaan di dalam headerArea tidak muncul mendobel di profil
+    if (page !== 'profile' && (page === 'home' || page === 'admin' || page === 'parent')) {
         let nameToDisplay = "";
 
         if (currentRole === 'superadmin' || currentRole === 'admin') {
-            // Jika variabel window.userName belum ada isinya, beri default "Pengajar"
             nameToDisplay = window.userName || "Pengajar"; 
         } else if (currentRole === 'parent') {
-            // Mengambil nama Wali yang login
             nameToDisplay = window.parentName || "Wali Santri";
         }
 
         displayGreeting(nameToDisplay);
     }
 
-    // --- 2. NAVIGASI HALAMAN ---
+    // --- 6. NAVIGASI HALAMAN (Logika Dashboard) ---
     if (page === 'home') {
         if (currentRole === 'admin' || currentRole === 'superadmin') {
             document.getElementById('adminDashboard').classList.remove('d-none');
-        } else {
+        } else if (currentRole === 'parent') {
             document.getElementById('parentDashboard').classList.remove('d-none');
+        
+            // Ambil semua anak untuk mengisi dropdown
+            const snap = await db.collection('students').where('parentEmail', '==', currentUser.email).get();
+            const select = document.getElementById('selectChildBeranda');
+            
+            if (select && !snap.empty) {
+                select.innerHTML = ""; 
+                snap.forEach((doc) => {
+                    select.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+                });
+                
+                // Update data untuk anak pertama yang terpilih
+                updateBerandaData(select.value);
+            }
         }
     } else if (page === 'admin') {
         document.getElementById('adminDashboard').classList.remove('d-none');
     } else if (page === 'parent') {
         document.getElementById('parentDashboard').classList.remove('d-none');
     } else if (page === 'profile') {
-        document.getElementById('profileSection').classList.remove('d-none');
+        // Memastikan section profil muncul
+        const profileSection = document.getElementById('profileSection');
+        if (profileSection) profileSection.classList.remove('d-none');
         
-        // --- 3. LOGIKA DINAMIS PROFIL (SOLUSI AGAR TIDAK BERCAMPUR) ---
+        // Logika Dinamis Profil
         if (currentRole === 'parent') {
-            // Jika Wali yang buka profil: Munculkan Kartu Santri & Sembunyikan Foto Biasa
-            const snap = await db.collection('students').where('parentEmail', '==', currentUser.email).limit(1).get();
+            const snap = await db.collection('students').where('parentEmail', '==', currentUser.email).get();
             if (!snap.empty) {
                 const studentData = snap.docs[0].data();
                 const studentId = snap.docs[0].id;
-                
-                // Jalankan fungsi pengatur tampilan yang kita buat tadi
                 setupProfilePage('parent', studentData, studentId);
             }
         } else {
-            // Jika Ustadzah yang buka profil: Sembunyikan Kartu Santri & Munculkan Foto Biasa
             const adminDoc = await db.collection('users').doc(currentUser.uid).get();
             if (adminDoc.exists) {
                 setupProfilePage('admin', adminDoc.data());
@@ -285,7 +311,7 @@ function showFilterAction() {
             clearTimeout(filterTimeout);
             filterTimeout = setTimeout(() => {
                 filterArea.classList.remove('show-filter');
-            }, 2000);
+            }, 2500);
         }
     }
 }
@@ -301,24 +327,14 @@ window.addEventListener('touchmove', (e) => {
     showFilterAction();
 });
 
-// 1. JIKA SCROLL: Langsung jalankan (Scroll tidak mungkin klik tombol navbar)
-window.addEventListener('scroll', () => {
-    // Tambahkan syarat: Jangan muncul kalau posisi di paling atas banget (opsional)
-    if (window.scrollY > 10) {
-        showFilterAction();
-    }
-});
+// Deteksi Scroll
+//window.addEventListener('scroll', triggerFilter);
 
-// 2. JIKA SENTUH & GESER (TOUCHMOVE): Cek apakah dari navbar
-window.addEventListener('touchmove', (e) => {
-    // Jika geseran jari berasal dari dalam navbar, jangan munculkan filter
-    if (e.target.closest('.navbar')) return;
-    
-    showFilterAction();
-});
+// Deteksi Sentuhan Layar (Untuk HP agar lebih responsif)
+//window.addEventListener('touchmove', triggerFilter);
 
 // --- 4. FUNGSI PEMBANTU (PASTIKAN KODE INI ADA DI SCRIPT.JS) ---
-function setupProfilePage(role, userData, studentId = null) {
+async function setupProfilePage(role, userDataInput, studentIdInput = null) {
     const cardContainer = document.getElementById('dynamicProfileCard');
     const areaPhoto = document.getElementById('areaPhotoProfil');
     const labelNama = document.getElementById('labelNamaProfil');
@@ -326,145 +342,134 @@ function setupProfilePage(role, userData, studentId = null) {
     const inputNamaWali = document.getElementById('profilNamaWali');
     const groupNamaWali = document.getElementById('groupNamaWali');
 
+    // Pastikan variabel userData mengacu pada input agar tidak error undefined
+    const userData = userDataInput; 
+
     if (role === 'parent') {
-        // --- TAMPILAN WALI SANTRI ---
-        areaPhoto.classList.add('d-none'); // Sembunyikan upload foto admin
-        groupNamaWali.classList.remove('d-none');
-        labelNama.innerText = "Nama Santri";
+        // --- TAMPILAN WALI SANTRI (MULTI-SANTRI SUPPORT) ---
+        if (areaPhoto) areaPhoto.classList.add('d-none'); 
+        if (groupNamaWali) groupNamaWali.classList.remove('d-none');
+        if (labelNama) labelNama.innerText = "Nama Santri";
         
-        inputNamaSantri.readOnly = true;
-        inputNamaSantri.style.backgroundColor = "#e9ecef";
-        inputNamaSantri.value = userData.name || "";
-        inputNamaWali.value = userData.parentName || "";
-
-// 1. Ambil data jilid asli
-// Gunakan .replace untuk menghapus kata "Jilid " agar parseInt hanya mengambil angkanya saja
-// --- PASTIKAN BLOK INI BERADA DI DALAM onSnapshot ---
-db.collection('students').doc(studentId).onSnapshot((doc) => {
-    const userData = doc.data();
-    if (!userData) return;
-
-    // 1. Ambil data jilid asli & bersihkan kata "Jilid "
-    let jilidRaw = userData.jilid || "Jilid PAUD";
-    let jilidClean = jilidRaw.replace("Jilid ", ""); 
-
-    // 2. Tentukan angka untuk perhitungan progress bar
-    let numericJilid;
-    if (jilidClean === "PAUD") {
-        numericJilid = 0.5; // Agar bar muncul sedikit (sekitar 8%)
-    } else if (jilidClean === "Al-Quran" || jilidClean === "Al-Qur'an") {
-        numericJilid = 6;   // Full 100%
-    } else {
-        // Mengambil angka dari "1", "2", dst
-        numericJilid = parseInt(jilidClean) || 0;
-    }
-
-    // Perhitungan Progres: (posisi / total jilid) * 100
-    const progress = Math.min((numericJilid / 6) * 100, 100);
-
-    // Logika Label Jilid agar tidak dobel kata "Jilid"
-    const displayJilid = (jilidRaw.includes("Jilid") || jilidRaw.includes("Al-Qur")) 
-                        ? jilidRaw 
-                        : " " + jilidRaw;
-
-    const avatar = userData.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg';
-
-    // Masukkan HTML Kartu ke Container (Menggunakan "=" agar me-reset isi setiap update data)
-    cardContainer.innerHTML = `
-    <div class="card shadow-sm mb-4 border-0 card-santri-dynamic" style="border-radius: 15px; border-left: 5px solid #28a745;">
-        <div class="card-body p-4 text-start">
-            <div class="row align-items-center">
-                <div class="col-4 text-center">
-                    <img src="${userData.photo || avatar}" class="rounded-circle shadow-sm" style="width: 85px; height: 85px; object-fit: cover; border: 3px solid #198754;">
-                    <div class="mt-2">
-                        <small class="text-card-muted d-block" style="font-size: 0.6rem; font-weight: bold;">NIS: ${userData.nis || '-'}</small>
-                    </div>
-                </div>
-                <div class="col-5">
-                    <h5 class="fw-bold mb-0 text-card-title">${userData.name}</h5>
-                    <small class="text-success fw-bold d-block mb-2">Otw Al-Qur'an! 📖</small>
-                    <div class="progress custom-progress" style="height: 8px; border-radius: 10px;">
-                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
-                             style="width: ${progress}%">
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between mt-1 small text-card-muted" style="font-size: 0.7rem;">
-                        <span>${displayJilid}</span>
-                        <span>Al-Qur'an</span>
-                    </div>
-                </div>
-                <div class="col-3 text-center">
-                    <div id="qrcode" class="qrcode-wrapper p-1 d-inline-block shadow-sm" style="border-radius: 8px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>`;
-
-    // Re-generate QR Code setelah HTML kartu diupdate (jika menggunakan library qrcode)
-    if (typeof generateQRCode === "function") {
-        generateQRCode(userData.nis || userData.name);
-    }
-});
-
-// 2. JALANKAN INI SETELAH innerHTML (Penting agar QR Code Ter-render)
-setTimeout(() => {
-    const qrcodeContainer = document.getElementById("qrcode");
-    if (qrcodeContainer && userData.nis) {
-        qrcodeContainer.innerHTML = ""; // Bersihkan sisa QR lama agar tidak tumpang tindih
-
-        let baseURL = window.location.origin;
-
-        if (baseURL.includes("github.io")) {
-            baseURL = "tpqalmubarokarc.blogspot.com"; 
+        if (inputNamaSantri) {
+            inputNamaSantri.readOnly = true;
+            inputNamaSantri.style.backgroundColor = "#e9ecef";
         }
+
+        // 1. Bersihkan kontainer kartu sebelum mengisi agar tidak menumpuk
+        if (cardContainer) cardContainer.innerHTML = "";
+
+        // 2. Ambil SEMUA santri yang memiliki email wali yang sama
+        const snap = await db.collection('students').where('parentEmail', '==', currentUser.email).get();
         
-        // LOGIKA OTOMATIS: 
-        // Menggunakan window.location.origin agar saat di lokal link-nya localhost, 
-        // dan saat di deploy link-nya otomatis netlify.app
-        const blogspotURL = "https://tpqalmubarokarc.blogspot.com"; // Ganti dengan domain blogspot Kakak
-        const finalLink = `${blogspotURL}/p/kartu-santri.html?nis=${userData.nis}`;
+        if (!snap.empty) {
+            snap.forEach((docSnap) => {
+                const sId = docSnap.id;
+                const sData = docSnap.data();
 
-        new QRCode(qrcodeContainer, {
-            text: finalLink,
-            width: 60,
-            height: 60,
-            colorDark : "#198754",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.M
-        });
+                const cardWrapper = document.createElement('div');
+                cardWrapper.id = `wrapper-${sId}`;
+                if (cardContainer) cardContainer.appendChild(cardWrapper);
 
-        console.log("QR Code Generated for:", finalLink);
-    }
-}, 200); // Jeda dinaikkan sedikit (200ms) agar lebih stabil di HP yang agak lambat
+                db.collection('students').doc(sId).onSnapshot((doc) => {
+                    const childData = doc.data();
+                    if (!childData) return;
+
+                    let jilidRaw = childData.jilid || "Jilid PAUD";
+                    let jilidClean = jilidRaw.replace("Jilid ", ""); 
+                    let numericJilid;
+                    if (jilidClean === "PAUD") {
+                        numericJilid = 0.5;
+                    } else if (jilidClean === "Al-Quran" || jilidClean === "Al-Qur'an") {
+                        numericJilid = 6;
+                    } else {
+                        numericJilid = parseInt(jilidClean) || 0;
+                    }
+                    const progress = Math.min((numericJilid / 6) * 100, 100);
+                    const displayJilid = (jilidRaw.includes("Jilid") || jilidRaw.includes("Al-Qur")) ? jilidRaw : " " + jilidRaw;
+                    const avatar = childData.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg';
+
+                    cardWrapper.innerHTML = `
+                    <div class="card shadow-sm mb-4 border-0 card-santri-dynamic" style="border-radius: 15px; border-left: 5px solid #28a745;">
+                        <div class="card-body p-4 text-start">
+                            <div class="row align-items-center">
+                                <div class="col-4 text-center">
+                                    <img src="${childData.photo || avatar}" class="rounded-circle shadow-sm" style="width: 85px; height: 85px; object-fit: cover; border: 3px solid #198754;">
+                                    <div class="mt-2">
+                                        <small class="text-card-muted d-block" style="font-size: 0.6rem; font-weight: bold;">NIS: ${childData.nis || '-'}</small>
+                                    </div>
+                                </div>
+                                <div class="col-5">
+                                    <h5 class="fw-bold mb-0 text-card-title">${childData.name}</h5>
+                                    <small class="text-success fw-bold d-block mb-2">Otw Al-Qur'an! 📖</small>
+                                    <div class="progress custom-progress" style="height: 8px; border-radius: 10px;">
+                                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: ${progress}%"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1 small text-card-muted" style="font-size: 0.7rem;">
+                                        <span>${displayJilid}</span>
+                                        <span>Al-Qur'an</span>
+                                    </div>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <div id="qrcode-${sId}" class="qrcode-wrapper p-1 d-inline-block shadow-sm" style="border-radius: 8px; background: white;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                    setTimeout(() => {
+                        const qrcodeContainer = document.getElementById(`qrcode-${sId}`);
+                        if (qrcodeContainer && childData.nis) {
+                            qrcodeContainer.innerHTML = ""; 
+                            const blogspotURL = "https://tpqalmubarokarc.blogspot.com"; 
+                            const finalLink = `${blogspotURL}/p/kartu-santri.html?nis=${childData.nis}`;
+                            new QRCode(qrcodeContainer, {
+                                text: finalLink,
+                                width: 60,
+                                height: 60,
+                                colorDark : "#198754",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.M
+                            });
+                        }
+                    }, 300);
+                });
+            });
+
+            const daftarNamaAnak = snap.docs.map(doc => doc.data().name).join(", ");
+            if (inputNamaSantri) inputNamaSantri.value = daftarNamaAnak;
+            if (inputNamaWali) inputNamaWali.value = snap.docs[0].data().parentName || "";
+            if (document.getElementById('profilePhone')) document.getElementById('profilePhone').value = snap.docs[0].data().phone || "";
+            if (document.getElementById('profileAddress')) document.getElementById('profileAddress').value = snap.docs[0].data().address || "";
+        }
     } else {
         // --- TAMPILAN USTADZAH ---
-        cardContainer.innerHTML = "";
-        areaPhoto.classList.remove('d-none');
-        groupNamaWali.classList.add('d-none');
-        labelNama.innerText = "Nama Lengkap Ustadzah";
+        if (cardContainer) cardContainer.innerHTML = "";
+        if (areaPhoto) areaPhoto.classList.remove('d-none');
+        if (groupNamaWali) groupNamaWali.classList.add('d-none');
+        if (labelNama) labelNama.innerText = "Nama Lengkap Ustadzah";
         
-        inputNamaSantri.readOnly = false;
-        inputNamaSantri.style.backgroundColor = "#ffffff";
-        inputNamaSantri.value = userData.nama || userData.name || "";
+        if (inputNamaSantri) {
+            inputNamaSantri.readOnly = false;
+            inputNamaSantri.style.backgroundColor = "#ffffff";
+            // Memperbaiki pemanggilan nama ustadzah
+            inputNamaSantri.value = userData.nama || userData.name || ""; 
+        }
         
         const imgPreview = document.getElementById('profilePreview');
         if (imgPreview) {
-            // LOGIKA BARU:
-            // 1. Cek di Firestore (gambar Kakak membuktikan ini kosong/tidak ada)
-            // 2. Cek di Firebase Auth (currentUser.photoURL)
-            // 3. Kalau dua-duanya gak ada, baru inisial
-            const linkFoto = userData.photoURL || currentUser.photoURL || `https://ui-avatars.com/api/?name=${userData.nama || 'U'}`;
-            
+            // Memperbaiki pemanggilan foto ustadzah
+            const linkFoto = userData.photo || userData.photoURL || currentUser.photoURL || `https://ui-avatars.com/api/?name=${userData.nama || 'U'}`;
             imgPreview.src = linkFoto;
             imgPreview.style.objectFit = "cover";
         }
     }   
 
-    // --- DATA INI HARUS DI LUAR ELSE AGAR TERISI UNTUK SEMUA ROLE ---
+    // Isi data tambahan yang bersifat umum
     if(document.getElementById('profilEmail')) document.getElementById('profilEmail').value = currentUser.email || "";
     if(document.getElementById('profilePhone')) document.getElementById('profilePhone').value = userData.phone || "";
     if(document.getElementById('profileAddress')) document.getElementById('profileAddress').value = userData.address || "";
-}   
+}
 
 // --- FITUR ADMIN (USTADZAH) ---
 
@@ -727,7 +732,7 @@ async function openDetail(id) {
             ${currentRole === 'superadmin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
         </div>
         <div class="ms-3">
-            <h5 class="mb-0 fw-bold text-success nama-santri-detail">${data.name}</h5>
+            <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
             <small class="text-muted fw-bold">${data.class}</small>
             <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
         </div>
@@ -791,7 +796,6 @@ async function openDetail(id) {
         `;
     });
 
-    // Proteksi Tombol Tagihan WA: Hanya muncul jika Superadmin
     const modalFooter = document.querySelector('#gradeModal .modal-body .d-flex.gap-2');
     if (modalFooter) {
         const billingBtn = (currentRole === 'superadmin') 
@@ -802,14 +806,16 @@ async function openDetail(id) {
             ${billingBtn}
         `;
     }
-
-    
 }
     
 // 4. Simpan Nilai
 async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
     const inputs = document.querySelectorAll('.grade-input');
+    
+    // --- AMBIL DATA EMAIL WALI DARI INPUT MODAL ---
+    const parentEmail = document.getElementById('updateParentEmail').value;
+    
     const notes = document.getElementById('gradeNotes').value;
     const levelValue = document.getElementById('studentLevel').value;
     
@@ -825,19 +831,30 @@ async function saveGrades() {
     });
 
     // --- UPDATE DATABASE ---
-    await db.collection('students').doc(id).update({
-        grades: gradesObj,
-        notes: notes,
-        jilid: levelValue,
-        // Tambahkan field ini agar tersimpan di database:
-        absensiSakit: parseInt(sakit),
-        absensiIzin: parseInt(izin),
-        absensiLain: parseInt(lain)
-    });
-    
-    Swal.fire("Berhasil", "Nilai, Jilid, dan Absensi berhasil disimpan!", "success");
-    const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
-    modal.hide();
+    try {
+        await db.collection('students').doc(id).update({
+            grades: gradesObj,
+            notes: notes,
+            jilid: levelValue,
+            // Simpan Email Wali Santri ke database
+            parentEmail: parentEmail,
+            // Simpan data absensi
+            absensiSakit: parseInt(sakit),
+            absensiIzin: parseInt(izin),
+            absensiLain: parseInt(lain)
+        });
+        
+        // Menampilkan notifikasi sukses menggunakan SweetAlert
+        Swal.fire("Berhasil", "Nilai, Jilid, Absensi, dan Email Wali berhasil disimpan!", "success");
+        
+        // Menutup modal setelah data berhasil disimpan
+        const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
+        modal.hide();
+        
+    } catch (error) {
+        console.error("Error saat menyimpan data: ", error);
+        Swal.fire("Gagal", "Terjadi kesalahan: " + error.message, "error");
+    }
 }
 
 // 5. Tagihan WA (Individual)
@@ -1291,24 +1308,39 @@ function showRegisterModal() {
 // REGISTER WALI SANTRI
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    // Pastikan ID ini sesuai dengan yang ada di tag <input> HTML Kakak
     const nama = document.getElementById('regNama').value;
-    const email = document.getElementById('regEmail').value;
+    const email = document.getElementById('regEmail').value; 
     const password = document.getElementById('regParentPassword').value;
+
+    if (!nama || !email || !password) {
+        Swal.fire("Peringatan", "Harap isi semua kolom!", "warning");
+        return;
+    }
+
+    // Tampilkan Loading
+    Swal.showLoading();
 
     try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        
+        // Simpan ke Firestore
         await db.collection('users').doc(userCredential.user.uid).set({
-            nama: nama, email: email, role: 'parent',
+            nama: nama, 
+            email: email, 
+            role: 'parent', // Kunci agar masuk ke Dashboard Wali
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // PAKSA LOGOUT agar tidak langsung masuk dashboard
+        // PAKSA LOGOUT agar sistem tidak bingung antara session daftar & session login
         await auth.signOut();
 
-        Swal.fire("Berhasil", "Pendaftaran Berhasil! Silakan Login.", "success").then(() => {
-            window.location.reload(); // Reload setelah klik OK
+        Swal.fire("Berhasil", "Pendaftaran Berhasil! Silakan Login dengan email dan password tersebut.", "success").then(() => {
+            window.location.reload(); 
         });
     } catch (error) { 
+        console.error("Registrasi Error:", error);
         Swal.fire("Error", "Gagal Daftar: " + error.message, "error"); 
     }
 });
@@ -2423,8 +2455,8 @@ async function uploadFotoSantri(input) {
 
     // 1. Tampilkan Loading
     Swal.fire({
-        title: 'Memproses...',
-        text: 'Sedang mengunggah foto',
+        title: 'Memproses Foto...',
+        text: 'Sedang mengompres & mengunggah',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
@@ -2461,7 +2493,7 @@ async function uploadFotoSantri(input) {
         Swal.fire({
             icon: 'success',
             title: 'Berhasil',
-            text: 'Foto berhasil diperbarui',
+            text: 'Foto berhasil diperbarui (Ukuran < 100KB)',
             timer: 1500,
             showConfirmButton: false
         });
@@ -2470,9 +2502,166 @@ async function uploadFotoSantri(input) {
         console.error(error);
         Swal.fire("Gagal", "Error: " + error.message, "error");
     }
-
 }
 
+function renderReportCard(studentId, data) {
+    const reportDiv = document.getElementById('childReportCard');
+    if (!reportDiv) return;
 
+    let contentHtml = '';
 
+    // 1. LOGIKA PENENTUAN MATERI BERDASARKAN KELAS
+    const kelasAnak = (data.class || "");
+    let subjects = [];
 
+    // Jika kelas mengandung kata "Pra-TK", tampilkan 3 materi ini
+    if (kelasAnak.includes("Pra-TK")) {
+        subjects = ["Jilid", "Akidah Akhlak", "Kitabaty"];
+    } 
+    // Jika selain Pra-TK (TK-SD), tampilkan 6 materi lengkap
+    else {
+        subjects = ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
+    }
+
+    // 2. TAMPILKAN MATERI (Meskipun Nilai Belum Ada)
+    const savedGrades = data.grades || {};
+    
+    subjects.forEach(subj => {
+        // Ambil nilai dari database, jika tidak ada tampilkan "-"
+        const gradeVal = savedGrades[subj] || "-";
+        
+        contentHtml += `
+            <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                <span class="fw-medium">${subj}</span>
+                <span class="badge ${gradeVal === '-' ? 'bg-secondary bg-opacity-50' : 'bg-primary'} px-3" style="border-radius: 8px;">
+                    ${gradeVal}
+                </span>
+            </div>`;
+    });
+
+    // 3. Header & Data Kehadiran
+    contentHtml += `
+        <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
+            <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
+                <h6 class="fw-bold mb-0 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Kehadiran Santri</h6>
+            </div>
+        </div>
+        <div class="grade-row d-flex justify-content-between border-bottom py-2">
+            <span>Sakit</span> <span class="badge bg-danger rounded-pill">${data.absensiSakit || 0}</span>
+        </div>
+        <div class="grade-row d-flex justify-content-between border-bottom py-2">
+            <span>Izin</span> <span class="badge bg-warning text-dark rounded-pill">${data.absensiIzin || 0}</span>
+        </div>
+        <div class="grade-row d-flex justify-content-between border-bottom py-2">
+            <span>Lain-lain</span> <span class="badge bg-secondary rounded-pill">${data.absensiLain || 0}</span>
+        </div>`;
+
+    // 4. LOGIKA WALI KELAS (Otomatis ganti jika kelas berbeda)
+    let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; 
+    let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
+
+    if (kelasAnak.toLowerCase().includes("sunan giri")) {
+        namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+        linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
+    }
+
+    const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // 5. Bagian Tanda Tangan
+    contentHtml += `
+    <div id="signatureWrapper" class="mt-4">
+        <div class="row text-center align-items-start g-0">
+            <div class="col-4">
+                <p class="small mb-1" style="font-size: 0.7rem;">Kepala TPQ</p>
+                <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                    <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px;">
+                </div>
+                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+            </div>
+            <div class="col-4">
+                <p class="small mb-1" style="font-size: 0.7rem;">Wali Kelas</p>
+                <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                    <img src="${linkTtdWaliKelas}" style="max-height: 45px;">
+                </div>
+                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem;">${namaWaliKelas}</p>
+            </div>
+            <div class="col-4">
+                <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
+                <p class="small fw-bold mb-1" style="font-size: 0.7rem;">Wali Santri,</p>
+                <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                    ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
+                </div>
+                <p class="small fw-bold mb-0" style="font-size: 0.6rem; text-decoration: underline;">${data.parentName || "( Nama Wali )"}</p>
+            </div>
+        </div>
+    </div>`;
+
+    reportDiv.innerHTML = contentHtml;
+
+    if (typeof checkSignatureStatus === 'function') {
+        checkSignatureStatus(studentId, data);
+    }
+}   
+
+function updateBerandaData(studentId) {
+    const loader = document.getElementById('loading');
+    
+    // Antena Real-time berdasarkan ID santri yang dipilih
+    db.collection('students').doc(studentId).onSnapshot((doc) => {
+        if (loader) loader.classList.add('d-none');
+        if (!doc.exists) return;
+
+        const data = doc.data();
+        const sId = doc.id;
+
+        // --- A. Sinkronisasi Foto & Profil ---
+        const avatar = data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg';
+        if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = data.photo || avatar;
+        if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
+        if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
+        
+        let teksJilid = (data.jilid || "-").toString().replace("Jilid ", "");
+        if (document.getElementById('childJilidDisplay')) document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
+
+        // --- B. Logika Bulan & Infaq ---
+        const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const namaBulan = daftarBulan[new Date().getMonth()];
+        const displayBulan = document.getElementById('currentMonthDisplay');
+        if (displayBulan) displayBulan.innerText = "Bulan " + namaBulan + " " + new Date().getFullYear();
+
+        // --- C. Sinkronisasi Nilai & Rapor (ChildReportCard) ---
+        renderReportCard(sId, data);
+
+        // --- D. Sinkronisasi Infaq & Riwayat ---
+        // Panggil fungsi updateInfaq Kakak di sini jika ada, kirimkan sId dan data
+    });
+}
+
+// Ambil elemen tombol
+const btnBackToTop = document.getElementById('backToTop');
+
+window.onscroll = function() {
+    // 1. CEK HALAMAN AKTIF: Hanya tampilkan jika dashboard admin/superadmin sedang dibuka
+    // Sesuaikan 'adminDashboard' dengan ID container dashboard utama Kakak
+    const isAdminDashboardVisible = !document.getElementById('adminDashboard').classList.contains('d-none');
+
+    if (isAdminDashboardVisible) {
+        // 2. LOGIKA MUNCULKAN TOMBOL (Jika sudah scroll lebih dari 300px)
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btnBackToTop.style.display = "block";
+        } else {
+            btnBackToTop.style.display = "none";
+        }
+    } else {
+        // Jika sedang di halaman profil atau halaman lain, pastikan tombol sembunyi
+        btnBackToTop.style.display = "none";
+    }
+};
+
+// Fungsi saat tombol diklik (Scroll halus ke atas)
+btnBackToTop.onclick = function() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+};
