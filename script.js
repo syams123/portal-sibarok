@@ -184,9 +184,21 @@ function logoutUser() {
 
 // --- NAVIGASI UI ---
 function hideAllPages() {
+    // 1. Sembunyikan Dashboard Utama (Kode Lama Kakak)
     document.getElementById('adminDashboard').classList.add('d-none');
     document.getElementById('parentDashboard').classList.add('d-none');
     document.getElementById('profileSection').classList.add('d-none');
+
+    // 2. TAMBAHAN: Paksa Sembunyi Elemen Header & Filter (Agar tidak muncul di Login)
+    const headerArea = document.getElementById('headerArea');
+    const searchAreaSticky = document.getElementById('searchAreaSticky');
+    const filterClassArea = document.getElementById('filterClassArea');
+    const greetingArea = document.getElementById('greetingArea');
+
+    if (headerArea) headerArea.style.setProperty('display', 'none', 'important');
+    if (searchAreaSticky) searchAreaSticky.style.setProperty('display', 'none', 'important');
+    if (filterClassArea) filterClassArea.style.setProperty('display', 'none', 'important');
+    if (greetingArea) greetingArea.style.setProperty('display', 'none', 'important');
 }
 
 async function showPage(page) {
