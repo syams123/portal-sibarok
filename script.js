@@ -50,103 +50,96 @@ let statusSebelumnya = null;
 
 // Cek status login
     auth.onAuthStateChanged((user) => {
-        const loader = document.getElementById('loading');
-        if (loader) loader.classList.remove('d-none');
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.remove('d-none');
 
-        if (user) {
-            currentUser = user;
-            // Gunakan onSnapshot agar otomatis mendeteksi perubahan di Firebase Console
-            const unsubscribe = db.collection('users').doc(user.uid).onSnapshot(async (userDoc) => {
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    currentRole = userData.role;
+    if (user) {
+        currentUser = user;
+        const unsubscribe = db.collection('users').doc(user.uid).onSnapshot(async (userDoc) => {
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                currentRole = userData.role;
 
-                    setTimeout(() => {
-    showPage('home');
-}, 100);
+                setTimeout(() => {
+                    showPage('home');
+                }, 100);
 
-                    // --- PEMBERSIHAN TOTAL (Mencegah "Ustadzah Ustadz") ---
-                    // 1. Ambil nama asli saja. JANGAN tambahkan default "Ustadzah" di sini
-                    let namaMurni = userData.nama || userData.name || "Pengajar";
-                    
-                    // 2. Deteksi panggilan berdasarkan field gender di Firebase
-                    // Jika gender "Pria", panggilan "Ustadz". Jika tidak, baru "Ustadzah"
-                    const gender = userData.gender || "Wanita";
-                    const panggilan = (gender === 'Pria') ? "Ustadz" : "Ustadzah";
-                    
-                    // 3. Gabungkan hasil akhir
-                    const sapaanFinal = `${panggilan} ${namaMurni}`;
+                let namaMurni = userData.nama || userData.name || "Pengajar";
+                const gender = userData.gender || "Wanita";
+                const panggilan = (gender === 'Pria') ? "Ustadz" : "Ustadzah";
+                const sapaanFinal = `${panggilan} ${namaMurni}`;
 
-                    // 4. Update ke tampilan (Hanya panggil ini SATU KALI)
-                    window.userName = sapaanFinal;
-                    if (typeof displayGreeting === "function") displayGreeting(sapaanFinal);
+                window.userName = sapaanFinal;
+                if (typeof displayGreeting === "function") displayGreeting(sapaanFinal);
 
-                    if (statusSebelumnya === false && userData.isApproved === true) {
-    // MATIKAN LOADER DI SINI AGAR TIDAK STUCK SAAT ALERT MUNCUL
-    if (loader) loader.classList.add('d-none'); 
-
-    Swal.fire({
-        title: "Alhamdulillah!",
-        text: `Selamat ${sapaanFinal}, akun Anda telah disetujui. Membuka dasbor...`,
-        icon: "success",
-        timer: 3000,
-        showConfirmButton: false
-    });
-}
-// Update status pelacak
-statusSebelumnya = userData.isApproved;
-
-                    // --- LOGIKA OTOMATIS MASUK ---
-                    if (currentRole === 'admin' && userData.isApproved === false) {
-                        if (loader) loader.classList.add('d-none'); 
-                        document.getElementById('loginSection').classList.add('d-none');
-                        document.getElementById('mainNavbar').classList.add('d-none');
-                        if (typeof hideAllPages === "function") hideAllPages();
-                        const waitingRoom = document.getElementById('waitingRoom');
-                        if (waitingRoom) {
-                            waitingRoom.classList.remove('d-none');
-                            
-                            // MENGISI NAMA (Menggunakan sapaanFinal yang sudah didefinisikan)
-                            const waitingName = document.getElementById('waitingName');
-                            if (waitingName) {
-                                waitingName.innerHTML = `Assalamu'alaikum<br><span style="font-size: 1.2rem;">Mohon Maaf, ${sapaanFinal}</span>`;
-                            }
-                        }
-                        
-                        // Berhenti di sini, jangan lanjut ke kode dashboard
-                        return; 
-                    }
-
-                    // --- TAMPILKAN DASHBOARD ---
-                    const waitingRoom = document.getElementById('waitingRoom');
-                    if (waitingRoom) waitingRoom.classList.add('d-none');
-                    document.getElementById('loginSection').classList.add('d-none');
-                    document.getElementById('mainNavbar').classList.remove('d-none');
-
-                    if (currentRole === 'admin' || currentRole === 'superadmin') {
-                        showPage('admin');
-                        await renderStudents();
-                        await renderUstadzah();
-                    } else {
-                        showPage('parent');
-                        await loadChildData(user.email);
-                    }
-
-                    if (loader) loader.classList.add('d-none');
-                    if (unsubscribe) unsubscribe(); 
-
-                } else {
-                    await auth.signOut();
-                    if (loader) loader.classList.add('d-none');
+                if (statusSebelumnya === false && userData.isApproved === true) {
+                    if (loader) loader.classList.add('d-none'); 
+                    Swal.fire({
+                        title: "Alhamdulillah!",
+                        text: `Selamat ${sapaanFinal}, akun Anda telah disetujui. Membuka dasbor...`,
+                        icon: "success",
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
                 }
-            });
-        } else {
-            document.getElementById('loginSection').classList.remove('d-none');
-            document.getElementById('mainNavbar').classList.add('d-none');
-            hideAllPages();
-            if (loader) loader.classList.add('d-none');
-        }
-    });
+                statusSebelumnya = userData.isApproved;
+
+                if (currentRole === 'admin' && userData.isApproved === false) {
+                    if (loader) loader.classList.add('d-none'); 
+                    document.getElementById('loginSection').classList.add('d-none');
+                    document.getElementById('mainNavbar').classList.add('d-none');
+                    
+                    // --- PERBAIKAN DI SINI ---
+                    if (typeof hideAllPages === "function") hideAllPages();
+                    
+                    const waitingRoom = document.getElementById('waitingRoom');
+                    if (waitingRoom) {
+                        waitingRoom.classList.remove('d-none');
+                        const waitingName = document.getElementById('waitingName');
+                        if (waitingName) {
+                            waitingName.innerHTML = `Assalamu'alaikum<br><span style="font-size: 1.2rem;">Mohon Maaf, ${sapaanFinal}</span>`;
+                        }
+                    }
+                    return; 
+                }
+
+                const waitingRoom = document.getElementById('waitingRoom');
+                if (waitingRoom) waitingRoom.classList.add('d-none');
+                document.getElementById('loginSection').classList.add('d-none');
+                document.getElementById('mainNavbar').classList.remove('d-none');
+
+                if (currentRole === 'admin' || currentRole === 'superadmin') {
+                    showPage('admin');
+                    await renderStudents();
+                    await renderUstadzah();
+                } else {
+                    showPage('parent');
+                    await loadChildData(user.email);
+                }
+
+                if (loader) loader.classList.add('d-none');
+                if (unsubscribe) unsubscribe(); 
+
+            } else {
+                await auth.signOut();
+                if (loader) loader.classList.add('d-none');
+            }
+        });
+    } else {
+        // --- KONDISI LOGOUT / BELUM LOGIN ---
+        // Pastikan loginSection muncul, tapi elemen lainnya dibersihkan total
+        const loginSect = document.getElementById('loginSection');
+        const navBar = document.getElementById('mainNavbar');
+        
+        if (loginSect) loginSect.classList.remove('d-none');
+        if (navBar) navBar.classList.add('d-none');
+        
+        // PANGGIL PEMBERSIH FILTER DI SINI
+        hideAllPages(); 
+        
+        if (loader) loader.classList.add('d-none');
+    }
+});
 
 // Login Function
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -184,12 +177,18 @@ function logoutUser() {
 
 // --- NAVIGASI UI ---
 function hideAllPages() {
-    // 1. Sembunyikan Dashboard Utama (Kode Lama Kakak)
-    document.getElementById('adminDashboard').classList.add('d-none');
-    document.getElementById('parentDashboard').classList.add('d-none');
-    document.getElementById('profileSection').classList.add('d-none');
+    // 1. Sembunyikan Dashboard Utama (Sesuai kode asli Kakak)
+    const adminDash = document.getElementById('adminDashboard');
+    const parentDash = document.getElementById('parentDashboard');
+    const profSect = document.getElementById('profileSection');
+    const waitRoom = document.getElementById('waitingRoom');
+    
+    if (adminDash) adminDash.classList.add('d-none');
+    if (parentDash) parentDash.classList.add('d-none');
+    if (profSect) profSect.classList.add('d-none');
+    if (waitRoom) waitRoom.classList.add('d-none');
 
-    // 2. TAMBAHAN: Paksa Sembunyi Elemen Header & Filter (Agar tidak muncul di Login)
+    // 2. TAMBAHAN: Paksa Sembunyi Elemen Header & Filter agar tidak bocor ke Login
     const headerArea = document.getElementById('headerArea');
     const searchAreaSticky = document.getElementById('searchAreaSticky');
     const filterClassArea = document.getElementById('filterClassArea');
