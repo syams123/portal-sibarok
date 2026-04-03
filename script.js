@@ -59,6 +59,11 @@ let statusSebelumnya = null;
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 currentRole = userData.role;
+                if (currentRole === 'admin') {
+        // Jika Ustadzah Salwa login, kita patenkan variabelnya
+        // Pastikan teksnya persis dengan yang ada di Firestore kakak
+        window.userClass = "TK-SD (Sunan Giri)"; 
+    }
 
                 setTimeout(() => {
                     showPage('home');
@@ -71,6 +76,25 @@ let statusSebelumnya = null;
 
                 window.userName = sapaanFinal;
                 if (typeof displayGreeting === "function") displayGreeting(sapaanFinal);
+
+                // --- LOGIKA TAMPILAN FILTER & POPUP ---
+                const filterArea = document.getElementById('filterClassArea'); // Container filter di dashboard
+                const classInputContainer = document.getElementById('classInputContainer'); // Div pembungkus di popup tambah
+                const studentClassInput = document.getElementById('studentClass'); // Select di popup tambah
+
+                if (currentRole === 'admin') {
+                    // Sembunyikan filter kelas di dashboard
+                    if (filterArea) filterArea.classList.add('d-none');
+                    
+                    // Sembunyikan pilihan kelas di popup tambah santri
+                    if (classInputContainer) classInputContainer.classList.add('d-none');
+                    // Paksa value dropdown di popup mengikuti kelas admin tersebut
+                    if (studentClassInput) studentClassInput.value = window.userClass;
+                } else {
+                    // Superadmin bisa lihat semua
+                    if (filterArea) filterArea.classList.remove('d-none');
+                    if (classInputContainer) classInputContainer.classList.remove('d-none');
+                }
 
                 if (statusSebelumnya === false && userData.isApproved === true) {
                     if (loader) loader.classList.add('d-none'); 
@@ -88,8 +112,6 @@ let statusSebelumnya = null;
                     if (loader) loader.classList.add('d-none'); 
                     document.getElementById('loginSection').classList.add('d-none');
                     document.getElementById('mainNavbar').classList.add('d-none');
-                    
-                    // --- PERBAIKAN DI SINI ---
                     if (typeof hideAllPages === "function") hideAllPages();
                     
                     const waitingRoom = document.getElementById('waitingRoom');
@@ -126,17 +148,11 @@ let statusSebelumnya = null;
             }
         });
     } else {
-        // --- KONDISI LOGOUT / BELUM LOGIN ---
-        // Pastikan loginSection muncul, tapi elemen lainnya dibersihkan total
         const loginSect = document.getElementById('loginSection');
         const navBar = document.getElementById('mainNavbar');
-        
         if (loginSect) loginSect.classList.remove('d-none');
         if (navBar) navBar.classList.add('d-none');
-        
-        // PANGGIL PEMBERSIH FILTER DI SINI
         hideAllPages(); 
-        
         if (loader) loader.classList.add('d-none');
     }
 });
@@ -489,19 +505,29 @@ async function saveStudent() {
     const id = document.getElementById('studentId').value;
     const name = document.getElementById('stdName').value;
     const gender = document.getElementById('stdGender').value;
-    const sClass = document.getElementById('stdClass').value;
     const jilid = document.getElementById('stdJilid').value;
     const parentEmail = document.getElementById('stdParentEmail').value;
     const parentPhone = document.getElementById('stdParentPhone').value;
     const photoFile = document.getElementById('stdPhoto').files[0];
     const joinDateValue = document.getElementById('stdJoinDate').value;
 
+    // --- LOGIKA PERBAIKAN DI SINI ---
+    let sClass = "";
     let teacher = "";
-    if (sClass === "TK-SD (Sunan Giri)") {
+
+    if (currentRole === 'admin') {
+        // Jika login sebagai Ustadzah Salwa, paksa nilai ke Sunan Giri
+        sClass = window.userClass; // Pastikan ini berisi "TK-SD (Sunan Giri)"
         teacher = "Ustadzah Salwa";
-    } else if (sClass === "Pra-TK (Sunan Ampel)" || sClass === "TK-SD (Sunan Kalijaga)") {
-        teacher = "Ustadzah Fika";
-    } 
+    } else {
+        // Jika Superadmin, ambil dari dropdown yang terlihat
+        sClass = document.getElementById('studentClass').value;
+        if (sClass === "TK-SD (Sunan Giri)") {
+            teacher = "Ustadzah Salwa";
+        } else {
+            teacher = "Ustadzah Fika";
+        }
+    }
 
     if (!joinDateValue && !id) {
         Swal.fire("Peringatan", "Silakan isi tanggal aktif santri terlebih dahulu!", "warning");
@@ -566,21 +592,51 @@ function renderStudents() {
     const notifList = document.getElementById('notifList'); 
     const notifCount = document.getElementById('notifCount'); 
     
-    const filter = document.getElementById('filterClass').value;
+    // 1. Ambil nilai filter dari dropdown
+    const filterElement = document.getElementById('filterClass');
+    const filter = filterElement ? filterElement.value : 'all';
+    
     let query = db.collection('students');
-    if (filter !== 'all') query = query.where('class', '==', filter);
 
+    // 2. LOGIKA FILTER OTOMATIS BERDASARKAN ROLE
+    if (currentRole === 'admin') {
+        // Jika Admin (Ustadzah Salwa), paksa ke kelasnya sendiri
+        const classToFilter = window.userClass || "TK-SD (Sunan Giri)";
+        query = query.where('class', '==', classToFilter);
+        
+        // Sembunyikan area filter dropdown agar tidak bisa intip kelas lain
+        const filterArea = document.getElementById('filterClassArea');
+        if (filterArea) filterArea.classList.add('d-none');
+    } 
+    else if (currentRole === 'superadmin') {
+        // Jika Superadmin (Ustadzah Fika), gunakan filter dropdown
+        if (filter !== 'all') {
+            query = query.where('class', '==', filter);
+        }
+        // Tampilkan kembali area filter
+        const filterArea = document.getElementById('filterClassArea');
+        if (filterArea) filterArea.classList.remove('d-none');
+    }
+
+    // 3. PENGURUTAN (Wajib buat Index di Firebase jika menggunakan where + orderBy)
     query = query.orderBy('name', 'asc');
 
+    // 4. REALTIME LISTENER
     query.onSnapshot((snapshot) => {
         listDiv.innerHTML = '';
         if (notifList) notifList.innerHTML = ''; 
         let pendingCount = 0;
 
+        // Update Counter Total Santri otomatis sesuai hasil filter
         const totalSantriElement = document.getElementById('totalSantriCount');
         if (totalSantriElement) {
             totalSantriElement.innerText = snapshot.size; 
         } 
+
+        if (snapshot.empty) {
+            listDiv.innerHTML = '<p class="text-center py-5 text-muted">Tidak ada data santri.</p>';
+            return;
+        }
 
         snapshot.forEach(doc => {
             const data = doc.data();
@@ -589,7 +645,7 @@ function renderStudents() {
             const avatarLaki = 'https://i.imgur.com/HPPr16Q.jpeg';
             const avatarPerempuan = 'https://i.imgur.com/NcNQ9R3.jpeg';
             const defaultAvatar = data.gender === 'Perempuan' ? avatarPerempuan : avatarLaki;
-
+            const photoUrl = data.photo || defaultAvatar;
 // --- 1. LOGIKA NOTIFIKASI TERPISAH (SISI LONCENG) ---
 if (currentRole === 'superadmin' && notifList) {
     // A. Notifikasi Infaq
