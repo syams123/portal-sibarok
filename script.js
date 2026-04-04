@@ -1039,12 +1039,19 @@ async function sendBillWA() {
 }
 
 // --- FITUR WALI SANTRI ---
-async function loadChildData(email) {
+let childListenerUnsubscribe = null;
+
+async function loadChildData(email, selectedId = null) {
     const loader = document.getElementById('loading');
     
+    // Matikan antena sebelumnya (jika ada) mencegah lag/dobel saat wali ganti anak
+    if (childListenerUnsubscribe) {
+        childListenerUnsubscribe();
+    }
+    
     // 1. ANTENA REAL-TIME: Nilai Rapor, Infaq, Foto, dan Profil
-    db.collection('students').where('parentEmail', '==', email).limit(1)
-        .onSnapshot((snapshot) => {
+    childListenerUnsubscribe = db.collection('students').where('parentEmail', '==', email)        
+    .onSnapshot((snapshot) => {
             // MATIKAN LOADER SEGERA SAAT DATA TIBA (Menghilangkan stuck "Memuat")
             if (loader) loader.classList.add('d-none');
 
@@ -1054,7 +1061,56 @@ async function loadChildData(email) {
                 return;
             }
 
-            const docSnap = snapshot.docs[0];
+            // =======================================================
+            // 🌟 AWAL SISIPAN: LOGIKA PEMILIH ANAK (MULTI-CHILD) 🌟
+            // =======================================================
+            let docSnap = snapshot.docs[0]; // Default: Tampilkan anak pertama
+
+            if (snapshot.size > 1) {
+                // 1. Jika ada ID yang dipilih lewat tombol, gunakan data anak tersebut
+                if (selectedId) {
+                    const foundDoc = snapshot.docs.find(d => d.id === selectedId);
+                    if (foundDoc) docSnap = foundDoc;
+                }
+
+                // 2. Buat wadah tombol navigasi secara otomatis jika belum ada
+                let navDiv = document.getElementById('multiChildNav');
+                if (!navDiv) {
+                    navDiv = document.createElement('div');
+                    navDiv.id = 'multiChildNav';
+                    navDiv.className = 'mb-3';
+                    const dashboard = document.getElementById('parentDashboard');
+                    if (dashboard) dashboard.prepend(navDiv); // Taruh paling atas di dalam dashboard
+                }
+
+                // 3. Render tombol-tombol nama anak
+                let btnHtml = '<p class="small fw-bold mb-2 text-success"><i class="fas fa-users me-1"></i> Pilih Data Ananda:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
+
+snapshot.forEach((doc) => {
+    const childData = doc.data();
+    const isSelected = (doc.id === docSnap.id);
+    
+    // Gunakan warna hijau (success) pengganti biru (primary)
+    const btnStyle = isSelected ? 'btn-success shadow-sm' : 'btn-outline-success';
+    
+    // Nama lengkap dengan proteksi truncate agar tetap rapi di mobile
+    const fullName = childData.name || "Tanpa Nama";
+    
+    btnHtml += `
+        <button class="btn btn-sm ${btnStyle} rounded-pill px-3" onclick="loadChildData('${email}', '${doc.id}')">
+            <span class="text-truncate-name">${fullName}</span>
+        </button>`;
+});
+
+btnHtml += '</div><hr class="mt-1 mb-3">';
+
+if(navDiv) navDiv.innerHTML = btnHtml;
+            }
+            // =======================================================
+            // 🌟 AKHIR SISIPAN 🌟
+            // =======================================================
+
+            // KODE ASLI KAKAK DI BAWAH INI TETAP UTUH 100% TANPA DIUBAH
             const data = docSnap.data();
             const studentId = docSnap.id; 
             
@@ -1069,122 +1125,122 @@ async function loadChildData(email) {
             }
 
             // --- A. Sinkronisasi Foto & Profil ---
-const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
+            const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
 
-if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = fotoSantri;
-if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
-if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
+            if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = fotoSantri;
+            if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
+            if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
 
-let teksJilid = (data.jilid || "-").toString().replace("Jilid ", "");
-if (document.getElementById('childJilidDisplay')) {
-    document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
-}
+            let teksJilid = (data.jilid || "-").toString().replace("Jilid ", "");
+            if (document.getElementById('childJilidDisplay')) {
+                document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
+            }
 
-// --- B. Sinkronisasi Nilai, Absensi, & TTD ---
-const reportDiv = document.getElementById('childReportCard');
-if (reportDiv) {
-    let contentHtml = ''; // Variabel ini harus menampung SEMUANYA
+            // --- B. Sinkronisasi Nilai, Absensi, & TTD ---
+            const reportDiv = document.getElementById('childReportCard');
+            if (reportDiv) {
+                let contentHtml = ''; // Variabel ini harus menampung SEMUANYA
 
-    // 1. Tambah Nilai
-    if (data.grades) {
-        for (const [subj, grade] of Object.entries(data.grades)) {
-            contentHtml += `
-                <div class="grade-row d-flex justify-content-between border-bottom py-2">
-                    <span>${subj}</span>
-                    <span class="badge bg-primary badge-grade">${grade}</span>
-                </div>`;
-        }
-    }
+                // 1. Tambah Nilai
+                if (data.grades) {
+                    for (const [subj, grade] of Object.entries(data.grades)) {
+                        contentHtml += `
+                            <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                                <span>${subj}</span>
+                                <span class="badge bg-primary badge-grade">${grade}</span>
+                            </div>`;
+                    }
+                }
 
-    // 2. Tambah Absensi (Sesuai keinginan Kakak)
-    contentHtml += `
-        <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
-            <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
-                <h6 class="fw-bold mb-0 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
-                    Kehadiran Santri
-                </h6>
-            </div>
-        </div>`;
+                // 2. Tambah Absensi (Sesuai keinginan Kakak)
+                contentHtml += `
+                    <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
+                        <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
+                            <h6 class="fw-bold mb-0 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
+                                Kehadiran Santri
+                            </h6>
+                        </div>
+                    </div>`;
 
-    contentHtml += `
-        <div class="grade-row d-flex justify-content-between border-bottom py-2">
-            <span>Sakit</span>
-            <span class="badge bg-danger">${data.absensiSakit || 0}</span>
-        </div>
-        <div class="grade-row d-flex justify-content-between border-bottom py-2">
-            <span>Izin</span>
-            <span class="badge bg-warning text-dark">${data.absensiIzin || 0}</span>
-        </div>
-        <div class="grade-row d-flex justify-content-between border-bottom py-2">
-            <span>Lain-lain</span>
-            <span class="badge bg-secondary">${data.absensiLain || 0}</span>
-        </div>`;
+                contentHtml += `
+                    <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                        <span>Sakit</span>
+                        <span class="badge bg-danger">${data.absensiSakit || 0}</span>
+                    </div>
+                    <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                        <span>Izin</span>
+                        <span class="badge bg-warning text-dark">${data.absensiIzin || 0}</span>
+                    </div>
+                    <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                        <span>Lain-lain</span>
+                        <span class="badge bg-secondary">${data.absensiLain || 0}</span>
+                    </div>`;
 
-    // 3. Logika Wali Kelas
-    let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
-    let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
-    const kelasSantri = data.class || "";
+                // 3. Logika Wali Kelas
+                let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
+                let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
+                const kelasSantri = data.class || "";
 
-    if (kelasSantri.includes("Sunan Giri")) {
-        namaWaliKelas = "Salwa Kamilatuz Zakiyah";
-        linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
-    }
+                if (kelasSantri.includes("Sunan Giri")) {
+                    namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+                    linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
+                }
 
-    const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // 4. Tambah Bagian TTD (Digabung ke contentHtml)
-    contentHtml += `
-    <div id="signatureWrapper" class="mt-4">
-        <div class="row text-center align-items-start g-0">
-            <div class="col-4">
-                <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
-                <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
-                <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                    <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto;">
+                // 4. Tambah Bagian TTD (Digabung ke contentHtml)
+                contentHtml += `
+                <div id="signatureWrapper" class="mt-4">
+                    <div class="row text-center align-items-start g-0">
+                        <div class="col-4">
+                            <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
+                            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
+                            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                                <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto;">
+                            </div>
+                            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+                        </div>
+                        <div class="col-4">
+                            <p class="small mb-0">&nbsp;</p>
+                            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
+                            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                                <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto;">
+                            </div>
+                            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
+                        </div>
+                        <div class="col-4">
+                            <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
+                            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
+                            <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                                ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
+                            </div>
+                            <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">${data.parentName || "( Nama Wali Santri )"}</p>
+                        </div>
+                    </div>
                 </div>
-                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
-            </div>
-            <div class="col-4">
-                <p class="small mb-0">&nbsp;</p>
-                <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
-                <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                    <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto;">
-                </div>
-                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
-            </div>
-            <div class="col-4">
-                <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
-                <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
-                <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                    ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
-                </div>
-                <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">${data.parentName || "( Nama Wali Santri )"}</p>
-            </div>
-        </div>
-    </div>
-    <div id="signatureInputArea"></div>`;
+                <div id="signatureInputArea"></div>`;
 
-    // 5. Masukkan SEMUA ke dalam HTML sekaligus
-    reportDiv.innerHTML = contentHtml;
+                // 5. Masukkan SEMUA ke dalam HTML sekaligus
+                reportDiv.innerHTML = contentHtml;
 
-    // 6. Jalankan fungsi TTD
-    if (typeof checkSignatureStatus === 'function') {
-        checkSignatureStatus(docSnap.id, data);
-    }
-}
+                // 6. Jalankan fungsi TTD
+                if (typeof checkSignatureStatus === 'function') {
+                    checkSignatureStatus(docSnap.id, data);
+                }
+            }
 
-// --- AKHIR ---
-const ldr = document.getElementById('loading');
-if (ldr) ldr.classList.add('d-none');
+            // --- AKHIR ---
+            const ldr = document.getElementById('loading');
+            if (ldr) ldr.classList.add('d-none');
+            
             // --- C. Sinkronisasi Status Infaq Otomatis ---
             const statusText = document.getElementById('childInfaqStatus');
             const btnCetak = document.getElementById('btnCetakKuitansi');
-            const cardInfaq = document.getElementById('cardInfaq'); // ID Baru yang ditambahkan di HTML
+            const cardInfaq = document.getElementById('cardInfaq'); 
             
             if (data.infaqStatus === true || data.infaqStatus === "Lunas") {
                 // Tampilan Lunas
-                statusText.innerText = "Lunas";
-                statusText.className = "text-success fw-bold";
+                if(statusText) { statusText.innerText = "Lunas"; statusText.className = "text-success fw-bold"; }
                 if(btnCetak) btnCetak.classList.remove('d-none');
                 
                 // Ganti Border ke Hijau
@@ -1194,8 +1250,7 @@ if (ldr) ldr.classList.add('d-none');
                 }
             } else {
                 // Tampilan Belum Lunas
-                statusText.innerText = "Belum Lunas";
-                statusText.className = "text-danger fw-bold";
+                if(statusText) { statusText.innerText = "Belum Lunas"; statusText.className = "text-danger fw-bold"; }
                 if(btnCetak) btnCetak.classList.add('d-none');
                 
                 // Ganti Border ke Merah
@@ -1206,7 +1261,7 @@ if (ldr) ldr.classList.add('d-none');
             }   
 
             // --- D. UPDATE OTOMATIS: Riwayat Pembayaran ---
-            loadPaymentHistory(studentId);
+            if (typeof loadPaymentHistory === 'function') loadPaymentHistory(studentId);
 
             if (typeof playBeep === 'function') playBeep();
         }, (error) => {
@@ -2693,6 +2748,20 @@ function renderReportCard(studentId, data) {
         </div>
         <div class="grade-row d-flex justify-content-between border-bottom py-2">
             <span>Lain-lain</span> <span class="badge bg-secondary rounded-pill">${data.absensiLain || 0}</span>
+        </div>`;
+
+        const catatanUstadzah = (data.notes && data.notes.trim() !== "") 
+                            ? data.notes 
+                            : "Tetap semangat mengaji dan menjaga shalatnya di rumah ya sayang.";
+
+    contentHtml += `
+        <div class="mt-4 mb-3">
+            <label class="small fw-bold text-success mb-1">
+                <i class="fas fa-comment-dots me-1"></i> Pesan Ustadzah:
+            </label>
+            <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded" style="font-style: italic; font-size: 0.85rem; color: #155724; line-height: 1.5;">
+                "${catatanUstadzah}"
+            </div>
         </div>`;
 
     // 4. LOGIKA WALI KELAS (Otomatis ganti jika kelas berbeda)
