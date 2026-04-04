@@ -767,3 +767,62 @@ select.form-select:disabled {
 .btn-outline-tpq { color: #28a745; border-color: #28a745; }
 .btn-outline-tpq:hover { background-color: #28a745; color: white; }
 .text-truncate-name { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
+
+/* Container Floating */
+.floating-tutorial {
+    position: fixed;
+    bottom: 85px; /* Di atas tombol backToTop sedikit */
+    right: 20px;
+    z-index: 1050;
+}
+
+/* Tombol Lingkaran */
+.btn-float-tutorial {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #ffc107; /* Kuning Warning */
+    color: #000;
+    border: 3px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    animation: pulse-yellow 2s infinite;
+}
+
+.btn-float-tutorial:hover {
+    transform: scale(1.1);
+    background-color: #ffca2c;
+    color: #000;
+}
+
+/* Animasi Berdenyut */
+@keyframes pulse-yellow {
+    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+/* Label Melayang di Samping Tombol */
+.tutorial-hint {
+    position: absolute;
+    right: 65px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.floating-tutorial:hover .tutorial-hint {
+    opacity: 1;
+}
