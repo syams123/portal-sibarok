@@ -762,3 +762,8 @@ select.form-select:disabled {
         padding-right: 0.75rem !important;
     }
 }
+
+.btn-tpq { background-color: #28a745; color: white; border-color: #28a745; }
+.btn-outline-tpq { color: #28a745; border-color: #28a745; }
+.btn-outline-tpq:hover { background-color: #28a745; color: white; }
+.text-truncate-name { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
