@@ -716,7 +716,7 @@ select.form-select:disabled {
     width: 50px;  /* SAMA dengan tombol hijau */
     height: 50px; /* SAMA dengan tombol hijau */
     border-radius: 50%;
-    z-index: 2000; /* SAMA agar tumpukannya konsisten */
+    z-index: 1000 !important; /* SAMA agar tumpukannya konsisten */
     display: flex;
     align-items: center;
     justify-content: center;
