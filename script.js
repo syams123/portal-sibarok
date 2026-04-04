@@ -1455,68 +1455,90 @@ async function loadProfile() {
     }
 }
 
-async function saveProfile() {
-    const btn = event.target;
-    const originalText = "Simpan Profil"; // Menghindari error originalText undefined
-    btn.disabled = true;
-    btn.innerText = "Menyimpan...";
+    async function saveProfile() {
+        const btn = event.target;
+        const originalText = "Simpan Profil"; // Menghindari error originalText undefined
+        btn.disabled = true;
+        btn.innerText = "Menyimpan...";
 
-    const newPhone = document.getElementById('profilePhone').value;
-    const newAddress = document.getElementById('profileAddress').value;
-    // Ambil input file berdasarkan ID di HTML Kakak
-    const fileInput = document.getElementById('profilePhotoInput'); 
+        const newPhone = document.getElementById('profilePhone').value;
+        const newAddress = document.getElementById('profileAddress').value;
+        // Ambil input file berdasarkan ID di HTML Kakak
+        const fileInput = document.getElementById('profilePhotoInput'); 
 
-    try {
-        let dataToUpdate = {
-            phone: newPhone,
-            address: newAddress
-        };
+        try {
+            let dataToUpdate = {
+                phone: newPhone,
+                address: newAddress
+            };
 
-        // --- PROSES UPLOAD FOTO JIKA ADA FILE DIPILIH ---
-        if (fileInput && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            const storageRef = storage.ref(`profile_photos/${currentUser.uid}`);
-            
-            // 1. Upload file ke Firebase Storage
-            const snapshot = await storageRef.put(file);
-            // 2. Ambil link URL permanennya
-            const downloadURL = await snapshot.ref.getDownloadURL();
-            
-            // 3. Masukkan link asli ke dalam data yang akan diupdate
-            dataToUpdate.photoURL = downloadURL;
+            // --- PROSES UPLOAD FOTO JIKA ADA FILE DIPILIH ---
+            if (fileInput && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const storageRef = storage.ref(`profile_photos/${currentUser.uid}`);
+                
+                // 1. Upload file ke Firebase Storage
+                const snapshot = await storageRef.put(file);
+                // 2. Ambil link URL permanennya
+                const downloadURL = await snapshot.ref.getDownloadURL();
+                
+                // 3. Masukkan link asli ke dalam data yang akan diupdate
+                dataToUpdate.photoURL = downloadURL;
 
-            const imgPreview = document.getElementById('profilePreview');
-if (imgPreview) {
-    imgPreview.src = downloadURL; 
-}
-        }
-
-        if (currentRole === 'parent') {
-            const newParentName = document.getElementById('profilNamaWali').value;
-            dataToUpdate.parentName = newParentName;
-
-            const snap = await db.collection('students').where('parentEmail', '==', currentUser.email).limit(1).get();
-            if (!snap.empty) {
-                await db.collection('students').doc(snap.docs[0].id).update(dataToUpdate);
-            }
-        } else {
-            const newAdminName = document.getElementById('profilNama').value;
-            dataToUpdate.name = newAdminName;
-            dataToUpdate.nama = newAdminName;
-
-            // Update ke koleksi Users (Admin/Ustadzah)
-            await db.collection('users').doc(currentUser.uid).update(dataToUpdate);
-        }
-
-        Swal.fire("Berhasil", "Profil Berhasil Diperbarui!", "success");
-    } catch (error) {
-        console.error(error);
-        Swal.fire("Error", "Gagal menyimpan data: " + error.message, "error");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-save me-2"></i> ${originalText}`;
+                const imgPreview = document.getElementById('profilePreview');
+    if (imgPreview) {
+        imgPreview.src = downloadURL; 
     }
-}
+            }
+
+            if (currentRole === 'parent') {
+                const newParentName = document.getElementById('profilNamaWali').value;
+                dataToUpdate.parentName = newParentName;
+
+                await db.collection('users').doc(currentUser.uid).update({
+                name: newParentName,
+                nama: newParentName,
+                phone: newPhone,
+                address: newAddress,
+                photoURL: dataToUpdate.photoURL || null
+            });
+
+            // 2. Cari SEMUA anak berdasarkan email wali (Hapus .limit(1))
+            const snap = await db.collection('students').where('parentEmail', '==', currentUser.email).get();
+            
+            if (!snap.empty) {
+                const batch = db.batch();
+                snap.forEach(doc => {
+                    // Update field parentName di setiap dokumen anak
+                    batch.update(doc.ref, { 
+                        parentName: newParentName,
+                        // Jika ingin foto profil wali juga muncul di data anak, tambahkan di sini:
+                        // parentPhoto: dataToUpdate.photoURL 
+                    });
+                });
+                await batch.commit(); // Eksekusi update massal
+            }
+            
+            // Update variabel global agar nama di header langsung berubah
+            window.parentName = newParentName;
+            } else {
+                const newAdminName = document.getElementById('profilNama').value;
+                dataToUpdate.name = newAdminName;
+                dataToUpdate.nama = newAdminName;
+
+                // Update ke koleksi Users (Admin/Ustadzah)
+                await db.collection('users').doc(currentUser.uid).update(dataToUpdate);
+            }
+
+            Swal.fire("Berhasil", "Profil Berhasil Diperbarui!", "success");
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Error", "Gagal menyimpan data: " + error.message, "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fas fa-save me-2"></i> ${originalText}`;
+        }
+    }
 
 function showRegisterModal() {
     new bootstrap.Modal(document.getElementById('registerModal')).show();
