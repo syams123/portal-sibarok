@@ -57,30 +57,30 @@ let currentView = 'grid';
 
     if (user) {
         currentUser = user;
-        // PENTING: Jangan langsung panggil unsubscribe di dalam snapshot agar realtime tetap jalan
+
+        // --- TAMBAHAN: LANGSUNG MUNCULKAN NAVBAR AGAR TIDAK KOSONG ---
+        const navBar = document.getElementById('mainNavbar');
+        const loginSect = document.getElementById('loginSection');
+        if (navBar) navBar.classList.remove('d-none');
+        if (loginSect) loginSect.classList.add('d-none');
+
         const unsubscribe = db.collection('users').doc(user.uid).onSnapshot(async (userDoc) => {
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 currentRole = userData.role;
                 
-                // 1. Inisialisasi Data Dasar
                 let namaMurni = userData.nama || userData.name || "Pengajar";
                 const gender = userData.gender || "Wanita";
                 const panggilan = (gender === 'Pria') ? "Ustadz" : "Ustadzah";
                 const sapaanFinal = `${panggilan} ${namaMurni}`;
                 window.userName = sapaanFinal;
 
-                // 2. LOGIKA KRUSIAL: CEK PERSETUJUAN (WAITING ROOM)
-                // Jika belum disetujui (isApproved === false)
                 if (userData.isApproved === false) {
                     if (loader) loader.classList.add('d-none'); 
+                    if (navBar) navBar.classList.add('d-none'); // Sembunyikan jika belum disetujui
                     
-                    // Sembunyikan elemen utama agar tidak bisa diakses
-                    document.getElementById('loginSection').classList.add('d-none');
-                    document.getElementById('mainNavbar').classList.add('d-none');
                     if (typeof hideAllPages === "function") hideAllPages();
                     
-                    // Tampilkan Waiting Room
                     const waitingRoom = document.getElementById('waitingRoom');
                     if (waitingRoom) {
                         waitingRoom.classList.remove('d-none');
@@ -89,16 +89,15 @@ let currentView = 'grid';
                             waitingName.innerHTML = `Assalamu'alaikum<br><span style="font-size: 1.2rem;">Mohon Maaf, ${sapaanFinal}</span>`;
                         }
                     }
-                    return; // STOP DI SINI, jangan lanjut ke showPage lain
+                    return; 
                 }
 
-                // 3. JIKA SUDAH DISETUJUI (ATAU SUPERADMIN)
                 const waitingRoom = document.getElementById('waitingRoom');
                 if (waitingRoom) waitingRoom.classList.add('d-none');
-                document.getElementById('loginSection').classList.add('d-none');
-                document.getElementById('mainNavbar').classList.remove('d-none');
+                
+                // Pastikan navbar tetap terlihat jika sudah disetujui
+                if (navBar) navBar.classList.remove('d-none');
 
-                // Notifikasi Sukses Aktivasi (Jika baru saja disetujui)
                 if (statusSebelumnya === false && userData.isApproved === true) {
                     Swal.fire({
                         title: "Alhamdulillah!",
@@ -110,7 +109,6 @@ let currentView = 'grid';
                 }
                 statusSebelumnya = userData.isApproved;
 
-                // 4. PENGATURAN HAK AKSES KELAS & FILTER
                 if (currentRole === 'admin') {
                     window.userClass = userData.class || "TK-SD (Sunan Giri)";
                     const filterArea = document.getElementById('filterClassArea');
@@ -122,33 +120,31 @@ let currentView = 'grid';
                     if (studentClassInput) studentClassInput.value = window.userClass;
                 }
 
-                // 5. ARAHKAN KE HALAMAN YANG SESUAI
+                // ARAHKAN KE HALAMAN & MUNCULKAN TOMBOL PLUS
                 if (currentRole === 'admin' || currentRole === 'superadmin') {
-                    showPage('admin');
+                    showPage('admin'); // Memanggil showPage yang sudah diperbaiki di bawah
                     await renderStudents();
                     await renderUstadzah();
+                    
                 } else {
                     showPage('parent');
                     await loadChildData(user.email);
                 }
 
                 if (loader) loader.classList.add('d-none');
-                // PENTING: Jangan panggil unsubscribe() di sini jika ingin realtime approval
             } else {
                 await auth.signOut();
                 if (loader) loader.classList.add('d-none');
             }
         });
     } else {
-        // Logika Logout
+        // Logika Logout tetap sama seperti kode Kakak
         const loginSect = document.getElementById('loginSection');
         const navBar = document.getElementById('mainNavbar');
         const waitingRoom = document.getElementById('waitingRoom');
-        
         if (loginSect) loginSect.classList.remove('d-none');
         if (navBar) navBar.classList.add('d-none');
         if (waitingRoom) waitingRoom.classList.add('d-none');
-        
         hideAllPages(); 
         if (loader) loader.classList.add('d-none');
     }
@@ -223,8 +219,11 @@ async function showPage(page) {
     const filterClassArea = document.getElementById('filterClassArea');
     const greetingArea = document.getElementById('greetingArea');
     const btnBackToTop = document.getElementById('backToTop');
+    
+    // Identifikasi Tombol Plus (Floating Action Button)
+    const floatingBtn = document.getElementById('floatingAddBtn'); 
 
-    // --- 2. LOGIKA PAKSA SEMBUNYI TOTAL SAAT DI PROFIL ---
+    // --- 2. LOGIKA TAMPILAN ELEMEN BERDASARKAN HALAMAN ---
     if (page === 'profile') {
         // Jika sedang di profil, semua elemen pencarian & judul harus hilang
         if (headerArea) headerArea.style.setProperty('display', 'none', 'important');
@@ -232,25 +231,45 @@ async function showPage(page) {
         if (filterClassArea) filterClassArea.style.setProperty('display', 'none', 'important');
         if (greetingArea) greetingArea.style.setProperty('display', 'none', 'important');
         if (btnBackToTop) btnBackToTop.style.setProperty('display', 'none', 'important');
-    } else if (page === 'home' && (currentRole === 'superadmin' || currentRole === 'admin')) {
-        // Jika kembali ke home admin, munculkan kembali semuanya
+        
+        // Tambahan: Sembunyikan tombol plus saat di profil
+        if (floatingBtn) floatingBtn.classList.add('d-none');
+
+    } else if ((page === 'home' || page === 'admin') && (currentRole === 'superadmin' || currentRole === 'admin')) {
+        // PERBAIKAN: Jika masuk ke home/admin, PAKSA munculkan kembali semuanya
         if (headerArea) headerArea.style.setProperty('display', 'block', 'important');
         if (searchAreaSticky) searchAreaSticky.style.setProperty('display', 'block', 'important');
-        if (filterClassArea) filterClassArea.style.setProperty('display', 'block', 'important');
         if (greetingArea) greetingArea.style.setProperty('display', 'block', 'important');
+        
+        // Munculkan tombol plus kembali
+        if (floatingBtn) floatingBtn.classList.add('d-none');
+
+        // Logika Filter: Hanya muncul jika Superadmin
+        if (currentRole === 'superadmin') {
+            if (filterClassArea) filterClassArea.style.setProperty('display', 'block', 'important');
+        } else {
+            if (filterClassArea) filterClassArea.style.setProperty('display', 'none', 'important');
+        }
+
     } else {
         // Untuk halaman lain (misal home Wali Santri), sembunyikan filter admin
         if (headerArea) headerArea.style.setProperty('display', 'none', 'important');
         if (searchAreaSticky) searchAreaSticky.style.setProperty('display', 'none', 'important');
         if (filterClassArea) filterClassArea.style.setProperty('display', 'none', 'important');
+        if (greetingArea) greetingArea.style.setProperty('display', 'none', 'important');
+        
+        // Sembunyikan tombol plus untuk wali santri
+        if (floatingBtn) floatingBtn.classList.add('d-none');
     }
 
     // --- 3. TAMPILKAN HALAMAN TARGET ---
+    // Kakak pakai pola (page + 'Page'), pastikan ID di HTML adalah adminPage, profilePage, dll.
     const targetPage = document.getElementById(page + 'Page');
     if (targetPage) {
         targetPage.style.display = 'block';
+        // Pastikan tidak tertutup d-none dari bootstrap
+        targetPage.classList.remove('d-none'); 
     }
-
     // --- TAMBAHAN: Efek Smooth Scroll ke Atas ---
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
