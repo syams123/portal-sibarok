@@ -712,7 +712,7 @@ select.form-select:disabled {
     position: fixed;
     /* 30px (bottom hijau) + 50px (tinggi hijau) + 15px (jarak antar tombol) = 95px */
     bottom: 90px; 
-    right: 30px;  /* SAMA dengan tombol hijau */
+    right: 15px;  /* SAMA dengan tombol hijau */
     width: 50px;  /* SAMA dengan tombol hijau */
     height: 50px; /* SAMA dengan tombol hijau */
     border-radius: 50%;
