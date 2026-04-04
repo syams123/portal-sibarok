@@ -211,6 +211,56 @@
             <p class="mt-4 text-muted small">Portal SiBarok &copy; <script>document.write(new Date().getFullYear());</script></p>
         </div>
     </div>
+    <div class="floating-tutorial">
+    <span class="tutorial-hint fw-bold">Lihat Tutorial Video</span>
+    <button class="btn btn-float-tutorial" data-bs-toggle="modal" data-bs-target="#tutorialModal">
+        <i class="fas fa-video"></i>
+    </button>
+</div>
+
+<div class="modal fade" id="tutorialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none;">
+            <div class="modal-header bg-warning text-dark border-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-play-circle me-2"></i> Tutorial Portal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 bg-light">
+                <ul class="nav nav-pills nav-fill gap-2 mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active fw-bold small" data-bs-toggle="pill" data-bs-target="#vid-akun" type="button">1. Akun & Rapor</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold small" data-bs-toggle="pill" data-bs-target="#vid-infaq" type="button">2. Transaksi Infaq</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="pills-tabContent">
+    <div class="tab-pane fade show active" id="vid-akun" role="tabpanel">
+        <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden bg-black">
+            <iframe id="videoAkun" 
+                    src="https://www.youtube.com/embed/9koceNBiqV0?enablejsapi=1&rel=0" 
+                    allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+        <p class="mt-2 small text-center text-muted italic">Tutorial Pembuatan Akun & Serah Terima Rapor</p>
+    </div>
+
+    <div class="tab-pane fade" id="vid-infaq" role="tabpanel">
+        <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden bg-black">
+            <iframe id="videoInfaq" 
+                    src="https://www.youtube.com/embed/7RpXRcm-3Qg?enablejsapi=1&rel=0" 
+                    allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+        <p class="mt-2 small text-center text-muted italic">Tutorial Transaksi Infaq Bulanan</p>
+    </div>
+</d
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 </section>
 
 <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-success d-none sticky-top">
@@ -681,58 +731,6 @@
         title="Tambah Santri">
     <i class="fas fa-plus"></i>
 </button>
-
-<div class="floating-tutorial">
-    <span class="tutorial-hint fw-bold">Lihat Tutorial Video</span>
-    <button class="btn btn-float-tutorial" data-bs-toggle="modal" data-bs-target="#tutorialModal">
-        <i class="fas fa-video"></i>
-    </button>
-</div>
-
-<div class="modal fade" id="tutorialModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none;">
-            <div class="modal-header bg-warning text-dark border-0">
-                <h5 class="modal-title fw-bold"><i class="fas fa-play-circle me-2"></i> Tutorial Portal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-3 bg-light">
-                <ul class="nav nav-pills nav-fill gap-2 mb-3" id="pills-tab" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active fw-bold small" data-bs-toggle="pill" data-bs-target="#vid-akun" type="button">1. Akun & Rapor</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link fw-bold small" data-bs-toggle="pill" data-bs-target="#vid-infaq" type="button">2. Transaksi Infaq</button>
-                    </li>
-                </ul>
-                
-                <div class="tab-content" id="pills-tabContent">
-    <div class="tab-pane fade show active" id="vid-akun" role="tabpanel">
-        <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden bg-black">
-            <iframe id="videoAkun" 
-                    src="https://www.youtube.com/embed/9koceNBiqV0?enablejsapi=1&rel=0" 
-                    allow="autoplay; encrypted-media" allowfullscreen></iframe>
-        </div>
-        <p class="mt-2 small text-center text-muted italic">Tutorial Pembuatan Akun & Serah Terima Rapor</p>
-    </div>
-
-    <div class="tab-pane fade" id="vid-infaq" role="tabpanel">
-        <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden bg-black">
-            <iframe id="videoInfaq" 
-                    src="https://www.youtube.com/embed/7RpXRcm-3Qg?enablejsapi=1&rel=0" 
-                    allow="autoplay; encrypted-media" allowfullscreen></iframe>
-        </div>
-        <p class="mt-2 small text-center text-muted italic">Tutorial Transaksi Infaq Bulanan</p>
-    </div>
-</d
-            </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
