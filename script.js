@@ -2033,7 +2033,7 @@ async function konfirmasiBayar() {
 
                 await Swal.fire({
                     title: "Berhasil",
-                    text: `Konfirmasi berhasil! Ustadzah akan segera memverifikasi pembayaran Infaq untuk ${nama}.`,
+                    text: `Konfirmasi berhasil! Ustadzah akan segera memverifikasi pembayaran Infaq untuk ${namaSantriReal}.`,
                     icon: "success",
                     confirmButtonColor: '#198754'
                 });
