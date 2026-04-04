@@ -2961,3 +2961,35 @@ function changeView(view) {
 
 // WAJIB: Ekspos fungsi ke window agar bisa dipanggil onclick dari HTML
 window.changeView = changeView;
+
+// Fungsi untuk menghentikan semua video
+function stopAllTutorialVideos() {
+    const v1 = document.getElementById('videoAkun');
+    const v2 = document.getElementById('videoInfaq');
+    
+    if (v1) {
+        let src = v1.src;
+        v1.src = ""; // Cabut sumbernya sejenak
+        v1.src = src; // Pasang lagi agar reset ke posisi awal (berhenti)
+    }
+    if (v2) {
+        let src = v2.src;
+        v2.src = "";
+        v2.src = src;
+    }
+}
+
+// 1. Logika Stop Video saat Pindah Tab
+document.querySelectorAll('#tutorialModal .nav-link').forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function () {
+        stopAllTutorialVideos();
+    });
+});
+
+// 2. Logika Stop Video saat Modal Ditutup (Paling Penting!)
+const tutorialModal = document.getElementById('tutorialModal');
+if (tutorialModal) {
+    tutorialModal.addEventListener('hidden.bs.modal', function () {
+        stopAllTutorialVideos();
+    });
+}
