@@ -45,6 +45,8 @@ let currentUser = null;
 let currentRole = null; // 'admin' atau 'parent' atau 'superadmin'
 let studentsData = [];
 let statusSebelumnya = null;
+// Inisialisasi variabel global di bagian atas script
+let currentView = 'grid'; 
 
 // --- AUTHENTICATION ---
 
@@ -55,49 +57,49 @@ let statusSebelumnya = null;
 
     if (user) {
         currentUser = user;
+        // PENTING: Jangan langsung panggil unsubscribe di dalam snapshot agar realtime tetap jalan
         const unsubscribe = db.collection('users').doc(user.uid).onSnapshot(async (userDoc) => {
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 currentRole = userData.role;
-                if (currentRole === 'admin') {
-        // Jika Ustadzah Salwa login, kita patenkan variabelnya
-        // Pastikan teksnya persis dengan yang ada di Firestore kakak
-        window.userClass = "TK-SD (Sunan Giri)"; 
-    }
-
-                setTimeout(() => {
-                    showPage('home');
-                }, 100);
-
+                
+                // 1. Inisialisasi Data Dasar
                 let namaMurni = userData.nama || userData.name || "Pengajar";
                 const gender = userData.gender || "Wanita";
                 const panggilan = (gender === 'Pria') ? "Ustadz" : "Ustadzah";
                 const sapaanFinal = `${panggilan} ${namaMurni}`;
-
                 window.userName = sapaanFinal;
-                if (typeof displayGreeting === "function") displayGreeting(sapaanFinal);
 
-                // --- LOGIKA TAMPILAN FILTER & POPUP ---
-                const filterArea = document.getElementById('filterClassArea'); // Container filter di dashboard
-                const classInputContainer = document.getElementById('classInputContainer'); // Div pembungkus di popup tambah
-                const studentClassInput = document.getElementById('studentClass'); // Select di popup tambah
-
-                if (currentRole === 'admin') {
-                    // Sembunyikan filter kelas di dashboard
-                    if (filterArea) filterArea.classList.add('d-none');
+                // 2. LOGIKA KRUSIAL: CEK PERSETUJUAN (WAITING ROOM)
+                // Jika belum disetujui (isApproved === false)
+                if (userData.isApproved === false) {
+                    if (loader) loader.classList.add('d-none'); 
                     
-                    // Sembunyikan pilihan kelas di popup tambah santri
-                    if (classInputContainer) classInputContainer.classList.add('d-none');
-                    // Paksa value dropdown di popup mengikuti kelas admin tersebut
-                    if (studentClassInput) studentClassInput.value = window.userClass;
-                } else {
-                    // Superadmin bisa lihat semua
-                    if (filterArea) filterArea.classList.remove('d-none');
-                    if (classInputContainer) classInputContainer.classList.remove('d-none');
+                    // Sembunyikan elemen utama agar tidak bisa diakses
+                    document.getElementById('loginSection').classList.add('d-none');
+                    document.getElementById('mainNavbar').classList.add('d-none');
+                    if (typeof hideAllPages === "function") hideAllPages();
+                    
+                    // Tampilkan Waiting Room
+                    const waitingRoom = document.getElementById('waitingRoom');
+                    if (waitingRoom) {
+                        waitingRoom.classList.remove('d-none');
+                        const waitingName = document.getElementById('waitingName');
+                        if (waitingName) {
+                            waitingName.innerHTML = `Assalamu'alaikum<br><span style="font-size: 1.2rem;">Mohon Maaf, ${sapaanFinal}</span>`;
+                        }
+                    }
+                    return; // STOP DI SINI, jangan lanjut ke showPage lain
                 }
 
+                // 3. JIKA SUDAH DISETUJUI (ATAU SUPERADMIN)
+                const waitingRoom = document.getElementById('waitingRoom');
+                if (waitingRoom) waitingRoom.classList.add('d-none');
+                document.getElementById('loginSection').classList.add('d-none');
+                document.getElementById('mainNavbar').classList.remove('d-none');
+
+                // Notifikasi Sukses Aktivasi (Jika baru saja disetujui)
                 if (statusSebelumnya === false && userData.isApproved === true) {
-                    if (loader) loader.classList.add('d-none'); 
                     Swal.fire({
                         title: "Alhamdulillah!",
                         text: `Selamat ${sapaanFinal}, akun Anda telah disetujui. Membuka dasbor...`,
@@ -108,28 +110,19 @@ let statusSebelumnya = null;
                 }
                 statusSebelumnya = userData.isApproved;
 
-                if (currentRole === 'admin' && userData.isApproved === false) {
-                    if (loader) loader.classList.add('d-none'); 
-                    document.getElementById('loginSection').classList.add('d-none');
-                    document.getElementById('mainNavbar').classList.add('d-none');
-                    if (typeof hideAllPages === "function") hideAllPages();
-                    
-                    const waitingRoom = document.getElementById('waitingRoom');
-                    if (waitingRoom) {
-                        waitingRoom.classList.remove('d-none');
-                        const waitingName = document.getElementById('waitingName');
-                        if (waitingName) {
-                            waitingName.innerHTML = `Assalamu'alaikum<br><span style="font-size: 1.2rem;">Mohon Maaf, ${sapaanFinal}</span>`;
-                        }
-                    }
-                    return; 
+                // 4. PENGATURAN HAK AKSES KELAS & FILTER
+                if (currentRole === 'admin') {
+                    window.userClass = userData.class || "TK-SD (Sunan Giri)";
+                    const filterArea = document.getElementById('filterClassArea');
+                    const classInputContainer = document.getElementById('classInputContainer');
+                    const studentClassInput = document.getElementById('studentClass');
+
+                    if (filterArea) filterArea.classList.add('d-none');
+                    if (classInputContainer) classInputContainer.classList.add('d-none');
+                    if (studentClassInput) studentClassInput.value = window.userClass;
                 }
 
-                const waitingRoom = document.getElementById('waitingRoom');
-                if (waitingRoom) waitingRoom.classList.add('d-none');
-                document.getElementById('loginSection').classList.add('d-none');
-                document.getElementById('mainNavbar').classList.remove('d-none');
-
+                // 5. ARAHKAN KE HALAMAN YANG SESUAI
                 if (currentRole === 'admin' || currentRole === 'superadmin') {
                     showPage('admin');
                     await renderStudents();
@@ -140,18 +133,22 @@ let statusSebelumnya = null;
                 }
 
                 if (loader) loader.classList.add('d-none');
-                if (unsubscribe) unsubscribe(); 
-
+                // PENTING: Jangan panggil unsubscribe() di sini jika ingin realtime approval
             } else {
                 await auth.signOut();
                 if (loader) loader.classList.add('d-none');
             }
         });
     } else {
+        // Logika Logout
         const loginSect = document.getElementById('loginSection');
         const navBar = document.getElementById('mainNavbar');
+        const waitingRoom = document.getElementById('waitingRoom');
+        
         if (loginSect) loginSect.classList.remove('d-none');
         if (navBar) navBar.classList.add('d-none');
+        if (waitingRoom) waitingRoom.classList.add('d-none');
+        
         hideAllPages(); 
         if (loader) loader.classList.add('d-none');
     }
@@ -446,22 +443,46 @@ async function setupProfilePage(role, userDataInput, studentIdInput = null) {
 
                     setTimeout(() => {
                         const qrcodeContainer = document.getElementById(`qrcode-${sId}`);
-                        if (qrcodeContainer && childData.nis) {
-                            qrcodeContainer.innerHTML = ""; 
-                            const blogspotURL = "https://tpqalmubarokarc.blogspot.com"; 
-                            const finalLink = `${blogspotURL}/p/kartu-santri.html?nis=${childData.nis}`;
-                            new QRCode(qrcodeContainer, {
-                                text: finalLink,
-                                width: 60,
-                                height: 60,
-                                colorDark : "#198754",
-                                colorLight : "#ffffff",
-                                correctLevel : QRCode.CorrectLevel.M
-                            });
-                        }
-                    }, 300);
-                });
-            });
+if (qrcodeContainer && childData.nis) {
+    qrcodeContainer.innerHTML = ""; 
+    const blogspotURL = "https://tpqalmubarokarc.blogspot.com"; 
+    const finalLink = `${blogspotURL}/p/kartu-santri.html?nis=${childData.nis}`;
+    
+    // Inisialisasi QR Code
+    new QRCode(qrcodeContainer, {
+        text: finalLink,
+        width: 60,
+        height: 60,
+        colorDark : "#198754",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.M
+    });
+
+    // Tambahkan style pointer dan fungsi klik untuk zoom
+    qrcodeContainer.style.cursor = "zoom-in";
+    qrcodeContainer.onclick = function() {
+        // Ambil elemen gambar atau canvas yang dihasilkan oleh QRCode.js
+        const qrImage = qrcodeContainer.querySelector('img') || qrcodeContainer.querySelector('canvas');
+        if (qrImage) {
+            // Jika berupa canvas (biasanya di Android), konversi ke DataURL
+            const src = qrImage.tagName === 'CANVAS' ? qrImage.toDataURL() : qrImage.src;
+            
+            // Gunakan fungsi zoom yang sudah ada di index.html
+            if (typeof openZoom === "function") {
+                openZoom(src);
+                
+                // Tambahan: Paksa agar tampilan zoom tidak bulat (lingkaran)
+                const targetZoom = document.getElementById('zoomImage');
+                if (targetZoom) {
+                    targetZoom.style.borderRadius = "0px"; // Membuat sudut sedikit melengkung tapi tetap kotak
+                }
+            }
+        }
+    };
+}
+}, 300);
+});
+});
 
             const daftarNamaAnak = snap.docs.map(doc => doc.data().name).join(", ");
             if (inputNamaSantri) inputNamaSantri.value = daftarNamaAnak;
@@ -717,24 +738,56 @@ if (currentRole === 'superadmin') {
     }
 }
 
-            const cardHtml = `
-                <div class="col-6 col-md-4 col-lg-3 santri-card">
-                    <div class="card card-student shadow-sm h-100 position-relative">
-                        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
-                                onclick="event.stopPropagation(); deleteStudent('${id}', '${data.name}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <img src="${data.photo || defaultAvatar}" class="student-img-top" onclick="openDetail('${id}')">
-                        <div class="card-body p-2 text-center">
-                            <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
-                            <small class="text-muted d-block mb-1">${data.class}</small>
-                            ${ttdStatusHtml}
-                            ${walletBadgeHtml}
-                            ${statusBadgeHtml}
+            // --- 3. LOGIKA PEMILIHAN TAMPILAN (GRID vs LIST) ---
+            let finalHtml = "";
+
+            if (currentView === 'grid') {
+                // TAMPILAN GRID (KODE ASLI KAKAK - TETAP CANTIK & TIDAK GEPENG)
+                finalHtml = `
+                    <div class="col-6 col-md-4 col-lg-3 santri-card mb-3">
+                        <div class="card card-student shadow-sm h-100 position-relative">
+                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                                    onclick="event.stopPropagation(); deleteStudent('${id}', '${data.name}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <img src="${data.photo || defaultAvatar}" class="student-img-top" onclick="openDetail('${id}')">
+                            <div class="card-body p-2 text-center">
+                                <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
+                                <small class="text-muted d-block mb-1">${data.class}</small>
+                                ${ttdStatusHtml}
+                                ${walletBadgeHtml}
+                                ${statusBadgeHtml}
+                            </div>
+                        </div>  
+                    </div>`;
+            } else {
+                // TAMPILAN LIST (BARIS RAMPING - COCOK UNTUK HP)
+                finalHtml = `
+                    <div class="col-12 mb-2">
+                        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+                            <div class="card-body d-flex align-items-center py-2 px-3">
+                                <img src="${data.photo || defaultAvatar}" class="rounded-circle me-3" 
+                                     style="width: 45px; height: 45px; object-fit: cover; cursor: pointer; border: 1px solid #eee;" 
+                                     onclick="openDetail('${id}')">
+                                
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
+                                    <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2">
+                                    ${data.infaqStatus === true ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
+                                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="openDetail('${id}')">
+                                        <i class="fas fa-chevron-right text-muted"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>`;
-            listDiv.innerHTML += cardHtml;
+                    </div>`;
+            }
+
+            // Masukkan hasil pilihan ke dalam container utama
+            listDiv.innerHTML += finalHtml;
         });
 
         // --- UPDATE LONCENG & HIDE LOADER ---
@@ -2732,3 +2785,60 @@ btnBackToTop.onclick = function() {
         behavior: 'smooth'
     });
 };
+
+window.addEventListener('scroll', function() {
+    const mainBtn = document.getElementById('mainAddBtn');
+    const fabBtn = document.getElementById('floatingAddBtn');
+    const backToTop = document.getElementById('backToTop');
+
+    // Logika untuk Tombol Tambah Melayang (Hanya untuk Admin)
+    if (typeof currentRole !== 'undefined' && (currentRole === 'admin' || currentRole === 'superadmin')) {
+        if (mainBtn && fabBtn) {
+            const rect = mainBtn.getBoundingClientRect();
+            if (rect.bottom < 0) {
+                if (fabBtn.classList.contains('d-none')) {
+                    fabBtn.classList.remove('d-none');
+                    fabBtn.classList.add('fab-animate');
+                }
+            } else {
+                fabBtn.classList.add('d-none');
+                fabBtn.classList.remove('fab-animate');
+            }
+        }
+    }
+
+    // Logika untuk Tombol Back to Top (Umum)
+    if (backToTop) {
+        if (window.scrollY > 300) {
+            backToTop.style.display = "block";
+        } else {
+            backToTop.style.display = "none";
+        }
+    }
+});
+
+
+
+// Taruh di bagian bawah script
+function changeView(view) {
+    currentView = view;
+    
+    const btnList = document.getElementById('btnViewList');
+    const btnGrid = document.getElementById('btnViewGrid');
+    
+    if (btnList && btnGrid) {
+        if (view === 'list') {
+            btnList.classList.add('active');
+            btnGrid.classList.remove('active');
+        } else {
+            btnGrid.classList.add('active');
+            btnList.classList.remove('active');
+        }
+    }
+    
+    // Jalankan render ulang
+    renderStudents(); 
+}
+
+// WAJIB: Ekspos fungsi ke window agar bisa dipanggil onclick dari HTML
+window.changeView = changeView;
