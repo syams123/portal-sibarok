@@ -860,6 +860,20 @@ async function openDetail(id) {
     document.getElementById('gradeNotes').value = data.notes || '';
     
     const formContainer = document.getElementById('gradeFormContainer');
+    let htmlStr = `
+        <hr>
+        <h6 class="fw-bold mb-3">Input Nilai & Absensi:</h6>
+        <div id="subjectsList"></div>
+        <hr>
+        <div class="mb-3">
+            <label class="fw-bold text-success small">Catatan Ustadzah:</label>
+            <textarea id="gradeNotes" class="form-control" rows="3"></textarea>
+        </div>
+    `;
+    formContainer.innerHTML = htmlStr;
+
+    // ISI DATA (Harus SETELAH innerHTML di atas agar tidak tertimpa)
+    document.getElementById('gradeNotes').value = data.notes || "";
     formContainer.innerHTML = `
     <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
         <div class="position-relative">
@@ -1152,6 +1166,15 @@ if(navDiv) navDiv.innerHTML = btnHtml;
                     }
                 }
 
+                // Tambahkan ini di bagian render dasbor wali santri
+if (data.notes) {
+    contentHtml += `
+        <div class="mt-4 p-3 bg-light rounded border border-success border-opacity-25">
+            <h6 class="fw-bold text-success small mb-2"><i class="fas fa-edit"></i> Catatan Ustadzah:</h6>
+            <p class="mb-0 small text-muted" style="font-style: italic; line-height: 1.5;">"${data.notes}"</p>
+        </div>
+    `;
+}
                 // 2. Tambah Absensi (Sesuai keinginan Kakak)
                 contentHtml += `
                     <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
@@ -2748,20 +2771,6 @@ function renderReportCard(studentId, data) {
         </div>
         <div class="grade-row d-flex justify-content-between border-bottom py-2">
             <span>Lain-lain</span> <span class="badge bg-secondary rounded-pill">${data.absensiLain || 0}</span>
-        </div>`;
-
-        const catatanUstadzah = (data.notes && data.notes.trim() !== "") 
-                            ? data.notes 
-                            : "Tetap semangat mengaji dan menjaga shalatnya di rumah ya sayang.";
-
-    contentHtml += `
-        <div class="mt-4 mb-3">
-            <label class="small fw-bold text-success mb-1">
-                <i class="fas fa-comment-dots me-1"></i> Pesan Ustadzah:
-            </label>
-            <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded" style="font-style: italic; font-size: 0.85rem; color: #155724; line-height: 1.5;">
-                "${catatanUstadzah}"
-            </div>
         </div>`;
 
     // 4. LOGIKA WALI KELAS (Otomatis ganti jika kelas berbeda)
