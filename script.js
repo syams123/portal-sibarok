@@ -2994,37 +2994,45 @@ if (tutorialModal) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.querySelector('#emojiBtn');
-    const input = document.querySelector('#gradeNotes');
+// Pastikan library sudah terload sempurna
+window.addEventListener('load', () => {
+    const btn = document.getElementById('emojiBtn');
+    const input = document.getElementById('gradeNotes');
 
-    // Buat Picker Popup
+    if (!btn || !input) {
+        console.error("Tombol atau Textarea tidak ditemukan!");
+        return;
+    }
+
+    // Inisialisasi Picker dengan opsi tambahan
     const picker = picmoPopup.createPicker({
         referenceElement: btn,
         triggerElement: btn,
         position: 'bottom-end',
-        className: 'shadow-lg' // Biar lebih estetik
+        className: 'shadow-lg border-primary', // Tambah bayangan agar jelas
+        showSearch: true, // Biar ustadzah bisa cari emoji (misal: bintang)
+        zIndex: 9999 // WAJIB: Agar tidak tertutup modal/layout dashboard
     });
 
-    // Logika saat Ustadzah memilih emoji
+    // Event saat emoji dipilih
     picker.addEventListener('emoji:select', (selection) => {
         const emoji = selection.emoji;
         const start = input.selectionStart;
         const end = input.selectionEnd;
         const currentText = input.value;
 
-        // Sisipkan emoji di posisi kursor
+        // Sisipkan emoji
         input.value = currentText.slice(0, start) + emoji + currentText.slice(end);
         
-        // Kembalikan fokus ke textarea dan geser kursor setelah emoji
+        // Kembalikan fokus
         input.focus();
         const newPos = start + emoji.length;
         input.setSelectionRange(newPos, newPos);
     });
 
-    // Klik tombol untuk buka/tutup
-    btn.addEventListener('click', () => {
+    // Logika buka/tutup (Toggle)
+    btn.onclick = (e) => {
+        e.preventDefault(); // Mencegah form ke-submit tanpa sengaja
         picker.toggle();
-    });
+    };
 });
-
