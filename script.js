@@ -2994,45 +2994,26 @@ if (tutorialModal) {
     });
 }
 
-// Pastikan library sudah terload sempurna
-window.addEventListener('load', () => {
-    const btn = document.getElementById('emojiBtn');
-    const input = document.getElementById('gradeNotes');
+window.onload = function() {
+    const btn = document.querySelector('#emojiBtn');
+    const input = document.querySelector('#gradeNotes');
 
-    if (!btn || !input) {
-        console.error("Tombol atau Textarea tidak ditemukan!");
-        return;
+    if (btn && input) {
+        // Inisialisasi Picker di sini
+        const picker = picmoPopup.createPicker({
+            referenceElement: btn,
+            triggerElement: btn,
+            position: 'bottom-end'
+        });
+
+        picker.addEventListener('emoji:select', (selection) => {
+            input.value += selection.emoji;
+        });
+
+        btn.addEventListener('click', () => {
+            picker.toggle();
+        });
+    } else {
+        console.warn("Tombol emoji tidak ditemukan di halaman ini. Mungkin karena ustadzah belum login?");
     }
-
-    // Inisialisasi Picker dengan opsi tambahan
-    const picker = picmoPopup.createPicker({
-        referenceElement: btn,
-        triggerElement: btn,
-        position: 'bottom-end',
-        className: 'shadow-lg border-primary', // Tambah bayangan agar jelas
-        showSearch: true, // Biar ustadzah bisa cari emoji (misal: bintang)
-        zIndex: 9999 // WAJIB: Agar tidak tertutup modal/layout dashboard
-    });
-
-    // Event saat emoji dipilih
-    picker.addEventListener('emoji:select', (selection) => {
-        const emoji = selection.emoji;
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        const currentText = input.value;
-
-        // Sisipkan emoji
-        input.value = currentText.slice(0, start) + emoji + currentText.slice(end);
-        
-        // Kembalikan fokus
-        input.focus();
-        const newPos = start + emoji.length;
-        input.setSelectionRange(newPos, newPos);
-    });
-
-    // Logika buka/tutup (Toggle)
-    btn.onclick = (e) => {
-        e.preventDefault(); // Mencegah form ke-submit tanpa sengaja
-        picker.toggle();
-    };
-});
+};
