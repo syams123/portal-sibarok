@@ -895,13 +895,13 @@ async function openDetail(id) {
     formContainer.innerHTML = `
     <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
         <div class="position-relative">
-            <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
-                 class="rounded-circle border border-2 border-white shadow-sm"
-                 style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' ? 'pointer' : 'default'};"
-                 onclick="${currentRole === 'superadmin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
-            
-            ${currentRole === 'superadmin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
-        </div>
+    <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
+         class="rounded-circle border border-2 border-white shadow-sm"
+         style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' || currentRole === 'admin' ? 'pointer' : 'default'};"
+         onclick="${currentRole === 'superadmin' || currentRole === 'admin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
+    
+    ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
+</div>
         <div class="ms-3">
             <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
             <small class="text-muted fw-bold">${data.class}</small>
