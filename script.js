@@ -686,6 +686,14 @@ function renderStudents() {
             const avatarPerempuan = 'https://i.imgur.com/NcNQ9R3.jpeg';
             const defaultAvatar = data.gender === 'Perempuan' ? avatarPerempuan : avatarLaki;
             const photoUrl = data.photo || defaultAvatar;
+          // --- LOGIKA BADGE RAPOR (BARU) ---
+let raporBadgeHtml = "";
+if (data.rapor_status === 'selesai') {
+    raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1"><i class="fas fa-check-circle me-1"></i> Rapor Selesai</span>`;
+} else {
+    raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border">Belum Diisi</span>`;
+}
+
 // --- 1. LOGIKA NOTIFIKASI TERPISAH (SISI LONCENG) ---
 if (currentRole === 'superadmin' && notifList) {
     // A. Notifikasi Infaq
@@ -773,6 +781,7 @@ if (currentRole === 'superadmin') {
                             <div class="card-body p-2 text-center">
                                 <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
                                 <small class="text-muted d-block mb-1">${data.class}</small>
+                                ${raporBadgeHtml}
                                 ${ttdStatusHtml}
                                 ${walletBadgeHtml}
                                 ${statusBadgeHtml}
@@ -793,6 +802,7 @@ if (currentRole === 'superadmin') {
                                     <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
                                     <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
                                 </div>
+                                ${data.rapor_status === 'selesai' ? '<i class="fas fa-file-alt text-success" title="Rapor Selesai" style="font-size: 0.7rem;"></i>' : ''}
 
                                 <div class="d-flex align-items-center gap-2">
                                     ${data.infaqStatus === true ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
@@ -995,6 +1005,7 @@ async function saveGrades() {
             absensiSakit: parseInt(sakit),
             absensiIzin: parseInt(izin),
             absensiLain: parseInt(lain)
+            rapor_status: 'selesai',
         });
         
         // Menampilkan notifikasi sukses menggunakan SweetAlert
