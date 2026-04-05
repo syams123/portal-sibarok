@@ -694,7 +694,7 @@ let raporBadgeHtml = "";
 const isAlreadyGraded = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
 
 if (isAlreadyGraded) {
-    raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1" style="font-size: 0.6rem;"><i class="fas fa-check-circle me-1"></i> Rapor Selesai</span>`;
+    raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1" style="font-size: 0.6rem;"><i class="fas fa-check-circle me-1"></i> Input Selesai</span>`;
 } else {
     raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border" style="font-size: 0.6rem;">Belum Diisi</span>`;
 }
