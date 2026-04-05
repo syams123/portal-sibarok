@@ -688,55 +688,77 @@
                 </div>
                 <div id="gradeFormContainer">
                 </div>
-                <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
-<div class="mb-3 mt-3">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <label class="form-label fw-bold mb-0">Catatan Ustadzah</label>
-        
-        <button type="button" id="emojiTrigger" class="btn btn-sm btn-outline-secondary rounded-circle" title="Pilih Emoji" style="width: 35px; height: 35px;">
-            😀
-        </button>
-    </div>
+                <div class="mb-3 mt-3">
+    <label class="form-label fw-bold">Catatan Ustadzah</label>
     
-    <textarea id="gradeNotes" class="form-control" rows="4" placeholder="Tulis catatan di sini..."></textarea>
+    <div class="input-group">
+        <textarea id="gradeNotes" class="form-control" rows="4" placeholder="Tulis catatan di sini..."></textarea>
+        
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary h-100" type="button" id="emojiDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                😀
+            </button>
+            
+            <div class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="emojiDropdown" style="width: 250px; max-height: 200px; overflow-y: auto;">
+                <div id="emojiList" class="d-flex flex-wrap gap-1">
+                    </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        const button = document.querySelector('#emojiTrigger');
-        const textArea = document.querySelector('#gradeNotes');
+document.addEventListener('DOMContentLoaded', function() {
+    const textArea = document.getElementById('gradeNotes');
+    const emojiContainer = document.getElementById('emojiList');
+
+    // Daftar emoji populer (Kakak bisa tambah sendiri di sini)
+    const emojis = [
+        '😊','😇','🥰','😍','🤩','😘','☺','🥳','🤗','👏',
+        '👍','🙌','⭐','🌟','✨','🏆','🏅','🎓','📚','📝',
+        '💪','🤲','🕌','🌙','🌸','🌹','🍃','✅','💯','🔥',
+        '❤','🧡','💛','💚','💙','💜','🖤','🍭','🍎','🚀'
+    ];
+
+    // Generate tombol emoji secara otomatis
+    emojis.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-light btn-sm p-1';
+        btn.style.fontSize = '1.2rem';
+        btn.style.width = '40px';
+        btn.innerText = emoji;
         
-        // Pengaturan Popup Emoji
-        const picker = new EmojiButton({
-            position: 'bottom-end', // Posisi popup muncul (bisa disesuaikan)
-            theme: 'light',         // Tema popup ('light', 'dark', atau 'auto')
-            autoHide: false         // Ubah ke true jika ingin popup otomatis tertutup setelah klik 1 emoji
-        });
-
-        // Aksi ketika tombol berlogo emot diklik
-        button.addEventListener('click', () => {
-            picker.togglePicker(button);
-        });
-
-        // Aksi ketika salah satu emoji dipilih dari dalam popup
-        picker.on('emoji', selection => {
-            const emoji = selection.emoji;
+        btn.onclick = function(e) {
+            e.preventDefault();
             const startPos = textArea.selectionStart;
             const endPos = textArea.selectionEnd;
             
-            // Menyisipkan emoji pada posisi kursor
+            // Masukkan emoji ke posisi kursor
             textArea.value = textArea.value.substring(0, startPos) 
                            + emoji 
                            + textArea.value.substring(endPos, textArea.value.length);
             
-            // Mengembalikan fokus dan memindahkan kursor ke setelah emoji
+            // Fokus kembali dan geser kursor
             textArea.focus();
-            textArea.selectionStart = startPos + emoji.length;
-            textArea.selectionEnd = startPos + emoji.length;
-        });
+            const newPos = startPos + emoji.length;
+            textArea.setSelectionRange(newPos, newPos);
+        };
+        
+        emojiContainer.appendChild(btn);
     });
+});
 </script>
 
+<style>
+    /* Agar tampilan dropdown tidak tertutup elemen lain */
+    .dropdown-menu {
+        z-index: 1050;
+    }
+    /* Mempercantik tampilan scrollbar */
+    #emojiList::-webkit-scrollbar { width: 5px; }
+    #emojiList::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+</style>
                 <hr>
                 <div class="d-flex gap-2">
                     <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
