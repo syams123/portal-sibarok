@@ -873,6 +873,10 @@ async function openDetail(id) {
     document.getElementById('loading').classList.add('d-none');
     const doc = await db.collection('students').doc(id).get();
     const data = doc.data();
+	const jilidSelect = document.getElementById('studentLevel');
+if (jilidSelect && data.jilid) {
+    jilidSelect.value = data.jilid; 
+}
     
     document.getElementById('gradeStudentId').value = id;
     document.getElementById('gradeNotes').value = data.notes || '';
