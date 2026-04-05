@@ -2993,27 +2993,3 @@ if (tutorialModal) {
         stopAllTutorialVideos();
     });
 }
-
-window.onload = function() {
-    const btn = document.querySelector('#emojiBtn');
-    const input = document.querySelector('#gradeNotes');
-
-    if (btn && input) {
-        // Inisialisasi Picker di sini
-        const picker = picmoPopup.createPicker({
-            referenceElement: btn,
-            triggerElement: btn,
-            position: 'bottom-end'
-        });
-
-        picker.addEventListener('emoji:select', (selection) => {
-            input.value += selection.emoji;
-        });
-
-        btn.addEventListener('click', () => {
-            picker.toggle();
-        });
-    } else {
-        console.warn("Tombol emoji tidak ditemukan di halaman ini. Mungkin karena ustadzah belum login?");
-    }
-};
