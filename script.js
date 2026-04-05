@@ -625,6 +625,7 @@ async function saveStudent() {
     }
     document.getElementById('loading').classList.add('d-none');
 }
+
 // 2. Render Daftar Santri
 function renderStudents() { 
     const listDiv = document.getElementById('studentList');
@@ -847,7 +848,6 @@ if (currentRole === 'superadmin') {
         if (document.getElementById('loader')) document.getElementById('loader').classList.add('d-none');
     });
 }
-  
 // 3. Buka Detail & Input Nilai
 async function openDetail(id) {
     const modal = new bootstrap.Modal(document.getElementById('gradeModal'));
@@ -995,7 +995,6 @@ async function saveGrades() {
             absensiSakit: parseInt(sakit),
             absensiIzin: parseInt(izin),
             absensiLain: parseInt(lain)
-            rapor_status: 'selesai',
         });
         
         // Menampilkan notifikasi sukses menggunakan SweetAlert
