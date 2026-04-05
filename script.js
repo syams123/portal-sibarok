@@ -687,14 +687,18 @@ function renderStudents() {
             const defaultAvatar = data.gender === 'Perempuan' ? avatarPerempuan : avatarLaki;
             const photoUrl = data.photo || defaultAvatar;
 
-// --- LOGIKA BADGE RAPOR (BARU) ---
+// --- LOGIKA BADGE RAPOR (VERSI LEBIH PINTAR) ---
 let raporBadgeHtml = "";
-if (data.rapor_status === 'selesai') {
-    raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1"><i class="fas fa-check-circle me-1"></i> Rapor Selesai</span>`;
-} else {
-    raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border">Belum Diisi</span>`;
-}
 
+// Cek apakah statusnya 'selesai' ATAU apakah field grades sudah memiliki isi (untuk data lama)
+const isAlreadyGraded = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
+
+if (isAlreadyGraded) {
+    raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1" style="font-size: 0.6rem;"><i class="fas fa-check-circle me-1"></i> Rapor Selesai</span>`;
+} else {
+    raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border" style="font-size: 0.6rem;">Belum Diisi</span>`;
+}
+			
 // --- 1. LOGIKA NOTIFIKASI TERPISAH (SISI LONCENG) ---
 if (currentRole === 'superadmin' && notifList) {
     // A. Notifikasi Infaq
