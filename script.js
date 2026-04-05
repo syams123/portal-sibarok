@@ -795,6 +795,7 @@ if (currentRole === 'superadmin') {
                     </div>`;
             } else {
                 // TAMPILAN LIST (BARIS RAMPING - COCOK UNTUK HP)
+				const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
                 finalHtml = `
                     <div class="col-12 mb-2">
                         <div class="card shadow-sm border-0" style="border-radius: 12px;">
@@ -807,7 +808,7 @@ if (currentRole === 'superadmin') {
                                     <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
                                     <div class="d-flex align-items-center gap-2">
                                         <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
-                                        ${data.rapor_status === 'selesai' ? '<i class="fas fa-check-double text-success" title="Rapor Selesai" style="font-size: 0.7rem;"></i>' : ''}
+										${sudahDiisi ? '<i class="fas fa-check-circle text-success animation bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
                                     </div>
                                 </div>
 
