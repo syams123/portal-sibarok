@@ -688,52 +688,55 @@
                 </div>
                 <div id="gradeFormContainer">
                 </div>
-                <div class="mb-3 mt-3">
-    <label class="form-label fw-bold">Catatan Ustadzah</label>
-    
-    <div class="mb-2" id="emojiPicker">
-        <span class="text-muted small me-2">Pilih Emoji:</span>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn">😊</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn">⭐</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn">👍</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn">📚</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn">🏆</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn">✨</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn">💪</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary emoji-btn"> Barakallah</button>
+                <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.4/dist/index.min.js"></script>
+<div class="mb-3 mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <label class="form-label fw-bold mb-0">Catatan Ustadzah</label>
+        
+        <button type="button" id="emojiTrigger" class="btn btn-sm btn-outline-secondary rounded-circle" title="Pilih Emoji" style="width: 35px; height: 35px;">
+            😀
+        </button>
     </div>
-
+    
     <textarea id="gradeNotes" class="form-control" rows="4" placeholder="Tulis catatan di sini..."></textarea>
 </div>
 
 <script>
-    // Ambil semua tombol yang memiliki class 'emoji-btn'
-    const emojiButtons = document.querySelectorAll('.emoji-btn');
-    const textArea = document.getElementById('gradeNotes');
+    window.addEventListener('DOMContentLoaded', () => {
+        const button = document.querySelector('#emojiTrigger');
+        const textArea = document.querySelector('#gradeNotes');
+        
+        // Pengaturan Popup Emoji
+        const picker = new EmojiButton({
+            position: 'bottom-end', // Posisi popup muncul (bisa disesuaikan)
+            theme: 'light',         // Tema popup ('light', 'dark', atau 'auto')
+            autoHide: false         // Ubah ke true jika ingin popup otomatis tertutup setelah klik 1 emoji
+        });
 
-    // Berikan perintah klik pada setiap tombol emoji
-    emojiButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Mengambil teks/emoji dari tombol yang diklik
-            const emoji = this.innerText;
-            
-            // Menyisipkan emoji pada posisi kursor terakhir, atau di akhir teks
+        // Aksi ketika tombol berlogo emot diklik
+        button.addEventListener('click', () => {
+            picker.togglePicker(button);
+        });
+
+        // Aksi ketika salah satu emoji dipilih dari dalam popup
+        picker.on('emoji', selection => {
+            const emoji = selection.emoji;
             const startPos = textArea.selectionStart;
             const endPos = textArea.selectionEnd;
             
+            // Menyisipkan emoji pada posisi kursor
             textArea.value = textArea.value.substring(0, startPos) 
                            + emoji 
                            + textArea.value.substring(endPos, textArea.value.length);
             
-            // Mengembalikan fokus ke textarea setelah emoji diklik
+            // Mengembalikan fokus dan memindahkan kursor ke setelah emoji
             textArea.focus();
-            
-            // Memindahkan kursor ke setelah emoji yang baru ditambahkan
             textArea.selectionStart = startPos + emoji.length;
             textArea.selectionEnd = startPos + emoji.length;
         });
     });
 </script>
+
                 <hr>
                 <div class="d-flex gap-2">
                     <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
