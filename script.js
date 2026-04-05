@@ -625,7 +625,6 @@ async function saveStudent() {
     }
     document.getElementById('loading').classList.add('d-none');
 }
-                                
 // 2. Render Daftar Santri
 function renderStudents() { 
     const listDiv = document.getElementById('studentList');
@@ -675,8 +674,6 @@ function renderStudents() {
 
         if (snapshot.empty) {
             listDiv.innerHTML = '<p class="text-center py-5 text-muted">Tidak ada data santri.</p>';
-            const loader = document.getElementById('loader');
-            if (loader) loader.classList.add('d-none');
             return;
         }
 
@@ -688,48 +685,39 @@ function renderStudents() {
             const avatarPerempuan = 'https://i.imgur.com/NcNQ9R3.jpeg';
             const defaultAvatar = data.gender === 'Perempuan' ? avatarPerempuan : avatarLaki;
             const photoUrl = data.photo || defaultAvatar;
-
-            // --- TAMBAHAN LOGIKA BADGE RAPOR (STATUS PENGISIAN) ---
-            let raporBadgeHtml = "";
-            if (data.rapor_status === 'selesai') {
-                raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1" style="font-size: 0.6rem;"><i class="fas fa-check-circle me-1"></i> Rapor Selesai</span>`;
-            } else {
-                raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border" style="font-size: 0.6rem;">Belum Diisi</span>`;
-            }
-
-            // --- 1. LOGIKA NOTIFIKASI TERPISAH (SISI LONCENG) ---
-            if (currentRole === 'superadmin' && notifList) {
-                // A. Notifikasi Infaq
-                if (data.paymentMethod && !data.infaqStatus) {
-                    pendingCount++;
-                    notifList.innerHTML += `
-                        <div class="list-group-item p-2 border-bottom bg-light" style="cursor: pointer;" onclick="tandaiDibaca('${id}', 'infaq', '${data.name}')">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div style="font-size: 0.75rem;">
-                                    <span class="badge bg-warning text-dark mb-1">Infaq Baru</span><br>
-                                    <strong>${data.name}</strong> - ${data.paymentMethod}
-                                </div>
-                            </div>
-                        </div>`;
-                }
-                
-                // B. Notifikasi TTD Rapor
-                if (data.reportSignature && !data.ttdNotifRead) {
-                    pendingCount++; 
-                    notifList.innerHTML += `
-                        <div class="list-group-item p-2 border-bottom" style="cursor: pointer;" 
-                             onclick="tandaiDibaca('${id}', 'signature', '${data.name}')">
-                            <div class="d-flex align-items-center">
-                                <div class="me-2 text-info"><i class="fas fa-file-signature fa-lg"></i></div>
-                                <div style="font-size: 0.75rem;">
-                                    <span class="badge bg-info text-white mb-1">TTD Wali Baru</span><br>
-                                    <strong>Wali dari ${data.name}</strong><br>
-                                    <span class="text-muted" style="font-size: 0.65rem;">Klik untuk verifikasi TTD</span>
-                                </div>
-                            </div>
-                        </div>`;
-                }
-            }
+// --- 1. LOGIKA NOTIFIKASI TERPISAH (SISI LONCENG) ---
+if (currentRole === 'superadmin' && notifList) {
+    // A. Notifikasi Infaq
+    if (data.paymentMethod && !data.infaqStatus) {
+        pendingCount++;
+        notifList.innerHTML += `
+            <div class="list-group-item p-2 border-bottom bg-light" style="cursor: pointer;" onclick="tandaiDibaca('${id}', 'infaq', '${data.name}')">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div style="font-size: 0.75rem;">
+                        <span class="badge bg-warning text-dark mb-1">Infaq Baru</span><br>
+                        <strong>${data.name}</strong> - ${data.paymentMethod}
+                    </div>
+                </div>
+            </div>`;
+    }
+    
+    // B. Notifikasi TTD Rapor
+    if (data.reportSignature && !data.ttdNotifRead) {
+    pendingCount++; 
+    notifList.innerHTML += `
+        <div class="list-group-item p-2 border-bottom" style="cursor: pointer;" 
+             onclick="tandaiDibaca('${id}', 'signature', '${data.name}')">
+            <div class="d-flex align-items-center">
+                <div class="me-2 text-info"><i class="fas fa-file-signature fa-lg"></i></div>
+                <div style="font-size: 0.75rem;">
+                    <span class="badge bg-info text-white mb-1">TTD Wali Baru</span><br>
+                    <strong>Wali dari ${data.name}</strong><br>
+                    <span class="text-muted" style="font-size: 0.65rem;">Klik untuk verifikasi TTD</span>
+                </div>
+            </div>
+        </div>`;
+    }
+}
 
             // --- 2. LOGIKA BADGE DI KARTU (TETAP SAMA) ---
             let statusBadgeHtml = "";
@@ -750,28 +738,29 @@ function renderStudents() {
 
             let walletBadgeHtml = "";
             let ttdStatusHtml = ""; 
-            if (currentRole === 'superadmin') {
-                if (data.reportSignature) {
-                    ttdStatusHtml = `
-                        <div class="mb-2">
-                            <span class="badge bg-info text-dark w-100 py-1" style="font-size: 0.6rem;">
-                                <i class="fas fa-check-circle"></i> Rapor Diterima
-                            </span>
-                            <button class="btn btn-xs btn-outline-secondary w-100 mt-1" 
-                                    style="font-size: 0.55rem; padding: 2px;" 
-                                    onclick="event.stopPropagation(); resetTTD('${id}', '${data.name}')">
-                                <i class="fas fa-eraser"></i> Reset TTD
-                            </button>
-                        </div>`;
-                } else {
-                    ttdStatusHtml = `<div class="mb-2"><span class="badge bg-light text-muted w-100 py-1 border" style="font-size: 0.6rem;">Belum TTD</span></div>`;
-                }
-            }
+if (currentRole === 'superadmin') {
+    if (data.reportSignature) {
+        ttdStatusHtml = `
+            <div class="mb-2">
+                <span class="badge bg-info text-dark w-100 py-1" style="font-size: 0.6rem;">
+                    <i class="fas fa-check-circle"></i> Rapor Diterima
+                </span>
+                <button class="btn btn-xs btn-outline-secondary w-100 mt-1" 
+                        style="font-size: 0.55rem; padding: 2px;" 
+                        onclick="event.stopPropagation(); resetTTD('${id}', '${data.name}')">
+                    <i class="fas fa-eraser"></i> Reset TTD
+                </button>
+            </div>`;
+    } else {
+        ttdStatusHtml = `<div class="mb-2"><span class="badge bg-light text-muted w-100 py-1 border" style="font-size: 0.6rem;">Belum TTD</span></div>`;
+    }
+}
 
             // --- 3. LOGIKA PEMILIHAN TAMPILAN (GRID vs LIST) ---
             let finalHtml = "";
 
             if (currentView === 'grid') {
+                // TAMPILAN GRID (KODE ASLI KAKAK - TETAP CANTIK & TIDAK GEPENG)
                 finalHtml = `
                     <div class="col-6 col-md-4 col-lg-3 santri-card mb-3">
                         <div class="card card-student shadow-sm h-100 position-relative">
@@ -783,7 +772,6 @@ function renderStudents() {
                             <div class="card-body p-2 text-center">
                                 <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
                                 <small class="text-muted d-block mb-1">${data.class}</small>
-                                ${raporBadgeHtml}
                                 ${ttdStatusHtml}
                                 ${walletBadgeHtml}
                                 ${statusBadgeHtml}
@@ -791,6 +779,7 @@ function renderStudents() {
                         </div>  
                     </div>`;
             } else {
+                // TAMPILAN LIST (BARIS RAMPING - COCOK UNTUK HP)
                 finalHtml = `
                     <div class="col-12 mb-2">
                         <div class="card shadow-sm border-0" style="border-radius: 12px;">
@@ -801,10 +790,7 @@ function renderStudents() {
                                 
                                 <div class="flex-grow-1 overflow-hidden">
                                     <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
-                                        ${data.rapor_status === 'selesai' ? '<i class="fas fa-check-double text-success" title="Rapor Selesai" style="font-size: 0.7rem;"></i>' : ''}
-                                    </div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
                                 </div>
 
                                 <div class="d-flex align-items-center gap-2">
@@ -818,23 +804,36 @@ function renderStudents() {
                     </div>`;
             }
 
+            // Masukkan hasil pilihan ke dalam container utama
             listDiv.innerHTML += finalHtml;
         });
 
+        // --- UPDATE LONCENG & HIDE LOADER ---
         if (notifCount) {
             notifCount.innerText = pendingCount;
+            
             if (pendingCount > 0) {
+                // Tampilkan angka badge
                 notifCount.classList.remove('d-none');
+                
+                // --- PAKSA ANIMASI PULSE MENYALA ---
+                // Kita hapus dulu class-nya, lalu pasang lagi agar browser men-trigger animasi dari awal
                 notifCount.classList.remove('notif-pulse');
-                void notifCount.offsetWidth;
+                void notifCount.offsetWidth; // Trik "Reflow" agar animasi me-reset
                 notifCount.classList.add('notif-pulse');
+                
+                // Update Judul Dropdown secara otomatis
                 const notifHeader = document.getElementById('notifHeader');
                 if (notifHeader) notifHeader.innerText = "Pemberitahuan Baru";
+                
+                // Pastikan area lonceng terlihat
                 const notifArea = document.getElementById('notifArea');
                 if (notifArea) notifArea.classList.remove('d-none');
             } else {
+                // Jika tidak ada notif, sembunyikan angka dan matikan animasi
                 notifCount.classList.add('d-none');
                 notifCount.classList.remove('notif-pulse');
+                
                 const notifHeader = document.getElementById('notifHeader');
                 if (notifHeader) notifHeader.innerText = "Tidak ada Notifikasi";
             }
