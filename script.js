@@ -786,7 +786,7 @@ if (currentRole === 'superadmin') {
                             <div class="card-body p-2 text-center">
                                 <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
                                 <small class="text-muted d-block mb-1">${data.class}</small>
-				${raporBadgeHtml}
+				                ${raporBadgeHtml}
                                 ${ttdStatusHtml}
                                 ${walletBadgeHtml}
                                 ${statusBadgeHtml}
@@ -808,7 +808,7 @@ if (currentRole === 'superadmin') {
                                     <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
                                     <div class="d-flex align-items-center gap-2">
                                         <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
-										${sudahDiisi ? '<i class="fas fa-check-circle text-success animation bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
+										${sudahDiisi ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
                                     </div>
                                 </div>
 
