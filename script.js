@@ -2993,3 +2993,38 @@ if (tutorialModal) {
         stopAllTutorialVideos();
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.querySelector('#emojiBtn');
+    const input = document.querySelector('#gradeNotes');
+
+    // Buat Picker Popup
+    const picker = picmoPopup.createPicker({
+        referenceElement: btn,
+        triggerElement: btn,
+        position: 'bottom-end',
+        className: 'shadow-lg' // Biar lebih estetik
+    });
+
+    // Logika saat Ustadzah memilih emoji
+    picker.addEventListener('emoji:select', (selection) => {
+        const emoji = selection.emoji;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const currentText = input.value;
+
+        // Sisipkan emoji di posisi kursor
+        input.value = currentText.slice(0, start) + emoji + currentText.slice(end);
+        
+        // Kembalikan fokus ke textarea dan geser kursor setelah emoji
+        input.focus();
+        const newPos = start + emoji.length;
+        input.setSelectionRange(newPos, newPos);
+    });
+
+    // Klik tombol untuk buka/tutup
+    btn.addEventListener('click', () => {
+        picker.toggle();
+    });
+});
+
