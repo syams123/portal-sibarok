@@ -568,8 +568,7 @@ if (qrcodeContainer && childData.nis) {
     };
 }
 }, 300);
-});
-});
+
             const daftarNamaAnak = snap.docs.map(doc => doc.data().name).join(", ");
             if (inputNamaSantri) inputNamaSantri.value = daftarNamaAnak;
             if (inputNamaWali) inputNamaWali.value = snap.docs[0].data().parentName || "";
