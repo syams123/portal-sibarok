@@ -479,29 +479,45 @@ if (qrcodeContainer && childData.nis) {
 
     // Tambahkan style pointer dan fungsi klik untuk zoom
     qrcodeContainer.style.cursor = "zoom-in";
-    qrcodeContainer.onclick = function() {
-        // Ambil elemen gambar atau canvas yang dihasilkan oleh QRCode.js
-        const qrImage = qrcodeContainer.querySelector('img') || qrcodeContainer.querySelector('canvas');
-        if (qrImage) {
-            // Jika berupa canvas (biasanya di Android), konversi ke DataURL
-            const src = qrImage.tagName === 'CANVAS' ? qrImage.toDataURL() : qrImage.src;
+qrcodeContainer.onclick = function(e) {
+    // 1. Mencegah event merembet ke elemen di bawahnya (biar tidak bentrok)
+    e.preventDefault();
+    e.stopPropagation();
+
+    const qrImage = qrcodeContainer.querySelector('img') || qrcodeContainer.querySelector('canvas');
+    if (qrImage) {
+        const src = qrImage.tagName === 'CANVAS' ? qrImage.toDataURL() : qrImage.src;
+        
+        if (typeof openZoom === "function") {
+            openZoom(src);
             
-            // Gunakan fungsi zoom yang sudah ada di index.html
-            if (typeof openZoom === "function") {
-                openZoom(src);
+            // 2. LOGIKA PERBAIKAN STUCK: 
+            // Paksa agar overlay zoom bisa menerima interaksi dan tidak mengunci body selamanya
+            const zoomOverlay = document.getElementById('zoomOverlay'); // Sesuaikan ID overlay zoom Kakak
+            const targetZoom = document.getElementById('zoomImage');
+            
+            if (targetZoom) {
+                targetZoom.style.borderRadius = "12px"; // Biar lebih rapi (kotak tumpul)
+                targetZoom.style.pointerEvents = "auto"; // Pastikan bisa disentuh
+            }
+
+            if (zoomOverlay) {
+                zoomOverlay.style.display = "flex";
+                zoomOverlay.style.pointerEvents = "auto";
                 
-                // Tambahan: Paksa agar tampilan zoom tidak bulat (lingkaran)
-                const targetZoom = document.getElementById('zoomImage');
-                if (targetZoom) {
-                    targetZoom.style.borderRadius = "0px"; // Membuat sudut sedikit melengkung tapi tetap kotak
-                }
+                // Tambahkan event klik pada overlay untuk menutup jika ustadzah klik di luar gambar
+                zoomOverlay.onclick = function() {
+                    if (typeof closeZoom === "function") {
+                        closeZoom();
+                    } else {
+                        zoomOverlay.style.display = "none";
+                        document.body.style.overflow = "auto"; // Kembalikan scroll yang macet
+                    }
+                };
             }
         }
-    };
-}
-}, 300);
-});
-});
+    }
+};
 
             const daftarNamaAnak = snap.docs.map(doc => doc.data().name).join(", ");
             if (inputNamaSantri) inputNamaSantri.value = daftarNamaAnak;
