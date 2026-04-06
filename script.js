@@ -478,47 +478,16 @@ async function setupProfilePage(role, userDataInput, studentIdInput = null) {
             });
 
             // Tambahkan style pointer dan fungsi klik untuk zoom
-            qrcodeContainer.style.cursor = "zoom-in";
-            qrcodeContainer.onclick = function(e) {
-                // --- PERBAIKAN STUCK DI HP ---
-                e.preventDefault();
-                e.stopPropagation(); // Mencegah klik tembus ke elemen di bawahnya
-
-                // Ambil elemen gambar atau canvas yang dihasilkan oleh QRCode.js
-                const qrImage = qrcodeContainer.querySelector('img') || qrcodeContainer.querySelector('canvas');
-                if (qrImage) {
-                    // Jika berupa canvas (biasanya di Android), konversi ke DataURL
-                    const src = qrImage.tagName === 'CANVAS' ? qrImage.toDataURL() : qrImage.src;
-                    
-                    // Gunakan fungsi zoom yang sudah ada di index.html
-                    if (typeof openZoom === "function") {
-                        openZoom(src);
-                        
-                        // Tambahan: Paksa agar tampilan zoom tidak bulat (lingkaran)
-                        const targetZoom = document.getElementById('zoomImage');
-                        if (targetZoom) {
-                            targetZoom.style.borderRadius = "0px"; // Membuat tetap kotak
-                        }
-
-                        // Anti-stuck: Pastikan overlay bisa ditutup dengan klik area mana saja
-                        const zoomOverlay = document.getElementById('zoomOverlay');
-                        if (zoomOverlay) {
-                            zoomOverlay.onclick = function() {
-                                if (typeof closeZoom === "function") {
-                                    closeZoom();
-                                } else {
-                                    zoomOverlay.style.display = "none";
-                                    document.body.style.overflow = "auto";
-                                }
-                            };
-                        }
-                    }
-                }
-            };
+            // Set kursor ke standar karena tidak bisa diklik
+            qrcodeContainer.style.cursor = "default";
+            
+            // Hapus fungsi onclick (Zoom Dimatikan Total)
+            qrcodeContainer.onclick = null; 
+            
         }
     }, 300);
-});
-});
+}); // Penutup loop data (misal: snapshot.forEach)
+}); // Penutup fungsi utama/onSnapshot
             const daftarNamaAnak = snap.docs.map(doc => doc.data().name).join(", ");
             if (inputNamaSantri) inputNamaSantri.value = daftarNamaAnak;
             if (inputNamaWali) inputNamaWali.value = snap.docs[0].data().parentName || "";
