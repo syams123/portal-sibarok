@@ -17,6 +17,57 @@
         .profile-card { margin-top: -100px; border-radius: 20px; border: none; }
         .avatar-lg { width: 120px; height: 120px; object-fit: cover; border: 5px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .italic { font-style: italic; }
+
+        /* --- TAMBAHAN KHUSUS CETAK FISIK UKURAN KTP --- */
+        @media print {
+            @page { margin: 1cm; } /* Margin kertas printer */
+            
+            body { 
+                background: white !important; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            
+            /* Sembunyikan elemen yang tidak perlu dicetak ke kartu */
+            .profile-header, .print-hide { 
+                display: none !important; 
+            }
+            
+            .container {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Format Kartu menjadi ukuran KTP/BPJS (8.6cm x 5.4cm) */
+            .profile-card {
+                margin: 0 !important;
+                width: 8.6cm !important;
+                height: 5.4cm !important;
+                border: 1px dashed #999 !important; /* Garis panduan memotong */
+                border-radius: 8px !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+            
+            /* Skala ulang isi teks dan gambar agar muat di dalam kartu KTP */
+            .card-body { padding: 0.4cm !important; }
+            .card-body p.text-muted.mb-3 { font-size: 0.45rem !important; margin-bottom: 0.1cm !important; }
+            .avatar-lg { width: 1.4cm !important; height: 1.4cm !important; border-width: 2px !important; margin-bottom: 0.1cm !important; box-shadow: none !important; }
+            h3#viewName { font-size: 0.7rem !important; margin-bottom: 0 !important; }
+            p.text-success { font-size: 0.45rem !important; margin-bottom: 0.1cm !important; }
+            hr { margin: 0.1cm 0 !important; opacity: 0.3; }
+            
+            .row.mt-4 { margin-top: 0.1cm !important; }
+            .col-6 { margin-bottom: 0.1cm !important; }
+            .col-6 small.text-muted { font-size: 0.35rem !important; }
+            span#viewJilid, .col-6 span.text-success { font-size: 0.5rem !important; }
+            
+            .mt-3.text-start { margin-top: 0.1cm !important; }
+            label.small.mb-1 { font-size: 0.4rem !important; margin-bottom: 0 !important; }
+            .progress { height: 0.1cm !important; border-radius: 5px !important; }
+            #progressText { font-size: 0.4rem !important; }
+        }
     </style>
 </head>
 <body>
@@ -57,12 +108,19 @@
                 </div>
             </div>
 
-            <div class="mt-5 p-3 bg-light rounded-3 italic">
+            <div class="mt-5 p-3 bg-light rounded-3 italic print-hide">
                 <p class="small text-muted mb-0" style="line-height: 1.6;">
                     "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya." <br><strong>(HR. Bukhari)</strong>
                 </p>
             </div>
         </div>
+    </div>
+
+    <div class="text-center mt-4 print-hide">
+        <button class="btn btn-outline-success fw-bold shadow-sm" onclick="window.print()" style="border-radius: 10px; padding: 10px 20px;">
+            🖨️ Cetak Kartu
+        </button>
+        <p class="small text-muted mt-2">Kartu akan otomatis disesuaikan seukuran KTP saat dicetak.</p>
     </div>
 </div>
 
