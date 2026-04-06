@@ -506,6 +506,33 @@ if (qrcodeContainer && childData.nis) {
 
             // Tambahkan style pointer dan fungsi klik untuk zoom
             qrcodeContainer.style.cursor = "zoom-in";
+           <div class="col-3 text-center">
+                        <div id="qrcode-${sId}" class="qrcode-wrapper p-1 d-inline-block shadow-sm" style="border-radius: 8px; background: white;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    setTimeout(() => {
+        const qrcodeContainer = document.getElementById(`qrcode-${sId}`);
+        if (qrcodeContainer && childData.nis) {
+            qrcodeContainer.innerHTML = ""; 
+            const blogspotURL = "https://tpqalmubarokarc.blogspot.com"; 
+            const finalLink = `${blogspotURL}/p/kartu-santri.html?nis=${childData.nis}`;
+            
+            // Inisialisasi QR Code
+            new QRCode(qrcodeContainer, {
+                text: finalLink,
+                width: 60,
+                height: 60,
+                colorDark : "#198754",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+
+            // Tambahkan style pointer dan fungsi klik untuk zoom
+            qrcodeContainer.style.cursor = "zoom-in";
             qrcodeContainer.onclick = function(e) {
                 // --- PERBAIKAN STUCK DI HP ---
                 e.preventDefault();
@@ -544,12 +571,8 @@ if (qrcodeContainer && childData.nis) {
             };
         }
     }, 300);
-// Tutup kurung di bawah ini pastikan sesuai dengan jumlah loop/snapshot Kakak
-// Saya asumsikan ada 2 loop (forEach) seperti di snippet Kakak sebelumnya
         }); 
     });
-}
-
             const daftarNamaAnak = snap.docs.map(doc => doc.data().name).join(", ");
             if (inputNamaSantri) inputNamaSantri.value = daftarNamaAnak;
             if (inputNamaWali) inputNamaWali.value = snap.docs[0].data().parentName || "";
