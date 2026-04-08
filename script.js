@@ -2845,10 +2845,19 @@ function renderReportCard(studentId, data) {
 
     reportDiv.innerHTML = contentHtml;
 
-    if (typeof checkSignatureStatus === 'function') {
-        checkSignatureStatus(studentId, data);
-    }
-}   
+            if (typeof checkSignatureStatus === 'function') {
+                checkSignatureStatus(studentId, data);
+            }
+            const btnDownload = document.getElementById('btnDownloadPDF');
+            if (btnDownload) {
+                // Tombol muncul jika sudah ada tanda tangan wali (sebagai tanda sudah diverifikasi/selesai)
+                if (data.reportSignature) {
+                    btnDownload.style.display = 'block';
+                } else {
+                    btnDownload.style.display = 'none';
+                }
+            }
+        }    
 
 function updateBerandaData(studentId) {
     const loader = document.getElementById('loading');
