@@ -478,10 +478,15 @@
     </div>
 
     <div class="card shadow mb-4">
-        <div class="card-header bg-warning text-dark">Rapor Sisipan</div>
-        <div class="card-body" id="childReportCard">
-        </div>
+    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+        <span>Rapor Sisipan</span>
+        <button id="btnDownloadPDF" class="btn btn-sm btn-danger fw-bold shadow-sm" style="display:none;" onclick="prosesDownloadPDF()">
+            PDF 📥 Download
+        </button>
     </div>
+    <div class="card-body" id="childReportCard">
+        </div>
+</div>
 
 
         <div class="mt-4 px-2">
