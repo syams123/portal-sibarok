@@ -3010,3 +3010,69 @@ if (tutorialModal) {
         stopAllTutorialVideos();
     });
 }
+
+async function downloadLangsung(studentId) {
+    try {
+        // CEK 1: Pastikan library tersedia
+        if (!window.jspdf || !window.html2canvas) {
+            alert("Sistem sedang menyiapkan library PDF. Mohon tunggu 3 detik dan coba lagi.");
+            return;
+        }
+
+        console.log("Memulai download untuk:", studentId);
+        
+        // 2. Ambil data dari Firestore
+        const docRef = doc(db, "students", studentId);
+        const docSnap = await getDoc(docRef);
+        
+        if (!docSnap.exists()) {
+            alert("Data santri tidak ditemukan.");
+            return;
+        }
+        const data = docSnap.data();
+
+        // 3. Siapkan wadah bayangan
+        let tempDiv = document.getElementById('tempReportArea');
+        if (!tempDiv) {
+            tempDiv = document.createElement('div');
+            tempDiv.id = 'tempReportArea';
+            tempDiv.style.cssText = "position:absolute; left:-9999px; width:800px; background:white;";
+            document.body.appendChild(tempDiv);
+        }
+
+        // 4. Masukkan konten rapor
+        renderReportKeTemp(tempDiv, studentId, data);
+
+        // 5. Eksekusi PDF dengan penanganan Gambar (CORS)
+        setTimeout(async () => {
+            try {
+                const canvas = await html2canvas(tempDiv, {
+                    scale: 2,
+                    useCORS: true, // WAJIB agar tanda tangan/foto muncul
+                    allowTaint: false, // Menghindari error keamanan browser
+                    logging: false,
+                    backgroundColor: "#ffffff"
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+                pdf.save(`Rapor_${data.name.replace(/\s+/g, '_')}.pdf`);
+                
+                console.log("Download Sukses!");
+            } catch (canvasErr) {
+                console.error("Gagal membuat gambar:", canvasErr);
+                alert("Gagal memproses gambar rapor (CORS/Security). Coba hapus cache browser atau gunakan Google Chrome.");
+            }
+        }, 1200); // Beri jeda sedikit lebih lama agar gambar TTD ter-load
+
+    } catch (error) {
+        console.error("System Error:", error);
+        alert("Sistem gagal mengambil data. Pastikan Kakak sudah login sebagai Admin.");
+    }
+}
