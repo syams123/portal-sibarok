@@ -2778,22 +2778,16 @@ function renderReportCard(studentId, data) {
     const kelasAnak = (data.class || "");
     let subjects = [];
 
-    // Jika kelas mengandung kata "Pra-TK", tampilkan 3 materi ini
     if (kelasAnak.includes("Pra-TK")) {
         subjects = ["Jilid", "Akidah Akhlak", "Kitabaty"];
-    } 
-    // Jika selain Pra-TK (TK-SD), tampilkan 6 materi lengkap
-    else {
+    } else {
         subjects = ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
     }
 
-    // 2. TAMPILKAN MATERI (Meskipun Nilai Belum Ada)
+    // 2. TAMPILKAN MATERI
     const savedGrades = data.grades || {};
-    
     subjects.forEach(subj => {
-        // Ambil nilai dari database, jika tidak ada tampilkan "-"
         const gradeVal = savedGrades[subj] || "-";
-        
         contentHtml += `
             <div class="grade-row d-flex justify-content-between border-bottom py-2">
                 <span class="fw-medium">${subj}</span>
@@ -2820,7 +2814,7 @@ function renderReportCard(studentId, data) {
             <span>Lain-lain</span> <span class="badge bg-secondary rounded-pill">${data.absensiLain || 0}</span>
         </div>`;
 
-    // 4. LOGIKA WALI KELAS (Otomatis ganti jika kelas berbeda)
+    // 4. LOGIKA WALI KELAS
     let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; 
     let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
 
@@ -2831,7 +2825,7 @@ function renderReportCard(studentId, data) {
 
     const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // 5. Bagian Tanda Tangan (Revisi untuk PDF anti-error)
+    // 5. Bagian Tanda Tangan (DITAMBAHKAN crossorigin="anonymous")
     contentHtml += `
     <div id="signatureWrapper" class="mt-4">
         <div class="row text-center align-items-start g-0">
@@ -2862,19 +2856,19 @@ function renderReportCard(studentId, data) {
 
     reportDiv.innerHTML = contentHtml;
 
-            if (typeof checkSignatureStatus === 'function') {
-                checkSignatureStatus(studentId, data);
-            }
-            const btnDownload = document.getElementById('btnDownloadPDF');
-            if (btnDownload) {
-                // Tombol muncul jika sudah ada tanda tangan wali (sebagai tanda sudah diverifikasi/selesai)
-                if (data.reportSignature) {
-                    btnDownload.style.display = 'block';
-                } else {
-                    btnDownload.style.display = 'none';
-                }
-            }
-        }    
+    if (typeof checkSignatureStatus === 'function') {
+        checkSignatureStatus(studentId, data);
+    }
+    
+    const btnDownload = document.getElementById('btnDownloadPDF');
+    if (btnDownload) {
+        if (data.reportSignature) {
+            btnDownload.style.display = 'block';
+        } else {
+            btnDownload.style.display = 'none';
+        }
+    }
+}    
 
 function updateBerandaData(studentId) {
     const loader = document.getElementById('loading');
