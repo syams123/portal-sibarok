@@ -1244,7 +1244,7 @@ if (data.notes) {
                             <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
                             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
                             <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                                <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto;">
+                                <img src="https://i.imgur.com/APp2Mt6.png" crossorigin="anonymous" style="max-height: 45px; width: auto;">
                             </div>
                             <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
                         </div>
@@ -1252,7 +1252,7 @@ if (data.notes) {
                             <p class="small mb-0">&nbsp;</p>
                             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
                             <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                                <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto;">
+                                <img src="${linkTtdWaliKelas}" crossorigin="anonymous" style="max-height: 45px; width: auto;">
                             </div>
                             <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
                         </div>
@@ -1260,7 +1260,7 @@ if (data.notes) {
                             <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
                             <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
                             <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                                ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
+                                ${data.reportSignature ? `<img src="${data.reportSignature}" crossorigin="anonymous" style="max-height: 45px; width: auto;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
                             </div>
                             <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">${data.parentName || "( Nama Wali Santri )"}</p>
                         </div>
@@ -3050,11 +3050,12 @@ async function prosesDownloadPDF(studentId) {
 
         // 3. Proses Potret dengan html2canvas
         const canvas = await html2canvas(reportElement, {
-            scale: 2,           // Kualitas HD
-            useCORS: true,      // WAJIB: Agar gambar Imgur tidak 'corrupt'
-            allowTaint: false,  // Agar tidak tercemar data luar yang tidak aman
+            scale: 2,           
+            useCORS: true,      // Tetap true
+            allowTaint: false,  // Harus false agar toDataURL tidak diblokir
             backgroundColor: "#ffffff",
-            logging: false
+            imageTimeout: 15000, // Tambahkan ini! Memberi waktu ekstra jika Imgur lambat
+            logging: true        // Ubah sementara ke true untuk melihat prosesnya di F12 jika masih error
         });
 
         const imgData = canvas.toDataURL('image/png');
