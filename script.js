@@ -2831,21 +2831,21 @@ function renderReportCard(studentId, data) {
 
     const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // 5. Bagian Tanda Tangan
+    // 5. Bagian Tanda Tangan (Revisi untuk PDF anti-error)
     contentHtml += `
     <div id="signatureWrapper" class="mt-4">
         <div class="row text-center align-items-start g-0">
             <div class="col-4">
                 <p class="small mb-1" style="font-size: 0.7rem;">Kepala TPQ</p>
                 <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                    <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px;">
+                    <img src="https://i.imgur.com/APp2Mt6.png" crossorigin="anonymous" style="max-height: 45px;">
                 </div>
                 <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem;">Hafi Dzotur Rofi'ah, Lc.</p>
             </div>
             <div class="col-4">
                 <p class="small mb-1" style="font-size: 0.7rem;">Wali Kelas</p>
                 <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                    <img src="${linkTtdWaliKelas}" style="max-height: 45px;">
+                    <img src="${linkTtdWaliKelas}" crossorigin="anonymous" style="max-height: 45px;">
                 </div>
                 <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem;">${namaWaliKelas}</p>
             </div>
@@ -2853,7 +2853,7 @@ function renderReportCard(studentId, data) {
                 <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
                 <p class="small fw-bold mb-1" style="font-size: 0.7rem;">Wali Santri,</p>
                 <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                    ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
+                    ${data.reportSignature ? `<img src="${data.reportSignature}" crossorigin="anonymous" style="max-height: 45px;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
                 </div>
                 <p class="small fw-bold mb-0" style="font-size: 0.6rem; text-decoration: underline;">${data.parentName || "( Nama Wali )"}</p>
             </div>
