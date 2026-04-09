@@ -2875,7 +2875,8 @@ function renderReportCard(studentId, data) {
     const btnDownload = document.getElementById('btnDownloadPDF');
     if (btnDownload) {
         btnDownload.style.display = data.reportSignature ? 'block' : 'none';
-    }
+    	}
+	}
 }   
 
 function updateBerandaData(studentId) {
