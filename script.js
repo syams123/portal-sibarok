@@ -1175,15 +1175,22 @@ if(navDiv) navDiv.innerHTML = btnHtml;
                 document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
             }
 
-           // --- B. Sinkronisasi Rapor (Gunakan Fungsi Terpusat) ---
-// Ini akan otomatis merender Foto, Nilai, Absensi, Catatan, dan TTD ke #childReportCard
-renderReportCard(studentId, data);
+           // --- B. Sinkronisasi Nilai, Absensi, & TTD ---
+            const reportDiv = document.getElementById('childReportCard');
+            if (reportDiv) {
+                let contentHtml = ''; // Variabel ini harus menampung SEMUANYA
 
-// Pastikan profil di luar rapor juga terupdate (untuk tampilan dashboard)
-const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
-if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = fotoSantri;
-if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
-if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
+                // 1. Tambah Nilai
+                if (data.grades) {
+                    for (const [subj, grade] of Object.entries(data.grades)) {
+                        contentHtml += `
+                            <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                                <span>${subj}</span>
+                                <span class="badge bg-primary badge-grade">${grade}</span>
+                            </div>`;
+                    }
+                }
+
                 // Tambahkan ini di bagian render dasbor wali santri
 if (data.notes) {
     contentHtml += `
