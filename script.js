@@ -3028,87 +3028,56 @@ if (tutorialModal) {
 }
 
 async function prosesDownloadPDF(studentId) {
-    // 1. Cek apakah library sudah terload
-    if (!window.jspdf || !window.html2canvas) {
-        Swal.fire("Sistem Belum Siap", "Mohon tunggu 2-3 detik sampai library PDF selesai dimuat, lalu coba lagi.", "info");
+    // 1. Cek Library
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF || !window.html2canvas) {
+        Swal.fire("Sistem Belum Siap", "Library PDF sedang dimuat, tunggu sebentar.", "info");
         return;
     }
 
     try {
-        // Tampilkan loading SweetAlert agar user tidak bingung
         Swal.fire({
-            title: 'Sedang Memproses PDF...',
-            text: 'Mohon tunggu sebentar',
+            title: 'Menyiapkan PDF...',
+            text: 'Sedang memproses dokumen',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
         });
 
-        // 2. Ambil data terbaru dari Firestore (Gaya database Kak Had)
-        const docSnap = await db.collection('students').doc(studentId).get();
-        if (!docSnap.exists) {
-            throw new Error("Data santri tidak ditemukan!");
-        }
-        const data = docSnap.data();
-
-        // 3. Siapkan area render tersembunyi
-        let tempDiv = document.getElementById('tempReportArea');
-        if (!tempDiv) {
-            tempDiv = document.createElement('div');
-            tempDiv.id = 'tempReportArea';
-            // PENTING: Jangan pakai display:none, tapi geser ke luar layar agar bisa di-capture
-            tempDiv.style.cssText = "position:absolute; left:-9999px; width:800px; background:white; padding:40px; color:black;";
-            document.body.appendChild(tempDiv);
+        // 2. Pastikan elemen rapor sudah ada isinya
+        // Kita ambil elemen yang dirender oleh fungsi renderReportCard Kakak
+        const reportElement = document.getElementById('childReportCard');
+        
+        if (!reportElement || reportElement.innerHTML.trim() === "") {
+            throw new Error("Tampilan rapor tidak ditemukan atau masih kosong.");
         }
 
-        // 4. Isi konten rapor ke area rahasia (Sesuai fungsi render Kakak)
-        if (typeof renderReportKeTemp === "function") {
-            renderReportKeTemp(tempDiv, studentId, data);
-        } else {
-            // Jika fungsi render belum ada, kita buat template sederhana di sini
-            tempDiv.innerHTML = `
-                <div style="text-align:center; border:2px solid #198754; padding:20px;">
-                    <h2 style="color:#198754;">RAPOR SANTRI TPQ AL-MUBAROK</h2>
-                    <hr>
-                    <table style="width:100%; text-align:left;">
-                        <tr><td>Nama:</td><td><b>${data.name}</b></td></tr>
-                        <tr><td>Kelas:</td><td>${data.class}</td></tr>
-                    </table>
-                    <br>
-                    <p>Status TTD Wali: <b>Sudah Ditandatangani</b></p>
-                    <img src="${data.reportSignature}" style="width:150px; margin-top:20px;">
-                </div>
-            `;
-        }
+        // 3. Proses Capture menggunakan html2canvas
+        // Gunakan scale 2 agar tulisan kecil di TTD tidak pecah
+        const canvas = await html2canvas(reportElement, {
+            scale: 2, 
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            logging: false
+        });
 
-        // 5. Tunggu gambar & TTD selesai dirender browser (1.5 detik)
-        setTimeout(async () => {
-            try {
-                const canvas = await html2canvas(tempDiv, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: "#ffffff"
-                });
+        // 4. Buat PDF
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        // Hitung rasio agar pas di kertas A4
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+        
+        // Ambil nama santri untuk nama file
+        const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor";
+        pdf.save(`Rapor_${studentName.replace(/\s+/g, '_')}.pdf`);
 
-                pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-                pdf.save(`Rapor_${data.name.replace(/\s+/g, '_')}.pdf`);
-
-                Swal.close(); // Tutup loading
-            } catch (canvasErr) {
-                console.error(canvasErr);
-                Swal.fire("Gagal", "Gagal mengubah tampilan ke PDF: " + canvasErr.message, "error");
-            }
-        }, 1500);
+        Swal.fire("Berhasil", "Rapor berhasil diunduh!", "success");
 
     } catch (error) {
-        console.error("Main Error:", error);
-        Swal.fire("Terjadi Kesalahan", error.message, "error");
+        console.error("PDF Error:", error);
+        Swal.fire("Gagal", "Terjadi kesalahan: " + error.message, "error");
     }
 }
