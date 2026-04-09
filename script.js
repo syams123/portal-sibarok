@@ -3043,37 +3043,42 @@ async function prosesDownloadPDF(studentId) {
             throw new Error("Tampilan rapor tidak ditemukan. Coba tutup dan buka kembali modal.");
         }
 
-        // 2. Beri Jeda 2 Detik (Kunci Utama agar PNG tidak Corrupt)
-        // Jeda ini memastikan foto & TTD dari Imgur sudah muncul sempurna
-        setTimeout(async () => {
-            try {
-                const canvas = await html2canvas(reportElement, {
-                    scale: 2, // Kualitas cukup bagus (HD)
-                    useCORS: true, // WAJIB agar gambar dari link luar (Imgur/Firebase) bisa dipotret
-                    backgroundColor: "#ffffff",
-                    logging: false
-                });
+        // 2. Gunakan Promise untuk Jeda (Lebih stabil daripada setTimeout biasa)
+        // Memberi waktu 2 detik agar gambar TTD & Foto dari Imgur termuat sempurna
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDFLib('p', 'mm', 'a4');
-                
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        // 3. Proses Potret dengan html2canvas
+        const canvas = await html2canvas(reportElement, {
+            scale: 2,           // Kualitas HD
+            useCORS: true,      // WAJIB: Agar gambar Imgur tidak 'corrupt'
+            allowTaint: false,  // Agar tidak tercemar data luar yang tidak aman
+            backgroundColor: "#ffffff",
+            logging: false
+        });
 
-                pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-                
-                // Ambil nama dari judul modal agar tidak error "undefined data"
-                const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor_Santri";
-                pdf.save(`Rapor_${studentName.replace(/\s+/g, '_')}.pdf`);
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Cek jika hasil potret kosong
+        if (imgData === "data:," || imgData.length < 100) {
+            throw new Error("Gagal mengambil gambar. Pastikan gambar sudah muncul di layar.");
+        }
 
-                Swal.fire("Berhasil", "Rapor berhasil diunduh!", "success");
-            } catch (err) {
-                console.error(err);
-                Swal.fire("Gagal", "Kesalahan saat memotret: " + err.message, "error");
-            }
-        }, 2000); // Jeda 2 detik agar gambar tidak corrupt
+        // 4. Proses Pembuatan PDF
+        const pdf = new jsPDFLib('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        // Tambahkan ke PDF
+        pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+        
+        // Ambil nama dari judul modal
+        const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor_Santri";
+        pdf.save(`Rapor_${studentName.replace(/\s+/g, '_')}.pdf`);
+
+        Swal.fire("Berhasil", "Rapor berhasil diunduh!", "success");
 
     } catch (error) {
+        console.error("PDF Error:", error);
         Swal.fire("Gagal", error.message, "error");
     }
 }
