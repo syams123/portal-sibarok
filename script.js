@@ -760,52 +760,66 @@ if (currentRole === 'superadmin') {
 
             if (currentView === 'grid') {
                 // TAMPILAN GRID (KODE ASLI KAKAK - TETAP CANTIK & TIDAK GEPENG)
-                finalHtml = `
-                    <div class="col-6 col-md-4 col-lg-3 santri-card mb-3">
-                        <div class="card card-student shadow-sm h-100 position-relative">
-                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
-                                    onclick="event.stopPropagation(); deleteStudent('${id}', '${data.name}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            <img src="${data.photo || defaultAvatar}" class="student-img-top" onclick="openDetail('${id}')">
-                            <div class="card-body p-2 text-center">
-                                <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
-                                <small class="text-muted d-block mb-1">${data.class}</small>
-				                ${raporBadgeHtml}
-                                ${ttdStatusHtml}
-                                ${walletBadgeHtml}
-                                ${statusBadgeHtml}
-                            </div>
-                        </div>  
-                    </div>`;
+                // TAMPILAN GRID
+finalHtml = `
+    <div class="col-6 col-md-4 col-lg-3 santri-card mb-3">
+        <div class="card card-student shadow-sm h-100 position-relative">
+            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                    onclick="event.stopPropagation(); deleteStudent('${id}', '${data.name}')">
+                <i class="fas fa-trash"></i>
+            </button>
+            <img src="${data.photo || defaultAvatar}" class="student-img-top" onclick="openDetail('${id}')">
+            <div class="card-body p-2 text-center">
+                <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
+                <small class="text-muted d-block mb-1">${data.class}</small>
+                
+                ${data.reportSignature ? `
+                    <button class="btn btn-xs btn-danger w-100 mb-2 py-1 shadow-sm" 
+                            style="font-size: 0.65rem; border-radius: 5px;"
+                            onclick="event.stopPropagation(); downloadLangsung('${id}')">
+                        <i class="fas fa-file-pdf"></i> Download Rapor
+                    </button>
+                ` : ''}
+				${raporBadgeHtml}
+                ${ttdStatusHtml}
+                ${walletBadgeHtml}
+                ${statusBadgeHtml}
+            </div>
+        </div>  
+    </div>`;
             } else {
                 // TAMPILAN LIST (BARIS RAMPING - COCOK UNTUK HP)
 				const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
-                finalHtml = `
-                    <div class="col-12 mb-2">
-                        <div class="card shadow-sm border-0" style="border-radius: 12px;">
-                            <div class="card-body d-flex align-items-center py-2 px-3">
-                                <img src="${data.photo || defaultAvatar}" class="rounded-circle me-3" 
-                                     style="width: 45px; height: 45px; object-fit: cover; cursor: pointer; border: 1px solid #eee;" 
-                                     onclick="openDetail('${id}')">
-                                
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
-										${sudahDiisi ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
-                                    </div>
-                                </div>
+                // TAMPILAN LIST
+finalHtml = `
+    <div class="col-12 mb-2">
+        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+            <div class="card-body d-flex align-items-center py-2 px-3">
+                <img src="${data.photo || defaultAvatar}" class="rounded-circle me-3" 
+                     style="width: 45px; height: 45px; object-fit: cover; cursor: pointer; border: 1px solid #eee;" 
+                     onclick="openDetail('${id}')">
+                
+                <div class="flex-grow-1 overflow-hidden">
+                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
+                    <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
+                </div>
 
-                                <div class="d-flex align-items-center gap-2">
-                                    ${data.infaqStatus === true ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
-                                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="openDetail('${id}')">
-                                        <i class="fas fa-chevron-right text-muted"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
+                <div class="d-flex align-items-center gap-2">
+                    ${data.reportSignature ? `
+                        <i class="fas fa-file-pdf text-danger fa-lg" 
+                           style="cursor: pointer;" 
+                           title="Download Rapor"
+                           onclick="event.stopPropagation(); downloadLangsung('${id}')"></i>
+                    ` : ''}
+
+                    ${data.infaqStatus === true ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
+                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="openDetail('${id}')">
+                        <i class="fas fa-chevron-right text-muted"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>`;
             }
 
             // Masukkan hasil pilihan ke dalam container utama
