@@ -1175,22 +1175,15 @@ if(navDiv) navDiv.innerHTML = btnHtml;
                 document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
             }
 
-            // --- B. Sinkronisasi Nilai, Absensi, & TTD ---
-            const reportDiv = document.getElementById('childReportCard');
-            if (reportDiv) {
-                let contentHtml = ''; // Variabel ini harus menampung SEMUANYA
+           // --- B. Sinkronisasi Rapor (Gunakan Fungsi Terpusat) ---
+// Ini akan otomatis merender Foto, Nilai, Absensi, Catatan, dan TTD ke #childReportCard
+renderReportCard(studentId, data);
 
-                // 1. Tambah Nilai
-                if (data.grades) {
-                    for (const [subj, grade] of Object.entries(data.grades)) {
-                        contentHtml += `
-                            <div class="grade-row d-flex justify-content-between border-bottom py-2">
-                                <span>${subj}</span>
-                                <span class="badge bg-primary badge-grade">${grade}</span>
-                            </div>`;
-                    }
-                }
-
+// Pastikan profil di luar rapor juga terupdate (untuk tampilan dashboard)
+const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
+if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = fotoSantri;
+if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
+if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
                 // Tambahkan ini di bagian render dasbor wali santri
 if (data.notes) {
     contentHtml += `
@@ -2772,19 +2765,27 @@ function renderReportCard(studentId, data) {
     const reportDiv = document.getElementById('childReportCard');
     if (!reportDiv) return;
 
-    let contentHtml = '';
+    // Ambil foto santri untuk ditaruh di dalam rapor
+    const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
 
-    // 1. LOGIKA PENENTUAN MATERI BERDASARKAN KELAS
+    let contentHtml = `
+        <div class="text-center mb-4">
+            <img src="${fotoSantri}" crossorigin="anonymous" class="rounded-circle border border-3 border-success mb-2" style="width: 80px; height: 80px; object-fit: cover;">
+            <h5 class="fw-bold mb-0">${data.name || "-"}</h5>
+            <p class="text-muted small">${data.class || "-"}</p>
+        </div>
+    `;
+
+    // 1. LOGIKA PENENTUAN MATERI
     const kelasAnak = (data.class || "");
     let subjects = [];
-
     if (kelasAnak.includes("Pra-TK")) {
         subjects = ["Jilid", "Akidah Akhlak", "Kitabaty"];
     } else {
         subjects = ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
     }
 
-    // 2. TAMPILKAN MATERI
+    // 2. TAMPILKAN NILAI
     const savedGrades = data.grades || {};
     subjects.forEach(subj => {
         const gradeVal = savedGrades[subj] || "-";
@@ -2797,7 +2798,16 @@ function renderReportCard(studentId, data) {
             </div>`;
     });
 
-    // 3. Header & Data Kehadiran
+    // 3. TAMPILKAN CATATAN USTADZAH (Jika ada)
+    if (data.notes) {
+        contentHtml += `
+            <div class="mt-4 p-3 bg-light rounded border border-success border-opacity-25">
+                <h6 class="fw-bold text-success small mb-2"><i class="fas fa-edit"></i> Catatan Ustadzah:</h6>
+                <p class="mb-0 small text-muted" style="font-style: italic; line-height: 1.5;">"${data.notes}"</p>
+            </div>`;
+    }
+
+    // 4. DATA KEHADIRAN
     contentHtml += `
         <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
             <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
@@ -2814,10 +2824,9 @@ function renderReportCard(studentId, data) {
             <span>Lain-lain</span> <span class="badge bg-secondary rounded-pill">${data.absensiLain || 0}</span>
         </div>`;
 
-    // 4. LOGIKA WALI KELAS
+    // 5. LOGIKA WALI KELAS
     let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; 
     let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
-
     if (kelasAnak.toLowerCase().includes("sunan giri")) {
         namaWaliKelas = "Salwa Kamilatuz Zakiyah";
         linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
@@ -2825,50 +2834,49 @@ function renderReportCard(studentId, data) {
 
     const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // 5. Bagian Tanda Tangan (DITAMBAHKAN crossorigin="anonymous")
+    // 6. BAGIAN TANDA TANGAN
     contentHtml += `
     <div id="signatureWrapper" class="mt-4">
         <div class="row text-center align-items-start g-0">
             <div class="col-4">
-                <p class="small mb-1" style="font-size: 0.7rem;">Kepala TPQ</p>
+                <p class="small mb-1" style="font-size: 0.6rem;">Kepala TPQ</p>
                 <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
                     <img src="https://i.imgur.com/APp2Mt6.png" crossorigin="anonymous" style="max-height: 45px;">
                 </div>
-                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.55rem;">Hafi Dzotur Rofi'ah, Lc.</p>
             </div>
             <div class="col-4">
-                <p class="small mb-1" style="font-size: 0.7rem;">Wali Kelas</p>
+                <p class="small mb-1" style="font-size: 0.6rem;">Wali Kelas</p>
                 <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
                     <img src="${linkTtdWaliKelas}" crossorigin="anonymous" style="max-height: 45px;">
                 </div>
-                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.6rem;">${namaWaliKelas}</p>
+                <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.55rem;">${namaWaliKelas}</p>
             </div>
             <div class="col-4">
-                <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
-                <p class="small fw-bold mb-1" style="font-size: 0.7rem;">Wali Santri,</p>
+                <p class="small mb-0" style="font-size: 0.55rem;">Sidoarjo, ${tglSekarang}</p>
+                <p class="small fw-bold mb-1" style="font-size: 0.6rem;">Wali Santri,</p>
                 <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
                     ${data.reportSignature ? `<img src="${data.reportSignature}" crossorigin="anonymous" style="max-height: 45px;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
                 </div>
-                <p class="small fw-bold mb-0" style="font-size: 0.6rem; text-decoration: underline;">${data.parentName || "( Nama Wali )"}</p>
+                <p class="small fw-bold mb-0" style="font-size: 0.55rem; text-decoration: underline;">${data.parentName || "( Nama Wali )"}</p>
             </div>
         </div>
-    </div>`;
+    </div>
+    <div id="signatureInputArea"></div>`;
 
     reportDiv.innerHTML = contentHtml;
 
+    // Trigger pengecekan TTD
     if (typeof checkSignatureStatus === 'function') {
         checkSignatureStatus(studentId, data);
     }
-    
+
+    // Kontrol tombol download (hanya muncul jika sudah TTD)
     const btnDownload = document.getElementById('btnDownloadPDF');
     if (btnDownload) {
-        if (data.reportSignature) {
-            btnDownload.style.display = 'block';
-        } else {
-            btnDownload.style.display = 'none';
-        }
+        btnDownload.style.display = data.reportSignature ? 'block' : 'none';
     }
-}    
+}   
 
 function updateBerandaData(studentId) {
     const loader = document.getElementById('loading');
