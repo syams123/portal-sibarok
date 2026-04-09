@@ -3051,33 +3051,32 @@ async function prosesDownloadPDF(studentId) {
             throw new Error("Tampilan rapor tidak ditemukan atau masih kosong.");
         }
 
-        // 3. Proses Capture menggunakan html2canvas
-        // Gunakan scale 2 agar tulisan kecil di TTD tidak pecah
-        const canvas = await html2canvas(reportElement, {
-            scale: 2, 
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            logging: false
-        });
+        // 3. Beri jeda 1.5 detik agar semua gambar TTD dari Imgur ter-load sempurna
+        setTimeout(async () => {
+            try {
+                const canvas = await html2canvas(reportElement, {
+                    scale: 3, // Naikkan ke 3 agar hasil cetak lebih tajam/HD
+                    useCORS: true,
+                    backgroundColor: "#ffffff",
+                    logging: false
+                });
 
-        // 4. Buat PDF
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        
-        // Hitung rasio agar pas di kertas A4
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                // 4. Buat PDF
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf; // Pastikan ambil jsPDF terbaru
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-        pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-        
-        // Ambil nama santri untuk nama file
-        const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor";
-        pdf.save(`Rapor_${studentName.replace(/\s+/g, '_')}.pdf`);
+                // Masukkan gambar ke PDF dengan margin atas 10mm
+                pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+                
+                const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor";
+                pdf.save(`Rapor_${studentName.replace(/\s+/g, '_')}.pdf`);
 
-        Swal.fire("Berhasil", "Rapor berhasil diunduh!", "success");
-
-    } catch (error) {
-        console.error("PDF Error:", error);
-        Swal.fire("Gagal", "Terjadi kesalahan: " + error.message, "error");
-    }
-}
+                Swal.fire("Berhasil", "Rapor berhasil diunduh!", "success");
+            } catch (err) {
+                Swal.fire("Gagal", "Gagal mengambil gambar rapor: " + err.message, "error");
+            }
+        }, 1500); // Jeda 1.5 detik
