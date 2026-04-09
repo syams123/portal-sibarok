@@ -853,137 +853,137 @@ if (currentRole === 'superadmin') {
 }
 // 3. Buka Detail & Input Nilai
 async function openDetail(id) {
-    const modal = new bootstrap.Modal(document.getElementById('gradeModal'));
-    modal.show();
-    document.getElementById('loading').classList.add('d-none');
-    const doc = await db.collection('students').doc(id).get();
-    const data = doc.data();
-	renderReportCard(id, data);
-	const jilidSelect = document.getElementById('studentLevel');
-if (jilidSelect && data.jilid) {
-    jilidSelect.value = data.jilid; 
-}
-    
-    document.getElementById('gradeStudentId').value = id;
-    document.getElementById('gradeNotes').value = data.notes || '';
-    
-    const formContainer = document.getElementById('gradeFormContainer');
-    let htmlStr = `
-        <hr>
-        <h6 class="fw-bold mb-3">Input Nilai & Absensi:</h6>
-        <div id="subjectsList"></div>
-        <hr>
-        <div class="mb-3">
-            <label class="fw-bold text-success small">Catatan Ustadzah:</label>
-            <textarea id="gradeNotes" class="form-control" rows="3"></textarea>
-        </div>
-    `;
-    formContainer.innerHTML = htmlStr;
-
-    // ISI DATA (Harus SETELAH innerHTML di atas agar tidak tertimpa)
-    document.getElementById('gradeNotes').value = data.notes || "";
-    formContainer.innerHTML = `
-    <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
-        <div class="position-relative">
-    <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
-         class="rounded-circle border border-2 border-white shadow-sm"
-         style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' || currentRole === 'admin' ? 'pointer' : 'default'};"
-         onclick="${currentRole === 'superadmin' || currentRole === 'admin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
-    
-    ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
-</div>
-        <div class="ms-3">
-            <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
-            <small class="text-muted fw-bold">${data.class}</small>
-            <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
-        </div>
-    </div>
-
-    <div class="mb-4 p-3 bg-light rounded border">
-        <label class="form-label small fw-bold text-success"><i class="fas fa-envelope me-1"></i> Email Login Wali Santri</label>
-        <input type="email" id="updateParentEmail" class="form-control form-control-sm" 
-               value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
-        <div class="form-text" style="font-size: 0.65rem;">Ganti email asli jika sudah ada</div>
-    </div>
-
-    <hr>
-    
-    <h6 class="fw-bold mb-3">Daftar Kehadiran Santri:</h6>
-    <div class="row g-2 mb-4">
-        <div class="col-4 text-center">
-            <label class="form-label small fw-bold text-danger">Sakit</label>
-            <input type="number" id="absensiSakit" class="form-control form-control-sm text-center" 
-                   value="${data.absensiSakit || 0}" min="0">
-        </div>
-        <div class="col-4 text-center">
-            <label class="form-label small fw-bold text-warning">Izin</label>
-            <input type="number" id="absensiIzin" class="form-control form-control-sm text-center" 
-                   value="${data.absensiIzin || 0}" min="0">
-        </div>
-        <div class="col-4 text-center">
-            <label class="form-label small fw-bold text-secondary">Lain-lain</label>
-            <input type="number" id="absensiLain" class="form-control form-control-sm text-center" 
-                   value="${data.absensiLain || 0}" min="0">
-        </div>
-    </div>
-
-    <hr>
-    <h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
-`;
-
-    let subjects = data.class.includes("Pra-TK") 
-        ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
-        : ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
-
-    const savedGrades = data.grades || {};
-
-    subjects.forEach(subj => {
-        const val = savedGrades[subj] || '';
-        formContainer.innerHTML += `
-            <div class="row mb-2 align-items-center">
-                <div class="col-6"><label>${subj}</label></div>
-                <div class="col-6">
-                    <select class="form-select form-select-sm grade-input" data-subject="${subj}">
-                        <option value="">-</option>
-                        <option value="A+" ${val==='A+'?'selected':''}>A+</option>
-                        <option value="A" ${val==='A'?'selected':''}>A</option>
-                        <option value="B+" ${val==='B+'?'selected':''}>B+</option>
-                        <option value="B" ${val==='B'?'selected':''}>B</option>
-                        <option value="C+" ${val==='C+'?'selected':''}>C+</option>
-                        <option value="C" ${val==='C'?'selected':''}>C</option>
-                    </select>
-                </div>
-            </div>
-        `;
-    });
-
-    // Bagian bawah fungsi openDetail
-    const modalFooter = document.querySelector('#gradeModal .modal-body .d-flex.gap-2');
-    if (modalFooter) {
-        const billingBtn = (currentRole === 'superadmin') 
-            ? `<button class="btn btn-warning flex-grow-1" onclick="sendBillWA()"><i class="fas fa-money-bill-wave"></i> Tagih</button>` 
-            : '';
-
-        // LOGIKA BARU: Cek apakah sudah ada tanda tangan wali santri
-        let downloadBtn = '';
-        if (data.reportSignature && data.reportSignature !== "") {
-            downloadBtn = `<button class="btn btn-outline-danger flex-grow-1" onclick="prosesDownloadPDF('${id}')">
-                                <i class="fas fa-file-pdf"></i> PDF
-                             </button>`;
-        } else {
-            // Opsional: Beri info kalau belum TTD
-            downloadBtn = `<button class="btn btn-light flex-grow-1" disabled title="Menunggu TTD Wali">
-                                <i class="fas fa-clock"></i> Belum TTD
-                             </button>`;
+    try {
+        const modal = new bootstrap.Modal(document.getElementById('gradeModal'));
+        modal.show();
+        
+        const doc = await db.collection('students').doc(id).get();
+        if (!doc.exists) throw new Error("Data tidak ditemukan");
+        
+        const data = doc.data();
+        
+        // 1. Render Tampilan Rapor
+        renderReportCard(id, data);
+        
+        // 2. Set Jilid
+        const jilidSelect = document.getElementById('studentLevel');
+        if (jilidSelect && data.jilid) {
+            jilidSelect.value = data.jilid; 
         }
 
-        modalFooter.innerHTML = `
-            <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
-            ${downloadBtn}
-            ${billingBtn}
+        document.getElementById('gradeStudentId').value = id;
+        
+        const formContainer = document.getElementById('gradeFormContainer');
+        
+        // 3. Render Form Input (Gabungkan Header, Foto, dan Kehadiran jadi satu)
+        let htmlStr = `
+            <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
+                <div class="position-relative">
+                    <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
+                         class="rounded-circle border border-2 border-white shadow-sm"
+                         style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' || currentRole === 'admin' ? 'pointer' : 'default'};"
+                         onclick="${currentRole === 'superadmin' || currentRole === 'admin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
+                    ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
+                </div>
+                <div class="ms-3">
+                    <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
+                    <small class="text-muted fw-bold">${data.class}</small>
+                    <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
+                </div>
+            </div>
+
+            <div class="mb-4 p-3 bg-light rounded border">
+                <label class="form-label small fw-bold text-success"><i class="fas fa-envelope me-1"></i> Email Login Wali Santri</label>
+                <input type="email" id="updateParentEmail" class="form-control form-control-sm" 
+                       value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
+            </div>
+
+            <hr>
+            <h6 class="fw-bold mb-3">Daftar Kehadiran Santri:</h6>
+            <div class="row g-2 mb-4">
+                <div class="col-4 text-center">
+                    <label class="form-label small fw-bold text-danger">Sakit</label>
+                    <input type="number" id="absensiSakit" class="form-control form-control-sm text-center" value="${data.absensiSakit || 0}" min="0">
+                </div>
+                <div class="col-4 text-center">
+                    <label class="form-label small fw-bold text-warning">Izin</label>
+                    <input type="number" id="absensiIzin" class="form-control form-control-sm text-center" value="${data.absensiIzin || 0}" min="0">
+                </div>
+                <div class="col-4 text-center">
+                    <label class="form-label small fw-bold text-secondary">Lain-lain</label>
+                    <input type="number" id="absensiLain" class="form-control form-control-sm text-center" value="${data.absensiLain || 0}" min="0">
+                </div>
+            </div>
+
+            <hr>
+            <h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
         `;
+
+        // 4. Logika Materi
+        let subjects = data.class.includes("Pra-TK") 
+            ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
+            : ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
+
+        const savedGrades = data.grades || {};
+
+        subjects.forEach(subj => {
+            const val = savedGrades[subj] || '';
+            htmlStr += `
+                <div class="row mb-2 align-items-center">
+                    <div class="col-6"><label>${subj}</label></div>
+                    <div class="col-6">
+                        <select class="form-select form-select-sm grade-input" data-subject="${subj}">
+                            <option value="">-</option>
+                            <option value="A+" ${val==='A+'?'selected':''}>A+</option>
+                            <option value="A" ${val==='A'?'selected':''}>A</option>
+                            <option value="B+" ${val==='B+'?'selected':''}>B+</option>
+                            <option value="B" ${val==='B'?'selected':''}>B</option>
+                            <option value="C+" ${val==='C+'?'selected':''}>C+</option>
+                            <option value="C" ${val==='C'?'selected':''}>C</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        });
+
+        // 5. Input Catatan di bagian bawah
+        htmlStr += `
+            <hr>
+            <div class="mb-3">
+                <label class="fw-bold text-success small">Catatan Ustadzah:</label>
+                <textarea id="gradeNotes" class="form-control" rows="3">${data.notes || ""}</textarea>
+            </div>
+        `;
+
+        formContainer.innerHTML = htmlStr;
+
+        // 6. Tombol Aksi
+        const modalFooter = document.querySelector('#gradeModal .modal-body .d-flex.gap-2');
+        if (modalFooter) {
+            let downloadBtn = (data.reportSignature) 
+                ? `<button class="btn btn-outline-danger flex-grow-1" onclick="prosesDownloadPDF('${id}')"><i class="fas fa-file-pdf"></i> PDF</button>` 
+                : `<button class="btn btn-light flex-grow-1" disabled><i class="fas fa-clock"></i> Belum TTD</button>`;
+
+            const billingBtn = (currentRole === 'superadmin') 
+                ? `<button class="btn btn-warning flex-grow-1" onclick="sendBillWA()"><i class="fas fa-money-bill-wave"></i> Tagih</button>` 
+                : '';
+
+            modalFooter.innerHTML = `
+                <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
+                ${downloadBtn}
+                ${billingBtn}
+            `;
+        }
+
+        // Matikan Loader
+        document.getElementById('loading')?.classList.add('d-none');
+
+    } catch (error) {
+        console.error("Error openDetail:", error);
+        document.getElementById('loading')?.classList.add('d-none');
+        Swal.fire("Gagal", "Terjadi kesalahan sistem", "error");
     }
-}
+} // <--- SEKARANG SUDAH ADA PENUTUPNYA
     
 // 4. Simpan Nilai
 async function saveGrades() {
