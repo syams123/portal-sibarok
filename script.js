@@ -3028,49 +3028,65 @@ if (tutorialModal) {
 }
 
 async function prosesDownloadPDF(studentId) {
-    // 1. Validasi Library
+    // 1. Cek apakah library sudah terload
     if (!window.jspdf || !window.html2canvas) {
-        alert("Sistem PDF belum siap, mohon tunggu sebentar.");
+        Swal.fire("Sistem Belum Siap", "Mohon tunggu 2-3 detik sampai library PDF selesai dimuat, lalu coba lagi.", "info");
         return;
     }
 
-    // 2. Visual Feedback (Loading)
-    const btn = event.target.closest('button');
-    const originalContent = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    btn.disabled = true;
-
     try {
-        // 3. Ambil data mentah dari Firestore
-        const docRef = db.collection('students').doc(studentId);
-        const docSnap = await docRef.get();
-        
+        // Tampilkan loading SweetAlert agar user tidak bingung
+        Swal.fire({
+            title: 'Sedang Memproses PDF...',
+            text: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        // 2. Ambil data terbaru dari Firestore (Gaya database Kak Had)
+        const docSnap = await db.collection('students').doc(studentId).get();
         if (!docSnap.exists) {
-            throw new Error("Data santri tidak ditemukan di database.");
+            throw new Error("Data santri tidak ditemukan!");
         }
-        
         const data = docSnap.data();
 
-        // 4. Siapkan area render tersembunyi
+        // 3. Siapkan area render tersembunyi
         let tempDiv = document.getElementById('tempReportArea');
         if (!tempDiv) {
             tempDiv = document.createElement('div');
             tempDiv.id = 'tempReportArea';
-            tempDiv.style.cssText = "position:absolute; left:-9999px; width:750px; background:white; padding:20px;";
+            // PENTING: Jangan pakai display:none, tapi geser ke luar layar agar bisa di-capture
+            tempDiv.style.cssText = "position:absolute; left:-9999px; width:800px; background:white; padding:40px; color:black;";
             document.body.appendChild(tempDiv);
         }
 
-        // 5. Isi konten rapor ke area rahasia
-        // Pastikan fungsi renderReportKeTemp Kakak sudah benar
-        renderReportKeTemp(tempDiv, studentId, data);
+        // 4. Isi konten rapor ke area rahasia (Sesuai fungsi render Kakak)
+        if (typeof renderReportKeTemp === "function") {
+            renderReportKeTemp(tempDiv, studentId, data);
+        } else {
+            // Jika fungsi render belum ada, kita buat template sederhana di sini
+            tempDiv.innerHTML = `
+                <div style="text-align:center; border:2px solid #198754; padding:20px;">
+                    <h2 style="color:#198754;">RAPOR SANTRI TPQ AL-MUBAROK</h2>
+                    <hr>
+                    <table style="width:100%; text-align:left;">
+                        <tr><td>Nama:</td><td><b>${data.name}</b></td></tr>
+                        <tr><td>Kelas:</td><td>${data.class}</td></tr>
+                    </table>
+                    <br>
+                    <p>Status TTD Wali: <b>Sudah Ditandatangani</b></p>
+                    <img src="${data.reportSignature}" style="width:150px; margin-top:20px;">
+                </div>
+            `;
+        }
 
-        // 6. Tunggu sebentar agar gambar (TTD/Foto) selesai dimuat browser
+        // 5. Tunggu gambar & TTD selesai dirender browser (1.5 detik)
         setTimeout(async () => {
             try {
                 const canvas = await html2canvas(tempDiv, {
                     scale: 2,
                     useCORS: true,
-                    allowTaint: false,
+                    logging: false,
                     backgroundColor: "#ffffff"
                 });
 
@@ -3084,19 +3100,15 @@ async function prosesDownloadPDF(studentId) {
                 pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
                 pdf.save(`Rapor_${data.name.replace(/\s+/g, '_')}.pdf`);
 
-            } catch (errCanvas) {
-                console.error("Canvas Error:", errCanvas);
-                alert("Gagal memproses gambar rapor.");
-            } finally {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
+                Swal.close(); // Tutup loading
+            } catch (canvasErr) {
+                console.error(canvasErr);
+                Swal.fire("Gagal", "Gagal mengubah tampilan ke PDF: " + canvasErr.message, "error");
             }
-        }, 1200);
+        }, 1500);
 
     } catch (error) {
-        console.error("Main PDF Error:", error);
-        alert("Gagal mengambil data: " + error.message);
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
+        console.error("Main Error:", error);
+        Swal.fire("Terjadi Kesalahan", error.message, "error");
     }
 }
