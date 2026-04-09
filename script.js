@@ -760,66 +760,52 @@ if (currentRole === 'superadmin') {
 
             if (currentView === 'grid') {
                 // TAMPILAN GRID (KODE ASLI KAKAK - TETAP CANTIK & TIDAK GEPENG)
-                // TAMPILAN GRID
-finalHtml = `
-    <div class="col-6 col-md-4 col-lg-3 santri-card mb-3">
-        <div class="card card-student shadow-sm h-100 position-relative">
-            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
-                    onclick="event.stopPropagation(); deleteStudent('${id}', '${data.name}')">
-                <i class="fas fa-trash"></i>
-            </button>
-            <img src="${data.photo || defaultAvatar}" class="student-img-top" onclick="openDetail('${id}')">
-            <div class="card-body p-2 text-center">
-                <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
-                <small class="text-muted d-block mb-1">${data.class}</small>
-                
-                ${data.reportSignature ? `
-                    <button class="btn btn-xs btn-danger w-100 mb-2 py-1 shadow-sm" 
-                            style="font-size: 0.65rem; border-radius: 5px;"
-                            onclick="event.stopPropagation(); downloadLangsung('${id}')">
-                        <i class="fas fa-file-pdf"></i> Download Rapor
-                    </button>
-                ` : ''}
-				${raporBadgeHtml}
-                ${ttdStatusHtml}
-                ${walletBadgeHtml}
-                ${statusBadgeHtml}
-            </div>
-        </div>  
-    </div>`;
+                finalHtml = `
+                    <div class="col-6 col-md-4 col-lg-3 santri-card mb-3">
+                        <div class="card card-student shadow-sm h-100 position-relative">
+                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                                    onclick="event.stopPropagation(); deleteStudent('${id}', '${data.name}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <img src="${data.photo || defaultAvatar}" class="student-img-top" onclick="openDetail('${id}')">
+                            <div class="card-body p-2 text-center">
+                                <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
+                                <small class="text-muted d-block mb-1">${data.class}</small>
+				                ${raporBadgeHtml}
+                                ${ttdStatusHtml}
+                                ${walletBadgeHtml}
+                                ${statusBadgeHtml}
+                            </div>
+                        </div>  
+                    </div>`;
             } else {
                 // TAMPILAN LIST (BARIS RAMPING - COCOK UNTUK HP)
 				const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
-                // TAMPILAN LIST
-finalHtml = `
-    <div class="col-12 mb-2">
-        <div class="card shadow-sm border-0" style="border-radius: 12px;">
-            <div class="card-body d-flex align-items-center py-2 px-3">
-                <img src="${data.photo || defaultAvatar}" class="rounded-circle me-3" 
-                     style="width: 45px; height: 45px; object-fit: cover; cursor: pointer; border: 1px solid #eee;" 
-                     onclick="openDetail('${id}')">
-                
-                <div class="flex-grow-1 overflow-hidden">
-                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
-                    <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
-                </div>
+                finalHtml = `
+                    <div class="col-12 mb-2">
+                        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+                            <div class="card-body d-flex align-items-center py-2 px-3">
+                                <img src="${data.photo || defaultAvatar}" class="rounded-circle me-3" 
+                                     style="width: 45px; height: 45px; object-fit: cover; cursor: pointer; border: 1px solid #eee;" 
+                                     onclick="openDetail('${id}')">
+                                
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
+										${sudahDiisi ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
+                                    </div>
+                                </div>
 
-                <div class="d-flex align-items-center gap-2">
-                    ${data.reportSignature ? `
-                        <i class="fas fa-file-pdf text-danger fa-lg" 
-                           style="cursor: pointer;" 
-                           title="Download Rapor"
-                           onclick="event.stopPropagation(); downloadLangsung('${id}')"></i>
-                    ` : ''}
-
-                    ${data.infaqStatus === true ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
-                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="openDetail('${id}')">
-                        <i class="fas fa-chevron-right text-muted"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>`;
+                                <div class="d-flex align-items-center gap-2">
+                                    ${data.infaqStatus === true ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
+                                    <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="openDetail('${id}')">
+                                        <i class="fas fa-chevron-right text-muted"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
             }
 
             // Masukkan hasil pilihan ke dalam container utama
@@ -970,13 +956,29 @@ if (jilidSelect && data.jilid) {
         `;
     });
 
+    // Bagian bawah fungsi openDetail
     const modalFooter = document.querySelector('#gradeModal .modal-body .d-flex.gap-2');
     if (modalFooter) {
         const billingBtn = (currentRole === 'superadmin') 
-            ? `<button class="btn btn-warning flex-grow-1" onclick="sendBillWA()">Tagih Infaq (WA)</button>` 
+            ? `<button class="btn btn-warning flex-grow-1" onclick="sendBillWA()"><i class="fas fa-money-bill-wave"></i> Tagih</button>` 
             : '';
+
+        // LOGIKA BARU: Cek apakah sudah ada tanda tangan wali santri
+        let downloadBtn = '';
+        if (data.reportSignature && data.reportSignature !== "") {
+            downloadBtn = `<button class="btn btn-outline-danger flex-grow-1" onclick="prosesDownloadPDF('${id}')">
+                                <i class="fas fa-file-pdf"></i> PDF
+                             </button>`;
+        } else {
+            // Opsional: Beri info kalau belum TTD
+            downloadBtn = `<button class="btn btn-light flex-grow-1" disabled title="Menunggu TTD Wali">
+                                <i class="fas fa-clock"></i> Belum TTD
+                             </button>`;
+        }
+
         modalFooter.innerHTML = `
             <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
+            ${downloadBtn}
             ${billingBtn}
         `;
     }
@@ -3025,46 +3027,50 @@ if (tutorialModal) {
     });
 }
 
-async function downloadLangsung(studentId) {
-    try {
-        // CEK 1: Pastikan library tersedia
-        if (!window.jspdf || !window.html2canvas) {
-            alert("Sistem sedang menyiapkan library PDF. Mohon tunggu 3 detik dan coba lagi.");
-            return;
-        }
+async function prosesDownloadPDF(studentId) {
+    // 1. Validasi Library
+    if (!window.jspdf || !window.html2canvas) {
+        alert("Sistem PDF belum siap, mohon tunggu sebentar.");
+        return;
+    }
 
-        console.log("Memulai download untuk:", studentId);
+    // 2. Visual Feedback (Loading)
+    const btn = event.target.closest('button');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
+    try {
+        // 3. Ambil data mentah dari Firestore
+        const docRef = db.collection('students').doc(studentId);
+        const docSnap = await docRef.get();
         
-        // 2. Ambil data dari Firestore
-        const docRef = doc(db, "students", studentId);
-        const docSnap = await getDoc(docRef);
-        
-        if (!docSnap.exists()) {
-            alert("Data santri tidak ditemukan.");
-            return;
+        if (!docSnap.exists) {
+            throw new Error("Data santri tidak ditemukan di database.");
         }
+        
         const data = docSnap.data();
 
-        // 3. Siapkan wadah bayangan
+        // 4. Siapkan area render tersembunyi
         let tempDiv = document.getElementById('tempReportArea');
         if (!tempDiv) {
             tempDiv = document.createElement('div');
             tempDiv.id = 'tempReportArea';
-            tempDiv.style.cssText = "position:absolute; left:-9999px; width:800px; background:white;";
+            tempDiv.style.cssText = "position:absolute; left:-9999px; width:750px; background:white; padding:20px;";
             document.body.appendChild(tempDiv);
         }
 
-        // 4. Masukkan konten rapor
+        // 5. Isi konten rapor ke area rahasia
+        // Pastikan fungsi renderReportKeTemp Kakak sudah benar
         renderReportKeTemp(tempDiv, studentId, data);
 
-        // 5. Eksekusi PDF dengan penanganan Gambar (CORS)
+        // 6. Tunggu sebentar agar gambar (TTD/Foto) selesai dimuat browser
         setTimeout(async () => {
             try {
                 const canvas = await html2canvas(tempDiv, {
                     scale: 2,
-                    useCORS: true, // WAJIB agar tanda tangan/foto muncul
-                    allowTaint: false, // Menghindari error keamanan browser
-                    logging: false,
+                    useCORS: true,
+                    allowTaint: false,
                     backgroundColor: "#ffffff"
                 });
 
@@ -3077,16 +3083,20 @@ async function downloadLangsung(studentId) {
 
                 pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
                 pdf.save(`Rapor_${data.name.replace(/\s+/g, '_')}.pdf`);
-                
-                console.log("Download Sukses!");
-            } catch (canvasErr) {
-                console.error("Gagal membuat gambar:", canvasErr);
-                alert("Gagal memproses gambar rapor (CORS/Security). Coba hapus cache browser atau gunakan Google Chrome.");
+
+            } catch (errCanvas) {
+                console.error("Canvas Error:", errCanvas);
+                alert("Gagal memproses gambar rapor.");
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
             }
-        }, 1200); // Beri jeda sedikit lebih lama agar gambar TTD ter-load
+        }, 1200);
 
     } catch (error) {
-        console.error("System Error:", error);
-        alert("Sistem gagal mengambil data. Pastikan Kakak sudah login sebagai Admin.");
+        console.error("Main PDF Error:", error);
+        alert("Gagal mengambil data: " + error.message);
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
     }
 }
