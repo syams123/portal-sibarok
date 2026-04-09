@@ -962,12 +962,14 @@ if (jilidSelect && data.jilid) {
             ? `<button class="btn btn-warning flex-grow-1" onclick="sendBillWA()">Tagih Infaq (WA)</button>` 
             : '';
         modalFooter.innerHTML = `
+            <button class="btn btn-danger flex-grow-1" onclick="cetakPDFRapor('${id}')">
+                <i class="fas fa-file-pdf"></i> Arsip Rapor
+            </button>
             <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
             ${billingBtn}
         `;
     }
-}
-    
+}  
 // 4. Simpan Nilai
 async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
@@ -3009,4 +3011,157 @@ if (tutorialModal) {
     tutorialModal.addEventListener('hidden.bs.modal', function () {
         stopAllTutorialVideos();
     });
+}
+
+async function cetakPDFRapor(id) {
+    try {
+        // Ubah tombol jadi status loading agar user tahu proses sedang berjalan
+        const btnPdf = event.currentTarget;
+        const originalText = btnPdf.innerHTML;
+        btnPdf.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyiapkan...`;
+        btnPdf.disabled = true;
+
+        // Ambil data terbaru dari Firestore
+        const doc = await db.collection('students').doc(id).get();
+        const data = doc.data();
+
+        // Siapkan variabel guru/wali kelas (Sesuai logika yang Kakak buat)
+        let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
+        let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
+        const kelasSantri = data.class || "";
+
+        if (kelasSantri.includes("Sunan Giri")) {
+            namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+            linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
+        }
+
+        const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Mulai rakit tabel Nilai
+        let tabelNilaiHTML = '';
+        if (data.grades) {
+            for (const [subj, grade] of Object.entries(data.grades)) {
+                tabelNilaiHTML += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${subj}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${grade}</td>
+                    </tr>
+                `;
+            }
+        } else {
+            tabelNilaiHTML = `<tr><td colspan="2" style="text-align:center; padding: 8px;">Belum ada nilai yang diinput</td></tr>`;
+        }
+
+        // Siapkan elemen HTML untuk PDF
+        const printDiv = document.createElement('div');
+        printDiv.style.padding = '40px';
+        printDiv.style.fontFamily = 'Arial, sans-serif';
+        printDiv.style.color = '#333';
+        
+        printDiv.innerHTML = `
+            <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #198754;">LAPORAN HASIL BELAJAR SANTRI (SISIPAN)</h2>
+                <h4 style="margin: 5px 0 0 0;">Taman Pendidikan Al-Qur'an (TPQ)</h4>
+            </div>
+
+            <table style="width: 100%; margin-bottom: 20px; font-size: 14px;">
+                <tr>
+                    <td style="width: 15%; font-weight: bold;">Nama Santri</td><td style="width: 35%;">: ${data.name || '-'}</td>
+                    <td style="width: 15%; font-weight: bold;">Kelas</td><td style="width: 35%;">: ${data.class || '-'}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Jilid</td><td>: ${data.jilid ? "Jilid " + data.jilid.toString().replace("Jilid ", "") : "-"}</td>
+                    <td style="font-weight: bold;">Bulan</td><td>: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
+                </tr>
+            </table>
+
+            <h4 style="margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">A. Nilai Mata Pelajaran</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: left; width: 70%;">Mata Pelajaran</th>
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: center; width: 30%;">Predikat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tabelNilaiHTML}
+                </tbody>
+            </table>
+
+            <h4 style="margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">B. Kehadiran</h4>
+            <table style="width: 50%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+                <tr>
+                    <td style="padding: 5px; border: 1px solid #ddd;">Sakit</td>
+                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${data.absensiSakit || 0} Hari</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; border: 1px solid #ddd;">Izin</td>
+                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${data.absensiIzin || 0} Hari</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px; border: 1px solid #ddd;">Lain-lain</td>
+                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${data.absensiLain || 0} Hari</td>
+                </tr>
+            </table>
+
+            ${data.notes ? `
+            <h4 style="margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">C. Catatan Ustadzah</h4>
+            <p style="font-style: italic; font-size: 14px; background-color: #f8f9fa; padding: 10px; border-left: 4px solid #198754;">"${data.notes}"</p>
+            ` : ''}
+
+            <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center; font-size: 14px;">
+                <div style="width: 30%;">
+                    <p style="margin-bottom: 5px;">Mengetahui,</p>
+                    <p style="font-weight: bold; margin-bottom: 10px;">Kepala TPQ</p>
+                    <div style="height: 70px; display: flex; align-items: center; justify-content: center;">
+                        <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 60px; width: auto;" crossorigin="anonymous">
+                    </div>
+                    <p style="text-decoration: underline; font-weight: bold; margin-top: 5px;">Hafi Dzotur Rofi'ah, Lc.</p>
+                </div>
+                
+                <div style="width: 30%;">
+                    <p style="margin-bottom: 5px;">&nbsp;</p>
+                    <p style="font-weight: bold; margin-bottom: 10px;">Wali Kelas</p>
+                    <div style="height: 70px; display: flex; align-items: center; justify-content: center;">
+                        <img src="${linkTtdWaliKelas}" style="max-height: 60px; width: auto;" crossorigin="anonymous">
+                    </div>
+                    <p style="text-decoration: underline; font-weight: bold; margin-top: 5px;">${namaWaliKelas}</p>
+                </div>
+
+                <div style="width: 30%;">
+                    <p style="margin-bottom: 5px;">Sidoarjo, ${tglSekarang}</p>
+                    <p style="font-weight: bold; margin-bottom: 10px;">Wali Santri</p>
+                    <div style="height: 70px; display: flex; align-items: center; justify-content: center;">
+                        ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 60px; width: auto;" crossorigin="anonymous">` : `<span style="color: #999; font-size: 12px;">(Belum TTD)</span>`}
+                    </div>
+                    <p style="text-decoration: underline; font-weight: bold; margin-top: 5px;">${data.parentName || "( ....................... )"}</p>
+                </div>
+            </div>
+        `;
+
+        // Konfigurasi html2pdf
+        const opt = {
+            margin:       0.4,
+            filename:     `Arsip_Rapor_${data.name.replace(/\s+/g, '_')}_${tglSekarang.replace(/\s+/g, '')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true }, // useCORS wajib aktif agar TTD dari Imgur termuat!
+            jsPDF:        { unit: 'in', format: 'A4', orientation: 'portrait' }
+        };
+
+        // Eksekusi pembuatan PDF
+        await html2pdf().set(opt).from(printDiv).save();
+
+        // Kembalikan status tombol seperti semula
+        btnPdf.innerHTML = originalText;
+        btnPdf.disabled = false;
+
+    } catch (error) {
+        console.error("Gagal mencetak PDF:", error);
+        alert("Terjadi kesalahan saat membuat PDF. Pastikan koneksi internet stabil.");
+        
+        // Kembalikan status tombol jika error
+        const btnPdf = event.currentTarget;
+        btnPdf.innerHTML = `<i class="fas fa-file-pdf"></i> Arsip Rapor`;
+        btnPdf.disabled = false;
+    }
 }
