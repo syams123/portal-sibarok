@@ -858,6 +858,7 @@ async function openDetail(id) {
     document.getElementById('loading').classList.add('d-none');
     const doc = await db.collection('students').doc(id).get();
     const data = doc.data();
+	renderReportCard(id, data);
 	const jilidSelect = document.getElementById('studentLevel');
 if (jilidSelect && data.jilid) {
     jilidSelect.value = data.jilid; 
@@ -3028,10 +3029,10 @@ if (tutorialModal) {
 }
 
 async function prosesDownloadPDF(studentId) {
-    // 1. Cek Library
-    const { jsPDF } = window.jspdf || {};
-    if (!jsPDF || !window.html2canvas) {
-        Swal.fire("Sistem Belum Siap", "Library PDF sedang dimuat, tunggu sebentar.", "info");
+    // Perbaikan pengecekan library agar tidak terus-terusan "Belum Siap"
+    const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : null;
+    if (!jsPDFLib || !window.html2canvas) {
+        Swal.fire("Sistem Belum Siap", "Library sedang dimuat. Jika tetap muncul, pastikan ada koneksi internet.", "info");
         return;
     }
 
@@ -3043,40 +3044,40 @@ async function prosesDownloadPDF(studentId) {
             didOpen: () => { Swal.showLoading(); }
         });
 
-        // 2. Pastikan elemen rapor sudah ada isinya
-        // Kita ambil elemen yang dirender oleh fungsi renderReportCard Kakak
         const reportElement = document.getElementById('childReportCard');
         
         if (!reportElement || reportElement.innerHTML.trim() === "") {
-            throw new Error("Tampilan rapor tidak ditemukan atau masih kosong.");
+            throw new Error("Tampilan rapor belum muncul di layar. Coba tutup dan buka kembali modal.");
         }
 
-        // 3. Beri jeda 1.5 detik agar semua gambar TTD dari Imgur ter-load sempurna
+        // Timer 1.5 detik agar TTD Imgur ter-load (Mencegah PDF kosong)
         setTimeout(async () => {
             try {
                 const canvas = await html2canvas(reportElement, {
-                    scale: 3, // Naikkan ke 3 agar hasil cetak lebih tajam/HD
+                    scale: 2, // 2 sudah cukup tajam dan tidak terlalu berat
                     useCORS: true,
-                    backgroundColor: "#ffffff",
-                    logging: false
+                    backgroundColor: "#ffffff"
                 });
 
-                // 4. Buat PDF
                 const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf; // Pastikan ambil jsPDF terbaru
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdf = new jsPDFLib('p', 'mm', 'a4');
                 
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-                // Masukkan gambar ke PDF dengan margin atas 10mm
                 pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
                 
+                // Ambil nama santri langsung dari data UI
                 const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor";
                 pdf.save(`Rapor_${studentName.replace(/\s+/g, '_')}.pdf`);
 
                 Swal.fire("Berhasil", "Rapor berhasil diunduh!", "success");
             } catch (err) {
-                Swal.fire("Gagal", "Gagal mengambil gambar rapor: " + err.message, "error");
+                Swal.fire("Gagal", "Kesalahan saat memotret rapor: " + err.message, "error");
             }
-        }, 1500); // Jeda 1.5 detik
+        }, 1500);
+
+    } catch (error) {
+        Swal.fire("Gagal", error.message, "error");
+    }
+}
