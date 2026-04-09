@@ -3029,34 +3029,35 @@ if (tutorialModal) {
 }
 
 async function prosesDownloadPDF(studentId) {
-    // Perbaikan pengecekan library agar tidak terus-terusan "Belum Siap"
+    // 1. Cek Library jsPDF
     const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : null;
     if (!jsPDFLib || !window.html2canvas) {
-        Swal.fire("Sistem Belum Siap", "Library sedang dimuat. Jika tetap muncul, pastikan ada koneksi internet.", "info");
+        Swal.fire("Sistem Belum Siap", "Library PDF sedang dimuat, mohon tunggu sebentar.", "info");
         return;
     }
 
     try {
         Swal.fire({
-            title: 'Menyiapkan PDF...',
-            text: 'Sedang memproses dokumen',
+            title: 'Sedang Memotret Rapor...',
+            text: 'Mohon tunggu sampai proses selesai',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
         });
 
         const reportElement = document.getElementById('childReportCard');
-        
         if (!reportElement || reportElement.innerHTML.trim() === "") {
-            throw new Error("Tampilan rapor belum muncul di layar. Coba tutup dan buka kembali modal.");
+            throw new Error("Tampilan rapor tidak ditemukan. Coba tutup dan buka kembali modal.");
         }
 
-        // Timer 1.5 detik agar TTD Imgur ter-load (Mencegah PDF kosong)
+        // 2. Beri Jeda 2 Detik (Kunci Utama agar PNG tidak Corrupt)
+        // Jeda ini memastikan foto & TTD dari Imgur sudah muncul sempurna
         setTimeout(async () => {
             try {
                 const canvas = await html2canvas(reportElement, {
-                    scale: 2, // 2 sudah cukup tajam dan tidak terlalu berat
-                    useCORS: true,
-                    backgroundColor: "#ffffff"
+                    scale: 2, // Kualitas cukup bagus (HD)
+                    useCORS: true, // WAJIB agar gambar dari link luar (Imgur/Firebase) bisa dipotret
+                    backgroundColor: "#ffffff",
+                    logging: false
                 });
 
                 const imgData = canvas.toDataURL('image/png');
@@ -3067,15 +3068,16 @@ async function prosesDownloadPDF(studentId) {
 
                 pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
                 
-                // Ambil nama santri langsung dari data UI
-                const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor";
+                // Ambil nama dari judul modal agar tidak error "undefined data"
+                const studentName = document.querySelector('#gradeModal h5')?.innerText || "Rapor_Santri";
                 pdf.save(`Rapor_${studentName.replace(/\s+/g, '_')}.pdf`);
 
                 Swal.fire("Berhasil", "Rapor berhasil diunduh!", "success");
             } catch (err) {
-                Swal.fire("Gagal", "Kesalahan saat memotret rapor: " + err.message, "error");
+                console.error(err);
+                Swal.fire("Gagal", "Kesalahan saat memotret: " + err.message, "error");
             }
-        }, 1500);
+        }, 2000); // Jeda 2 detik agar gambar tidak corrupt
 
     } catch (error) {
         Swal.fire("Gagal", error.message, "error");
