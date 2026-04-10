@@ -3039,6 +3039,7 @@ if (tutorialModal) {
 
 async function cetakPDFRapor(id, btnElement) {
     const originalText = btnElement ? btnElement.innerHTML : '<i class="fas fa-file-pdf"></i> Arsip Rapor';
+    let printContainer;
     
     try {
         // 1. Ubah tombol jadi status loading
@@ -3079,69 +3080,89 @@ async function cetakPDFRapor(id, btnElement) {
             for (const [subj, grade] of Object.entries(data.grades)) {
                 tabelNilaiHTML += `
                     <tr>
-                        <td style="padding: 6px; border: 1px solid #ddd;">${subj}</td>
-                        <td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${grade}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd; width: 70%;">${subj}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; width: 30%;">${grade}</td>
                     </tr>
                 `;
             }
         } else {
-            tabelNilaiHTML = `<tr><td colspan="2" style="text-align:center; padding: 6px;">Belum ada nilai yang diinput</td></tr>`;
+            tabelNilaiHTML = `<tr><td colspan="2" style="text-align:center; padding: 6px; border: 1px solid #ddd;">Belum ada nilai yang diinput</td></tr>`;
         }
 
         // =======================================================
-        // 🌟 SMART IMAGE PRELOADER (OBAT ANTI-BLANK 17KB) 🌟
+        // 🌟 TAHAP 1: KONVERTER GAMBAR BASE64 (OBAT ANTI-BLANK) 🌟
         // =======================================================
+        // Fungsi ini memaksa gambar diunduh sepenuhnya dan diubah jadi kode base64, 
+        // sehingga html2pdf tidak perlu memuat internet lagi saat mencetak.
+        async function getBase64Image(url) {
+            try {
+                const response = await fetch(url, { mode: 'cors' });
+                const blob = await response.blob();
+                return await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                console.warn("CORS gagal untuk gambar:", url);
+                return url; // Fallback aman
+            }
+        }
+
         const linkTtdKepala = "https://i.imgur.com/APp2Mt6.png";
         const linkTtdWaliSantri = data.reportSignature || null;
 
-        // Kumpulkan semua link gambar yang akan dicetak
-        const imagesToPreload = [linkTtdKepala, linkTtdWaliKelas];
-        if (linkTtdWaliSantri) imagesToPreload.push(linkTtdWaliSantri);
-
-        // Fungsi untuk memaksa HP mendownload gambar ke cache secara diam-diam
-        const preloadImage = (url) => {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous'; // Wajib untuk Imgur
-                img.onload = () => resolve(); // Selesai didownload, lanjut!
-                img.onerror = () => {
-                    console.warn("Gambar gagal dimuat:", url);
-                    resolve(); // Jika gagal karena internet terputus, lewati saja agar tidak nyangkut
-                };
-                img.src = url;
-            });
-        };
-
-        // TUNGGU sampai semua gambar benar-benar selesai terdownload 100%
-        await Promise.all(imagesToPreload.map(url => preloadImage(url)));
+        // Tunggu sampai KETIGA gambar benar-benar selesai diunduh 100%
+        const [b64Kepala, b64WaliKelas, b64WaliSantri] = await Promise.all([
+            getBase64Image(linkTtdKepala),
+            getBase64Image(linkTtdWaliKelas),
+            linkTtdWaliSantri ? getBase64Image(linkTtdWaliSantri) : Promise.resolve(null)
+        ]);
 
         // =======================================================
-        // 🌟 STRING HTML MURNI (OBAT ANTI-MIRING / TERPOTONG) 🌟
+        // 🌟 TAHAP 2: KOTAK KANVAS ABSOLUT (OBAT ANTI-MIRING) 🌟
         // =======================================================
-        const htmlStringPDF = `
-            <div style="width: 800px; background-color: #ffffff; padding: 20px 40px 30px 40px; font-family: Arial, sans-serif; color: #333; line-height: 1.3; margin: 0;">
+        printContainer = document.createElement('div');
+        // Kunci posisi di pojok kiri atas, di belakang layer website agar tidak merusak tampilan HP
+        printContainer.style.position = 'fixed';
+        printContainer.style.top = '0';
+        printContainer.style.left = '0';
+        printContainer.style.zIndex = '-9999'; 
+        printContainer.style.pointerEvents = 'none';
+        printContainer.style.width = '800px'; 
+        printContainer.style.minWidth = '800px'; 
+        
+        // Perhatikan penggunaan !important di lebar tabel untuk membunuh responsivitas bawaan Bootstrap
+        printContainer.innerHTML = `
+            <div style="width: 800px !important; min-width: 800px !important; max-width: 800px !important; display: block !important; background-color: #ffffff; padding: 20px 40px 30px 40px; font-family: Arial, sans-serif; color: #333; line-height: 1.3; margin: 0; box-sizing: border-box; text-align: left;">
                 
                 <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
                     <h2 style="margin: 0; color: #198754; font-size: 18px; font-weight: bold;">RAPOR SISIPAN</h2>
                     <h4 style="margin: 3px 0 0 0; font-size: 16px; font-weight: normal;">Taman Pendidikan Al-Qur'an (TPQ) Al-Mubarok</h4>
                 </div>
 
-                <table style="width: 100%; margin-bottom: 15px; font-size: 13px;">
+                <table style="width: 100% !important; min-width: 100% !important; max-width: none !important; margin-bottom: 15px; font-size: 13px; border-collapse: collapse; table-layout: fixed;">
                     <tr>
-                        <td style="width: 15%; font-weight: bold;">Nama Santri</td><td style="width: 40%;">: ${data.name || '-'}</td>
-                        <td style="width: 15%; font-weight: bold;">Semester</td><td style="width: 30%;">: ${teksSemester}</td>
+                        <td style="width: 15%; font-weight: bold; padding: 4px;">Nama Santri</td>
+                        <td style="width: 40%; padding: 4px;">: ${data.name || '-'}</td>
+                        <td style="width: 15%; font-weight: bold; padding: 4px;">Semester</td>
+                        <td style="width: 30%; padding: 4px;">: ${teksSemester}</td>
                     </tr>
                     <tr>
-                        <td style="font-weight: bold;">Kelas</td><td>: ${data.class || '-'}</td>
-                        <td style="font-weight: bold;">Bulan</td><td>: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
+                        <td style="font-weight: bold; padding: 4px;">Kelas</td>
+                        <td style="padding: 4px;">: ${data.class || '-'}</td>
+                        <td style="font-weight: bold; padding: 4px;">Bulan</td>
+                        <td style="padding: 4px;">: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
                     </tr>
                     <tr>
-                        <td style="font-weight: bold;">Jilid</td><td colspan="3">: ${data.jilid ? "Jilid " + data.jilid.toString().replace("Jilid ", "") : "-"}</td>
+                        <td style="font-weight: bold; padding: 4px;">Jilid</td>
+                        <td colspan="3" style="padding: 4px;">: ${data.jilid ? "Jilid " + data.jilid.toString().replace("Jilid ", "") : "-"}</td>
                     </tr>
                 </table>
 
                 <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">A. Nilai Mata Pelajaran</h4>
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+                <table style="width: 100% !important; min-width: 100% !important; max-width: none !important; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; table-layout: fixed;">
                     <thead>
                         <tr style="background-color: #f8f9fa;">
                             <th style="padding: 6px; border: 1px solid #ddd; text-align: left; width: 70%;">Mata Pelajaran</th>
@@ -3154,10 +3175,10 @@ async function cetakPDFRapor(id, btnElement) {
                 </table>
 
                 <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">B. Kehadiran</h4>
-                <table style="width: 50%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+                <table style="width: 50% !important; min-width: 50% !important; max-width: none !important; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; table-layout: fixed;">
                     <tr>
-                        <td style="padding: 4px 6px; border: 1px solid #ddd;">Sakit</td>
-                        <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center;">${data.absensiSakit || 0} Hari</td>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd; width: 60%;">Sakit</td>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center; width: 40%;">${data.absensiSakit || 0} Hari</td>
                     </tr>
                     <tr>
                         <td style="padding: 4px 6px; border: 1px solid #ddd;">Izin</td>
@@ -3174,12 +3195,12 @@ async function cetakPDFRapor(id, btnElement) {
                 <p style="font-style: italic; font-size: 13px; background-color: #f8f9fa; padding: 8px; margin: 0 0 15px 0; border-left: 3px solid #198754;">"${data.notes}"</p>
                 ` : ''}
 
-                <div style="margin-top: 25px; display: flex; justify-content: space-between; text-align: center; font-size: 13px;">
+                <div style="margin-top: 25px; display: flex; justify-content: space-between; text-align: center; font-size: 13px; width: 100%;">
                     <div style="width: 30%;">
                         <p style="margin: 0 0 3px 0;">Mengetahui,</p>
                         <p style="font-weight: bold; margin: 0 0 5px 0;">Kepala TPQ</p>
                         <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            <img src="${linkTtdKepala}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">
+                            <img src="${b64Kepala}" style="max-height: 55px; width: auto; object-fit: contain;">
                         </div>
                         <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">Hafi Dzotur Rofi'ah, Lc.</p>
                     </div>
@@ -3188,7 +3209,7 @@ async function cetakPDFRapor(id, btnElement) {
                         <p style="margin: 0 0 3px 0;">&nbsp;</p>
                         <p style="font-weight: bold; margin: 0 0 5px 0;">Wali Kelas</p>
                         <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            <img src="${linkTtdWaliKelas}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">
+                            <img src="${b64WaliKelas}" style="max-height: 55px; width: auto; object-fit: contain;">
                         </div>
                         <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">${namaWaliKelas}</p>
                     </div>
@@ -3197,7 +3218,7 @@ async function cetakPDFRapor(id, btnElement) {
                         <p style="margin: 0 0 3px 0;">Sidoarjo, ${tglSekarang}</p>
                         <p style="font-weight: bold; margin: 0 0 5px 0;">Wali Santri</p>
                         <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            ${linkTtdWaliSantri ? `<img src="${linkTtdWaliSantri}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">` : `<span style="color: #999; font-size: 11px; font-style: italic;">(Belum divalidasi)</span>`}
+                            ${b64WaliSantri ? `<img src="${b64WaliSantri}" style="max-height: 55px; width: auto; object-fit: contain;">` : `<span style="color: #999; font-size: 11px; font-style: italic;">(Belum divalidasi)</span>`}
                         </div>
                         <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">${data.parentName || "( ....................... )"}</p>
                     </div>
@@ -3205,11 +3226,15 @@ async function cetakPDFRapor(id, btnElement) {
             </div>
         `;
 
-        // 7. Konfigurasi html2pdf
+        // Masukkan elemen ke dalam web sesaat agar bisa difoto oleh library
+        document.body.appendChild(printContainer);
+
+        // =======================================================
+        // 🌟 TAHAP 3: KONFIGURASI PDF (PENGUNCI KAMERA) 🌟
+        // =======================================================
         let namaSantri = data.name || 'Santri';
-        
         const opt = {
-            margin:       [0.1, 0.4, 0.4, 0.4],
+            margin:       [0.1, 0.4, 0.4, 0.4], 
             filename:     `Arsip Rapor ${namaSantri}, Semester ${tipeSemester} Tahun Ajaran ${tahunAjaran}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { 
@@ -3217,26 +3242,33 @@ async function cetakPDFRapor(id, btnElement) {
                 useCORS: true, 
                 windowWidth: 800,
                 width: 800,
+                x: 0, // KUNCI PENTING: Paksa kamera memfoto pas dari pojok kiri (Tidak akan terpotong lagi)
+                y: 0,
                 scrollY: 0, 
                 scrollX: 0
             }, 
             jsPDF:        { unit: 'in', format: 'A4', orientation: 'portrait' }
         };
 
-        // 8. Eksekusi PDF LANGSUNG dari String (Tanpa menempelkan elemen ke body HP)
-        await html2pdf().set(opt).from(htmlStringPDF).save();
+        // Eksekusi Pembuatan PDF
+        await html2pdf().set(opt).from(printContainer.firstElementChild).save();
 
     } catch (error) {
         console.error("Gagal mencetak PDF:", error);
-        alert("Terjadi kesalahan saat memproses PDF: " + error.message);
+        alert("Terjadi kesalahan saat memproses PDF: Pastikan internet stabil.");
     } finally {
-        // 9. Pastikan tombol kembali normal MESKIPUN terjadi error
+        // 9. Pastikan tombol normal kembali
         if (btnElement) {
             btnElement.innerHTML = originalText;
             btnElement.disabled = false;
         }
+        // 10. Langsung hapus sampah elemen dari web agar tidak membebani memori HP
+        if (printContainer && printContainer.parentNode) {
+            printContainer.parentNode.removeChild(printContainer);
+        }
     }
-}document.write(new Date().getFullYear());
+}
+document.write(new Date().getFullYear());
 
 document.addEventListener('DOMContentLoaded', function() {
     const textArea = document.getElementById('gradeNotes');
