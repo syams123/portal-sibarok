@@ -269,46 +269,48 @@
 </section>
 
 <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-success d-none sticky-top">
-    <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand d-flex align-items-center" href="#" style="gap: 12px;">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZTUnovmOq9QQvT4Nc0AI4aJ5hA_yqjj7frwkOyyhUJP-ohR8V2YSXsueIibUipTwU-bjXsDOv-at0dFzcJ_q7-YD50Y9wBcNIE6kFJGuiq-94CCE1aEh80rHBSCIs3DXhcRKZJpyqir3HascTXnuU1fNad19VVRAM8s4RceRIzo5ySEzeHt1CmU_hubc/s1600/TPQ%20Al-Mubarok%20LOGO%20PUTIH.png" alt="Logo" style="width: 45px; height: 45px; object-fit: contain;">
-            <div class="d-flex flex-column" style="line-height: 1.2;">
-                <span class="fw-bold" style="font-size: 1.25rem;">TPQ Al-Mubarok</span>
-                <small style="font-size: 0.7rem; opacity: 0.85;">ARC BB03-09</small>
+    <div class="container flex-nowrap align-items-center">
+        
+        <a class="navbar-brand d-flex align-items-center me-auto" href="#" style="gap: 8px; overflow: hidden; min-width: 0;">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZTUnovmOq9QQvT4Nc0AI4aJ5hA_yqjj7frwkOyyhUJP-ohR8V2YSXsueIibUipTwU-bjXsDOv-at0dFzcJ_q7-YD50Y9wBcNIE6kFJGuiq-94CCE1aEh80rHBSCIs3DXhcRKZJpyqir3HascTXnuU1fNad19VVRAM8s4RceRIzo5ySEzeHt1CmU_hubc/s1600/TPQ%20Al-Mubarok%20LOGO%20PUTIH.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;">
+            
+            <div class="d-flex flex-column justify-content-center" style="line-height: 1.1; min-width: 0;">
+                <span class="fw-bold text-truncate" style="font-size: clamp(1rem, 4vw, 1.25rem);">TPQ Al-Mubarok</span>
+                <small style="font-size: 0.65rem; opacity: 0.85;" class="text-truncate">ARC BB03-09</small>
             </div>
         </a>
 
-        <div class="d-flex align-items-center order-lg-3">
-    <div class="d-flex align-items-center me-2">
-        <div class="px-2" style="cursor: pointer;" onclick="toggleDarkMode()">
-            <i id="darkModeIcon" class="fas fa-moon fs-5 text-white"></i>
-        </div>
-
-        <div class="position-relative px-2 d-none" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
-            <i class="fas fa-bell fs-5 text-white"></i>
-            <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.65rem; border: 1px solid #198754;">0</span>
+        <div class="d-flex align-items-center gap-3 order-lg-3 flex-shrink-0">
             
-            <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: 0; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
-                <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Konfirmasi Pembayaran</div>
-                <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
+            <div style="cursor: pointer;" onclick="toggleDarkMode()" class="d-flex align-items-center">
+                <i id="darkModeIcon" class="fas fa-moon fs-5 text-white"></i>
             </div>
+
+            <div class="position-relative d-none d-flex align-items-center" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
+                <i class="fas fa-bell fs-5 text-white"></i>
+                <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.6rem; border: 1px solid #198754; padding: 0.25em 0.4em;">0</span>
+                
+                <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: -10px; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
+                    <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Pemberitahuan Baru</div>
+                    <div id="notifList" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <button class="navbar-toggler border-0 shadow-none p-0 ms-1 flex-shrink-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="width: 1.3rem; height: 1.3rem;"></span>
+            </button>
         </div>
     </div>
 
-    <button class="navbar-toggler border-0 shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-</div>
-
-<div class="collapse navbar-collapse order-lg-2" id="navbarNav">
-    <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0">
-        <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
-        <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('profile')">Profil</a></li>
-        <li class="nav-item"><a class="nav-link nav-custom-link text-warning fw-bold" href="#" onclick="logoutUser()">Keluar</a></li>
-    </ul>
-</div>
+    <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
+        <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0 px-3 px-lg-0">
+            <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('profile')">Profil</a></li>
+            <li class="nav-item mt-2 mt-lg-0"><a class="nav-link nav-custom-link text-warning fw-bold" href="#" onclick="logoutUser()">Keluar</a></li>
+        </ul>
+    </div>
 </nav>
-
+    
 <div id="headerArea" class="p-3 filter-container-adaptive pb-0">
     <div class="container p-0">
         <div id="greetingArea" class="mb-2 ms-1 fw" style="font-size: 0.9rem; line-height: 1.4;"></div>
