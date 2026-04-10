@@ -3268,7 +3268,6 @@ async function cetakPDFRapor(id, btnElement) {
         }
     }
 }
-document.write(new Date().getFullYear());
 
 document.addEventListener('DOMContentLoaded', function() {
     const textArea = document.getElementById('gradeNotes');
