@@ -961,25 +961,35 @@ if (jilidSelect && data.jilid) {
         // 1. Cek apakah sudah ada tanda tangan wali santri
         const isSigned = data.reportSignature && data.reportSignature !== "";
         
-        // 2. Tentukan status tombol PDF (Disabled jika belum TTD)
+        // 2. Tentukan status tombol PDF
         const pdfBtnAttr = isSigned ? "" : "disabled";
         const pdfBtnClass = isSigned ? "btn-danger" : "btn-secondary";
         const pdfBtnText = isSigned ? "Arsip Rapor" : "Belum TTD";
         const pdfBtnIcon = isSigned ? "fa-file-pdf" : "fa-lock";
 
+        // 3. Tombol Tagihan Infaq dengan Ikon WhatsApp
         const billingBtn = (currentRole === 'superadmin') 
-            ? `<button class="btn btn-warning flex-grow-1" onclick="sendBillWA()">Tagih Infaq (WA)</button>` 
+            ? `<button class="btn btn-warning flex-grow-1 d-flex align-items-center justify-content-center" onclick="sendBillWA()" title="Tagih Infaq (WA)">
+                   <i class="fab fa-whatsapp fs-5"></i> 
+                   <span class="d-none d-md-inline ms-2">Tagih Infaq</span>
+               </button>` 
             : '';
 
+        // 4. Render semua tombol
         modalFooter.innerHTML = `
-            <button class="btn ${pdfBtnClass} flex-grow-1" 
+            <button class="btn ${pdfBtnClass} flex-grow-1 d-flex align-items-center justify-content-center" 
                     onclick="cetakPDFRapor('${id}', this)" 
                     ${pdfBtnAttr} 
-                    title="${isSigned ? '' : 'Rapor belum ditandatangani wali santri'}">
-                <i class="fas ${pdfBtnIcon}"></i> ${pdfBtnText}
+                    title="${isSigned ? 'Cetak Arsip Rapor' : 'Rapor belum ditandatangani wali santri'}">
+                <i class="fas ${pdfBtnIcon} fs-5"></i> 
+                <span class="d-none d-md-inline ms-2">${pdfBtnText}</span>
             </button>
             
-            <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
+            <button class="btn btn-success flex-grow-1 d-flex align-items-center justify-content-center" onclick="saveGrades()" title="Simpan Data">
+                <i class="fas fa-save fs-5"></i> 
+                <span class="d-none d-md-inline ms-2">Simpan</span>
+            </button>
+            
             ${billingBtn}
         `;
     }
