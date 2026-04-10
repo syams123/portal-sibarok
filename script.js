@@ -958,13 +958,27 @@ if (jilidSelect && data.jilid) {
 
     const modalFooter = document.querySelector('#gradeModal .modal-body .d-flex.gap-2');
     if (modalFooter) {
+        // 1. Cek apakah sudah ada tanda tangan wali santri
+        const isSigned = data.reportSignature && data.reportSignature !== "";
+        
+        // 2. Tentukan status tombol PDF (Disabled jika belum TTD)
+        const pdfBtnAttr = isSigned ? "" : "disabled";
+        const pdfBtnClass = isSigned ? "btn-danger" : "btn-secondary";
+        const pdfBtnText = isSigned ? "Arsip Rapor" : "Belum TTD";
+        const pdfBtnIcon = isSigned ? "fa-file-pdf" : "fa-lock";
+
         const billingBtn = (currentRole === 'superadmin') 
             ? `<button class="btn btn-warning flex-grow-1" onclick="sendBillWA()">Tagih Infaq (WA)</button>` 
             : '';
+
         modalFooter.innerHTML = `
-            <button class="btn btn-danger flex-grow-1" onclick="cetakPDFRapor('${id}', this)">
-                <i class="fas fa-file-pdf"></i> Arsip Rapor
+            <button class="btn ${pdfBtnClass} flex-grow-1" 
+                    onclick="cetakPDFRapor('${id}', this)" 
+                    ${pdfBtnAttr} 
+                    title="${isSigned ? '' : 'Rapor belum ditandatangani wali santri'}">
+                <i class="fas ${pdfBtnIcon}"></i> ${pdfBtnText}
             </button>
+            
             <button class="btn btn-success flex-grow-1" onclick="saveGrades()">Simpan</button>
             ${billingBtn}
         `;
@@ -3162,9 +3176,14 @@ async function cetakPDFRapor(id, btnElement) {
         `;
 
         // 7. Konfigurasi html2pdf
+        // 7. Konfigurasi html2pdf
+        let namaSantri = data.name || 'Santri';
+        let tipeSemester = (bulanIni >= 0 && bulanIni <= 5) ? "Genap" : "Gasal";
+        let tahunAjaran = (bulanIni >= 0 && bulanIni <= 5) ? `${tahunIni - 1} - ${tahunIni}` : `${tahunIni} - ${tahunIni + 1}`;
+
         const opt = {
             margin:       0.4,
-            filename:     `Arsip_Rapor_${(data.name || 'Santri').replace(/\s+/g, '_')}_${tglSekarang.replace(/\s+/g, '')}.pdf`,
+            filename:     `Arsip Rapor ${namaSantri}, ${tipeSemester} (${tahunAjaran}).pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true }, 
             jsPDF:        { unit: 'in', format: 'A4', orientation: 'portrait' }
