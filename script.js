@@ -3039,7 +3039,6 @@ if (tutorialModal) {
 
 async function cetakPDFRapor(id, btnElement) {
     const originalText = btnElement ? btnElement.innerHTML : '<i class="fas fa-file-pdf"></i> Arsip Rapor';
-    let wrapperDiv; // Deklarasi di luar agar bisa dihapus nantinya
     
     try {
         // 1. Ubah tombol jadi status loading
@@ -3090,129 +3089,127 @@ async function cetakPDFRapor(id, btnElement) {
         }
 
         // =======================================================
-        // 🌟 AWAL TRIK KOTAK GAIB (ANTI BLANK & ANTI LAYOUT RUSAK) 🌟
+        // 🌟 SMART IMAGE PRELOADER (OBAT ANTI-BLANK 17KB) 🌟
         // =======================================================
-        
-        // Buat bungkus super kecil (1x1 pixel) agar layar HP tidak rusak/melebar
-        wrapperDiv = document.createElement('div');
-        wrapperDiv.style.position = 'absolute';
-        wrapperDiv.style.top = '0';
-        wrapperDiv.style.left = '0';
-        wrapperDiv.style.width = '1px';
-        wrapperDiv.style.height = '1px';
-        wrapperDiv.style.overflow = 'hidden';
-        wrapperDiv.style.pointerEvents = 'none';
-        wrapperDiv.style.zIndex = '-9999';
+        const linkTtdKepala = "https://i.imgur.com/APp2Mt6.png";
+        const linkTtdWaliSantri = data.reportSignature || null;
 
-        // Buat kanvas rapor berukuran mutlak 800px di dalam bungkus tadi
-        const printDiv = document.createElement('div');
-        printDiv.style.width = '800px';
-        printDiv.style.backgroundColor = '#ffffff';
-        printDiv.style.padding = '20px 40px 30px 40px'; // Padding atas dikurangi agar tidak melorot
-        printDiv.style.fontFamily = 'Arial, sans-serif';
-        printDiv.style.color = '#333';
-        printDiv.style.lineHeight = '1.3';
-        printDiv.style.boxSizing = 'border-box';
-        
-        printDiv.innerHTML = `
-            <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
-                <h2 style="margin: 0; color: #198754; font-size: 18px; font-weight: bold;">RAPOR SISIPAN</h2>
-                <h4 style="margin: 3px 0 0 0; font-size: 16px; font-weight: normal;">Taman Pendidikan Al-Qur'an (TPQ) Al-Mubarok</h4>
-            </div>
+        // Kumpulkan semua link gambar yang akan dicetak
+        const imagesToPreload = [linkTtdKepala, linkTtdWaliKelas];
+        if (linkTtdWaliSantri) imagesToPreload.push(linkTtdWaliSantri);
 
-            <table style="width: 100%; margin-bottom: 15px; font-size: 13px;">
-                <tr>
-                    <td style="width: 15%; font-weight: bold;">Nama Santri</td><td style="width: 40%;">: ${data.name || '-'}</td>
-                    <td style="width: 15%; font-weight: bold;">Semester</td><td style="width: 30%;">: ${teksSemester}</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold;">Kelas</td><td>: ${data.class || '-'}</td>
-                    <td style="font-weight: bold;">Bulan</td><td>: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold;">Jilid</td><td colspan="3">: ${data.jilid ? "Jilid " + data.jilid.toString().replace("Jilid ", "") : "-"}</td>
-                </tr>
-            </table>
+        // Fungsi untuk memaksa HP mendownload gambar ke cache secara diam-diam
+        const preloadImage = (url) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous'; // Wajib untuk Imgur
+                img.onload = () => resolve(); // Selesai didownload, lanjut!
+                img.onerror = () => {
+                    console.warn("Gambar gagal dimuat:", url);
+                    resolve(); // Jika gagal karena internet terputus, lewati saja agar tidak nyangkut
+                };
+                img.src = url;
+            });
+        };
 
-            <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">A. Nilai Mata Pelajaran</h4>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
-                <thead>
-                    <tr style="background-color: #f8f9fa;">
-                        <th style="padding: 6px; border: 1px solid #ddd; text-align: left; width: 70%;">Mata Pelajaran</th>
-                        <th style="padding: 6px; border: 1px solid #ddd; text-align: center; width: 30%;">Predikat</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tabelNilaiHTML}
-                </tbody>
-            </table>
+        // TUNGGU sampai semua gambar benar-benar selesai terdownload 100%
+        await Promise.all(imagesToPreload.map(url => preloadImage(url)));
 
-            <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">B. Kehadiran</h4>
-            <table style="width: 50%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
-                <tr>
-                    <td style="padding: 4px 6px; border: 1px solid #ddd;">Sakit</td>
-                    <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center;">${data.absensiSakit || 0} Hari</td>
-                </tr>
-                <tr>
-                    <td style="padding: 4px 6px; border: 1px solid #ddd;">Izin</td>
-                    <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center;">${data.absensiIzin || 0} Hari</td>
-                </tr>
-                <tr>
-                    <td style="padding: 4px 6px; border: 1px solid #ddd;">Lain-lain</td>
-                    <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center;">${data.absensiLain || 0} Hari</td>
-                </tr>
-            </table>
-
-            ${data.notes ? `
-            <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">C. Catatan Ustadzah</h4>
-            <p style="font-style: italic; font-size: 13px; background-color: #f8f9fa; padding: 8px; margin: 0 0 15px 0; border-left: 3px solid #198754;">"${data.notes}"</p>
-            ` : ''}
-
-            <div style="margin-top: 25px; display: flex; justify-content: space-between; text-align: center; font-size: 13px;">
-                <div style="width: 30%;">
-                    <p style="margin: 0 0 3px 0;">Mengetahui,</p>
-                    <p style="font-weight: bold; margin: 0 0 5px 0;">Kepala TPQ</p>
-                    <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">
-                    </div>
-                    <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">Hafi Dzotur Rofi'ah, Lc.</p>
-                </div>
+        // =======================================================
+        // 🌟 STRING HTML MURNI (OBAT ANTI-MIRING / TERPOTONG) 🌟
+        // =======================================================
+        const htmlStringPDF = `
+            <div style="width: 800px; background-color: #ffffff; padding: 20px 40px 30px 40px; font-family: Arial, sans-serif; color: #333; line-height: 1.3; margin: 0;">
                 
-                <div style="width: 30%;">
-                    <p style="margin: 0 0 3px 0;">&nbsp;</p>
-                    <p style="font-weight: bold; margin: 0 0 5px 0;">Wali Kelas</p>
-                    <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        <img src="${linkTtdWaliKelas}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">
-                    </div>
-                    <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">${namaWaliKelas}</p>
+                <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
+                    <h2 style="margin: 0; color: #198754; font-size: 18px; font-weight: bold;">RAPOR SISIPAN</h2>
+                    <h4 style="margin: 3px 0 0 0; font-size: 16px; font-weight: normal;">Taman Pendidikan Al-Qur'an (TPQ) Al-Mubarok</h4>
                 </div>
 
-                <div style="width: 30%;">
-                    <p style="margin: 0 0 3px 0;">Sidoarjo, ${tglSekarang}</p>
-                    <p style="font-weight: bold; margin: 0 0 5px 0;">Wali Santri</p>
-                    <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">` : `<span style="color: #999; font-size: 11px; font-style: italic;">(Belum divalidasi)</span>`}
+                <table style="width: 100%; margin-bottom: 15px; font-size: 13px;">
+                    <tr>
+                        <td style="width: 15%; font-weight: bold;">Nama Santri</td><td style="width: 40%;">: ${data.name || '-'}</td>
+                        <td style="width: 15%; font-weight: bold;">Semester</td><td style="width: 30%;">: ${teksSemester}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Kelas</td><td>: ${data.class || '-'}</td>
+                        <td style="font-weight: bold;">Bulan</td><td>: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Jilid</td><td colspan="3">: ${data.jilid ? "Jilid " + data.jilid.toString().replace("Jilid ", "") : "-"}</td>
+                    </tr>
+                </table>
+
+                <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">A. Nilai Mata Pelajaran</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="padding: 6px; border: 1px solid #ddd; text-align: left; width: 70%;">Mata Pelajaran</th>
+                            <th style="padding: 6px; border: 1px solid #ddd; text-align: center; width: 30%;">Predikat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tabelNilaiHTML}
+                    </tbody>
+                </table>
+
+                <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">B. Kehadiran</h4>
+                <table style="width: 50%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
+                    <tr>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd;">Sakit</td>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center;">${data.absensiSakit || 0} Hari</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd;">Izin</td>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center;">${data.absensiIzin || 0} Hari</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd;">Lain-lain</td>
+                        <td style="padding: 4px 6px; border: 1px solid #ddd; text-align: center;">${data.absensiLain || 0} Hari</td>
+                    </tr>
+                </table>
+
+                ${data.notes ? `
+                <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">C. Catatan Ustadzah</h4>
+                <p style="font-style: italic; font-size: 13px; background-color: #f8f9fa; padding: 8px; margin: 0 0 15px 0; border-left: 3px solid #198754;">"${data.notes}"</p>
+                ` : ''}
+
+                <div style="margin-top: 25px; display: flex; justify-content: space-between; text-align: center; font-size: 13px;">
+                    <div style="width: 30%;">
+                        <p style="margin: 0 0 3px 0;">Mengetahui,</p>
+                        <p style="font-weight: bold; margin: 0 0 5px 0;">Kepala TPQ</p>
+                        <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <img src="${linkTtdKepala}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">
+                        </div>
+                        <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">Hafi Dzotur Rofi'ah, Lc.</p>
                     </div>
-                    <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">${data.parentName || "( ....................... )"}</p>
+                    
+                    <div style="width: 30%;">
+                        <p style="margin: 0 0 3px 0;">&nbsp;</p>
+                        <p style="font-weight: bold; margin: 0 0 5px 0;">Wali Kelas</p>
+                        <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <img src="${linkTtdWaliKelas}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">
+                        </div>
+                        <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">${namaWaliKelas}</p>
+                    </div>
+
+                    <div style="width: 30%;">
+                        <p style="margin: 0 0 3px 0;">Sidoarjo, ${tglSekarang}</p>
+                        <p style="font-weight: bold; margin: 0 0 5px 0;">Wali Santri</p>
+                        <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            ${linkTtdWaliSantri ? `<img src="${linkTtdWaliSantri}" style="max-height: 55px; width: auto; object-fit: contain;" crossorigin="anonymous">` : `<span style="color: #999; font-size: 11px; font-style: italic;">(Belum divalidasi)</span>`}
+                        </div>
+                        <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">${data.parentName || "( ....................... )"}</p>
+                    </div>
                 </div>
             </div>
         `;
-
-        // Suntikkan ke layar
-        wrapperDiv.appendChild(printDiv);
-        document.body.appendChild(wrapperDiv);
-
-        // =======================================================
-        // ⏳ JEDA WAKTU OBAT ANTI-BLANK (WAJIB)
-        // Beri waktu 1.5 detik agar gambar TTD selesai di-download HP
-        // =======================================================
-        await new Promise(resolve => setTimeout(resolve, 1500));
 
         // 7. Konfigurasi html2pdf
         let namaSantri = data.name || 'Santri';
         
         const opt = {
-            margin:       [0.1, 0.4, 0.4, 0.4], // Margin Atas di-press sangat tipis (0.1 inchi)
+            margin:       [0.1, 0.4, 0.4, 0.4],
             filename:     `Arsip Rapor ${namaSantri}, Semester ${tipeSemester} Tahun Ajaran ${tahunAjaran}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { 
@@ -3220,14 +3217,14 @@ async function cetakPDFRapor(id, btnElement) {
                 useCORS: true, 
                 windowWidth: 800,
                 width: 800,
-                scrollY: 0, // Paksa kordinat mentok di atas (Anti-Melorot)
+                scrollY: 0, 
                 scrollX: 0
             }, 
             jsPDF:        { unit: 'in', format: 'A4', orientation: 'portrait' }
         };
 
-        // 8. Eksekusi pembuatan PDF (Memfoto elemen terdalam / printDiv)
-        await html2pdf().set(opt).from(printDiv).save();
+        // 8. Eksekusi PDF LANGSUNG dari String (Tanpa menempelkan elemen ke body HP)
+        await html2pdf().set(opt).from(htmlStringPDF).save();
 
     } catch (error) {
         console.error("Gagal mencetak PDF:", error);
@@ -3237,11 +3234,6 @@ async function cetakPDFRapor(id, btnElement) {
         if (btnElement) {
             btnElement.innerHTML = originalText;
             btnElement.disabled = false;
-        }
-        
-        // 10. BERSIHKAN KOTAK GAIB (Agar layar HP tidak terbebani)
-        if (wrapperDiv && wrapperDiv.parentNode) {
-            wrapperDiv.parentNode.removeChild(wrapperDiv);
         }
     }
 }document.write(new Date().getFullYear());
