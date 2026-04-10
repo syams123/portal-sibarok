@@ -3038,8 +3038,8 @@ if (tutorialModal) {
 }
 
 async function cetakPDFRapor(id, btnElement) {
-    // Simpan teks asli tombol agar bisa dikembalikan nanti
     const originalText = btnElement ? btnElement.innerHTML : '<i class="fas fa-file-pdf"></i> Arsip Rapor';
+    let wrapperDiv; // Deklarasi di luar agar bisa dihapus nantinya
     
     try {
         // 1. Ubah tombol jadi status loading
@@ -3055,17 +3055,12 @@ async function cetakPDFRapor(id, btnElement) {
 
         // 3. Logika Penentuan Semester Dinamis
         const tanggalSekarangObj = new Date();
-        const bulanIni = tanggalSekarangObj.getMonth(); // 0 (Jan) - 11 (Des)
+        const bulanIni = tanggalSekarangObj.getMonth();
         const tahunIni = tanggalSekarangObj.getFullYear();
         
-        let teksSemester = "";
-        if (bulanIni >= 0 && bulanIni <= 5) {
-            // Januari - Juni
-            teksSemester = `Genap ${tahunIni - 1} - ${tahunIni}`;
-        } else {
-            // Juli - Desember
-            teksSemester = `Gasal ${tahunIni} - ${tahunIni + 1}`;
-        }
+        let tipeSemester = (bulanIni >= 0 && bulanIni <= 5) ? "Genap" : "Gasal";
+        let tahunAjaran = (bulanIni >= 0 && bulanIni <= 5) ? `${tahunIni - 1} - ${tahunIni}` : `${tahunIni} - ${tahunIni + 1}`;
+        let teksSemester = `${tipeSemester} ${tahunAjaran}`;
 
         const tglSekarang = tanggalSekarangObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -3094,12 +3089,30 @@ async function cetakPDFRapor(id, btnElement) {
             tabelNilaiHTML = `<tr><td colspan="2" style="text-align:center; padding: 6px;">Belum ada nilai yang diinput</td></tr>`;
         }
 
-        // 6. Siapkan elemen HTML untuk PDF (Menggunakan padding lebih kecil)
+        // =======================================================
+        // 🌟 AWAL TRIK KOTAK GAIB (ANTI BLANK & ANTI LAYOUT RUSAK) 🌟
+        // =======================================================
+        
+        // Buat bungkus super kecil (1x1 pixel) agar layar HP tidak rusak/melebar
+        wrapperDiv = document.createElement('div');
+        wrapperDiv.style.position = 'absolute';
+        wrapperDiv.style.top = '0';
+        wrapperDiv.style.left = '0';
+        wrapperDiv.style.width = '1px';
+        wrapperDiv.style.height = '1px';
+        wrapperDiv.style.overflow = 'hidden';
+        wrapperDiv.style.pointerEvents = 'none';
+        wrapperDiv.style.zIndex = '-9999';
+
+        // Buat kanvas rapor berukuran mutlak 800px di dalam bungkus tadi
         const printDiv = document.createElement('div');
-        printDiv.style.padding = '25px 35px'; 
+        printDiv.style.width = '800px';
+        printDiv.style.backgroundColor = '#ffffff';
+        printDiv.style.padding = '20px 40px 30px 40px'; // Padding atas dikurangi agar tidak melorot
         printDiv.style.fontFamily = 'Arial, sans-serif';
         printDiv.style.color = '#333';
         printDiv.style.lineHeight = '1.3';
+        printDiv.style.boxSizing = 'border-box';
         
         printDiv.innerHTML = `
             <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
@@ -3185,31 +3198,50 @@ async function cetakPDFRapor(id, btnElement) {
             </div>
         `;
 
-        // 7. Konfigurasi html2pdf
+        // Suntikkan ke layar
+        wrapperDiv.appendChild(printDiv);
+        document.body.appendChild(wrapperDiv);
+
+        // =======================================================
+        // ⏳ JEDA WAKTU OBAT ANTI-BLANK (WAJIB)
+        // Beri waktu 1.5 detik agar gambar TTD selesai di-download HP
+        // =======================================================
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         // 7. Konfigurasi html2pdf
         let namaSantri = data.name || 'Santri';
-        let tipeSemester = (bulanIni >= 0 && bulanIni <= 5) ? "Genap" : "Gasal";
-        let tahunAjaran = (bulanIni >= 0 && bulanIni <= 5) ? `${tahunIni - 1} - ${tahunIni}` : `${tahunIni} - ${tahunIni + 1}`;
-
+        
         const opt = {
-            margin:       0.4,
-            filename:     `Arsip Rapor ${namaSantri}, ${tipeSemester} (${tahunAjaran}).pdf`,
+            margin:       [0.1, 0.4, 0.4, 0.4], // Margin Atas di-press sangat tipis (0.1 inchi)
+            filename:     `Arsip Rapor ${namaSantri}, Semester ${tipeSemester} Tahun Ajaran ${tahunAjaran}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true }, 
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true, 
+                windowWidth: 800,
+                width: 800,
+                scrollY: 0, // Paksa kordinat mentok di atas (Anti-Melorot)
+                scrollX: 0
+            }, 
             jsPDF:        { unit: 'in', format: 'A4', orientation: 'portrait' }
         };
 
-        // 8. Eksekusi pembuatan PDF
+        // 8. Eksekusi pembuatan PDF (Memfoto elemen terdalam / printDiv)
         await html2pdf().set(opt).from(printDiv).save();
 
     } catch (error) {
         console.error("Gagal mencetak PDF:", error);
-        alert("Terjadi kesalahan saat memproses data PDF. Pastikan internet stabil.");
+        alert("Terjadi kesalahan saat memproses PDF: " + error.message);
     } finally {
-        // 9. Pastikan tombol kembali normal MESKIPUN terjadi error di atas
+        // 9. Pastikan tombol kembali normal MESKIPUN terjadi error
         if (btnElement) {
             btnElement.innerHTML = originalText;
             btnElement.disabled = false;
+        }
+        
+        // 10. BERSIHKAN KOTAK GAIB (Agar layar HP tidak terbebani)
+        if (wrapperDiv && wrapperDiv.parentNode) {
+            wrapperDiv.parentNode.removeChild(wrapperDiv);
         }
     }
 }document.write(new Date().getFullYear());
