@@ -258,7 +258,12 @@
                     </div>
                 </div>
             </div>
-            <p class="mt-4 text-muted small">Portal SiBarok &copy; <script>document.write(new Date().getFullYear());</script></p>
+            <p class="mt-4 text-muted small">Portal SiBarok &copy; <span id="yearStatus"></span></p>
+
+<script>
+    // Kode ini jauh lebih aman daripada document.write
+    document.getElementById('yearStatus').innerText = new Date().getFullYear();
+</script>
         </div>
     </div>
 </section>
