@@ -3005,6 +3005,14 @@ function changeView(view) {
 // WAJIB: Ekspos fungsi ke window agar bisa dipanggil onclick dari HTML
 window.changeView = changeView;
 
+// Update tahun copyright secara otomatis dan aman
+document.addEventListener('DOMContentLoaded', function() {
+    const yearSpan = document.getElementById('currentYear');
+    if (yearSpan) {
+        yearSpan.innerText = new Date().getFullYear();
+    }
+});
+
 // Fungsi untuk menghentikan semua video
 function stopAllTutorialVideos() {
     const v1 = document.getElementById('videoAkun');
