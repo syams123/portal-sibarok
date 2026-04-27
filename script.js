@@ -523,6 +523,31 @@ async function setupProfilePage(role, userDataInput, studentIdInput = null) {
     if(document.getElementById('profileAddress')) document.getElementById('profileAddress').value = userData.address || "";
 }
 
+// --- RUMUS PENENTU BULAN TAGIHAN (CUT-OFF TGL 25) ---
+function hitungPeriodeInfaq() {
+    const tgl = new Date();
+    const tanggal = tgl.getDate();
+    let bulan = tgl.getMonth(); 
+    let tahun = tgl.getFullYear();
+
+    // Logika Cut-Off: Jika bayar >= tanggal 25, masuk tagihan bulan depan
+    if (tanggal >= 25) {
+        bulan = bulan + 1;
+        if (bulan > 11) {
+            bulan = 0;
+            tahun = tahun + 1;
+        }
+    }
+
+    const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const bulanTagihan = namaBulan[bulan];
+    
+    return {
+        periode: `${bulanTagihan} ${tahun}`,           // Contoh: "Mei 2026"
+        tanggalKuitansi: `05 ${bulanTagihan} ${tahun}` // Contoh: "05 Mei 2026"
+    };
+}
+
 // --- FITUR ADMIN (USTADZAH) ---
 
 /// 1. Simpan Data Santri (Create/Update)
@@ -1162,14 +1187,28 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             const data = docSnap.data();
             const studentId = docSnap.id; 
             
-            const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const tanggalSekarang = new Date();
-            const namaBulan = daftarBulan[tanggalSekarang.getMonth()];
-            const tahunSekarang = tanggalSekarang.getFullYear();
+            const tgl = new Date();
+            const tanggalHariIni = tgl.getDate();
+            let bulanIndex = tgl.getMonth();
+            let tahunIni = tgl.getFullYear();
 
+            // Jika tanggal 25 ke atas, majukan ke bulan berikutnya
+            if (tanggalHariIni >= 25) {
+                bulanIndex = bulanIndex + 1;
+                
+                // Jika melebihi Desember (11), reset ke Januari (0) dan majukan tahunnya
+                if (bulanIndex > 11) {
+                    bulanIndex = 0;
+                    tahunIni = tahunIni + 1;
+                }
+            }
+
+            const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const namaBulanFix = daftarBulan[bulanIndex];
+            
             const displayBulan = document.getElementById('currentMonthDisplay');
             if (displayBulan) {
-                displayBulan.innerText = "Bulan " + namaBulan + " " + tahunSekarang;
+                displayBulan.innerText = "Bulan " + namaBulanFix + " " + tahunIni;
             }
 
             // --- A. Sinkronisasi Foto & Profil ---
@@ -1825,9 +1864,9 @@ async function generateKuitansi() {
             namaSantriReal = dataSantri.name || namaSantriReal;
         }
 
-        const skrg = new Date();
-        const bulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const tglKuitansi = `05 ${bulanIndo[skrg.getMonth()]} ${skrg.getFullYear()}`;
+        // Panggil fungsi penentu periode
+        const dataPeriode = hitungPeriodeInfaq();
+        const tglKuitansi = dataPeriode.tanggalKuitansi;
 
         // --- 2. LOAD GAMBAR (LOGO & TTD) ---
         const logoUrl = "https://i.imgur.com/dzCdAFk.png"; 
@@ -2027,9 +2066,8 @@ async function konfirmasiBayar() {
                     doc.text("Rp 100.000,-", 55, 110, { align: "center" });
 
                     // Area TTD
-                    const skrg = new Date();
-                    const bulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                    const tglKuitansi = `${skrg.getDate()} ${bulanIndo[skrg.getMonth()]} ${skrg.getFullYear()}`;
+                    const dataPeriode = hitungPeriodeInfaq();
+                    const tglKuitansi = dataPeriode.tanggalKuitansi;
                     doc.setFontSize(11); doc.setFont("helvetica", "normal");
                     doc.text(`Sidoarjo, ${tglKuitansi}`, 155, 100, { align: "center" });
                     doc.text("IT Manajemen TPQ,", 155, 106, { align: "center" });
@@ -2122,9 +2160,8 @@ async function approvePembayaran(id, nama) {
     document.getElementById('loading').classList.remove('d-none');
 
     try {
-        const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const d = new Date();
-        const bulanSekarang = daftarBulan[d.getMonth()] + " " + d.getFullYear();
+        const dataPeriode = hitungPeriodeInfaq();
+        const bulanSekarang = dataPeriode.periode; // Ini akan menghasilkan misal: "Mei 2026"
 
         const batch = db.batch();
         const studentRef = db.collection('students').doc(id);
@@ -2905,11 +2942,31 @@ function updateBerandaData(studentId) {
         let teksJilid = (data.jilid || "-").toString().replace("Jilid ", "");
         if (document.getElementById('childJilidDisplay')) document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
 
-        // --- B. Logika Bulan & Infaq ---
+        // --- B. Logika Bulan & Infaq (Sistem Cut-Off Tgl 25) ---
+        const tgl = new Date();
+        const tanggalHariIni = tgl.getDate();
+        let bulanIndex = tgl.getMonth();
+        let tahunIni = tgl.getFullYear();
+
+        // Jika tanggal 25 ke atas, majukan ke bulan berikutnya
+        if (tanggalHariIni >= 25) {
+            bulanIndex = bulanIndex + 1;
+            
+            // Jika melebihi Desember (11), reset ke Januari (0) dan majukan tahunnya
+            if (bulanIndex > 11) {
+                bulanIndex = 0;
+                tahunIni = tahunIni + 1;
+            }
+        }
+
         const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const namaBulan = daftarBulan[new Date().getMonth()];
+        const namaBulanFix = daftarBulan[bulanIndex];
+        
         const displayBulan = document.getElementById('currentMonthDisplay');
-        if (displayBulan) displayBulan.innerText = "Bulan " + namaBulan + " " + new Date().getFullYear();
+        if (displayBulan) {
+            // Hasilnya otomatis berubah, contoh: "Bulan Mei 2026"
+            displayBulan.innerText = "Bulan " + namaBulanFix + " " + tahunIni;
+        }
 
         // --- C. Sinkronisasi Nilai & Rapor (ChildReportCard) ---
         renderReportCard(sId, data);
