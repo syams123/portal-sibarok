@@ -1981,7 +1981,12 @@ if (typeof data !== 'undefined' && data && data.infaqStatus) {
 
 async function konfirmasiBayar() {
     const metode = document.getElementById('selectMetodeBayar').value;
+    
+    // UPDATE: Ambil ID santri yang sedang aktif dari memori global
+    const selectedId = window.activeChildId; 
+
     if (!metode) return Swal.fire("Peringatan", "Silakan pilih metode pembayaran terlebih dahulu.", "warning");
+    if (!selectedId) return Swal.fire("Error", "ID Santri tidak terdeteksi. Silakan pilih ananda terlebih dahulu.", "error");
 
     // 1. Tampilkan Konfirmasi SweetAlert DULU (Layar masih bersih)
     const result = await Swal.fire({
@@ -2005,11 +2010,10 @@ async function konfirmasiBayar() {
     // Gunakan setTimeout kecil agar browser sempat merender loader sebelum proses berat dimulai
     setTimeout(async () => {
         try {
-            const user = firebase.auth().currentUser;
-            const snapshot = await db.collection('students').where('parentEmail', '==', user.email).limit(1).get();
+            // UPDATE: Langsung ambil dokumen santri berdasarkan ID yang sedang aktif
+            const docSnap = await db.collection('students').doc(selectedId).get();
             
-            if (!snapshot.empty) {
-                const docSnap = snapshot.docs[0];
+            if (docSnap.exists) {
                 const docId = docSnap.id;
                 const data = docSnap.data();
                 const namaSantriReal = data.name || "Santri";
@@ -2017,7 +2021,9 @@ async function konfirmasiBayar() {
                 // Update Firebase
                 await db.collection('students').doc(docId).update({
                     paymentMethod: metode,
-                    lastConfirmation: firebase.firestore.FieldValue.serverTimestamp()
+                    lastConfirmation: firebase.firestore.FieldValue.serverTimestamp(),
+                    // Tambahan update agar lonceng admin menyala untuk anak yang benar
+                    paymentNotifRead: false 
                 });
 
                 // --- PROSES GENERATE KUITANSI & ARSIP DRIVE ---
@@ -2098,9 +2104,6 @@ async function konfirmasiBayar() {
                 }
 
                 // --- 3. LOGIKA PENYELESAIAN ---
-                // Matikan loader tepat sebelum alert sukses muncul
-                if (loader) loader.classList.add('d-none');
-
                 if (loader) loader.classList.add('d-none');
 
                 await Swal.fire({
@@ -2110,15 +2113,13 @@ async function konfirmasiBayar() {
                     confirmButtonColor: '#198754'
                 });
 
-                // HAPUS location.reload()
-                // Ganti dengan fungsi render data Kakak agar tidak perlu refresh halaman
-                if (typeof checkPaymentStatus === "function") {
-                    checkPaymentStatus(); 
+                // Memperbarui UI tanpa refresh halaman
+                if (typeof updateBerandaData === "function") {
+                    updateBerandaData(docId);
                 }
             }
         } catch (error) {
             console.error("Master Error:", error);
-            // Matikan loader jika terjadi error agar tidak stuck
             if (loader) loader.classList.add('d-none');
             Swal.fire("Error", "Terjadi kesalahan: " + error.message, "error");
         }
@@ -2141,27 +2142,25 @@ function toggleNotification() {
 }
 
 async function approvePembayaran(id, nama) {
-    // 1. Tampilkan konfirmasi SweetAlert duluan (Layar masih bersih)
+    console.trace("MELACAK: Fungsi approve dipanggil oleh siapa?");
     const result = await Swal.fire({
         title: "Konfirmasi Pembayaran",
-        text: `Konfirmasi Pembayaran Infaq untuk ${nama}?`,
+        text: `Verifikasi Infaq untuk ${nama}?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: '#198754',
-        cancelButtonColor: '#d33',
+        cancelButtonColor: '#d33', // Update: Tambahan warna tombol batal
         confirmButtonText: 'Ya, Verifikasi',
-        cancelButtonText: 'Batal'
+        cancelButtonText: 'Batal'  // Update: Tambahan teks tombol batal
     });
 
-    // 2. Jika diklik 'Batal', fungsi berhenti
     if (!result.isConfirmed) return;
 
-    // 3. BARU MUNCULKAN LOADER (Hanya 1 kali saat proses data)
     document.getElementById('loading').classList.remove('d-none');
 
     try {
-        const dataPeriode = hitungPeriodeInfaq();
-        const bulanSekarang = dataPeriode.periode; // Ini akan menghasilkan misal: "Mei 2026"
+        const infoPeriode = hitungPeriodeInfaq();
+        const bulanSekarang = infoPeriode.periode; // Hasil: "Mei 2026" jika tgl 25+
 
         const batch = db.batch();
         const studentRef = db.collection('students').doc(id);
@@ -2181,70 +2180,70 @@ async function approvePembayaran(id, nama) {
 
         await batch.commit();
 
-        // 4. MATIKAN LOADER SEBELUM ALERT BERHASIL
         document.getElementById('loading').classList.add('d-none');
-        
-        await Swal.fire("Berhasil", "Alhamdulillah, pembayaran Infaq " + nama + " diverifikasi.", "success");
+        await Swal.fire("Berhasil", `Infaq ${nama} periode ${bulanSekarang} lunas.`, "success");
 
-        if (typeof renderStudents === "function") await renderStudents();
-        const dropdown = document.getElementById('notifDropdown');
-        if (dropdown) dropdown.classList.add('d-none');
+        // REFRESH TAMPILAN
+        if (typeof renderStudents === "function") renderStudents();
+        // Paksa Riwayat Pembayaran Load Ulang
+        if (typeof window.loadPaymentHistory === "function") window.loadPaymentHistory(id);
 
     } catch (error) {
         document.getElementById('loading').classList.add('d-none');
-        Swal.fire("Error", "Gagal verifikasi: " + error.message, "error");
+        Swal.fire("Error", error.message, "error");
     }
 }
 
-async function batalkanVerifikasi(id, nama) {
-    // 1. Konfirmasi dulu
+window.resetPembayaran = async function(id, nama) {
+    const info = hitungPeriodeInfaq(); // Mendapatkan "Mei 2026"
+    const bulanTarget = info.periode;
+
     const result = await Swal.fire({
-        title: "Batalkan Verifikasi?",
-        text: `Apakah Anda yakin ingin mengembalikan status ${nama} ke Belum Lunas?`,
+        title: "Reset Pembayaran?",
+        text: `Hapus riwayat ${bulanTarget} dan kembalikan status ${nama} ke Belum Lunas?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, Batalkan Lunas',
-        cancelButtonText: 'Kembali'
+        confirmButtonText: 'Ya, Reset Total'
     });
 
     if (!result.isConfirmed) return;
 
-    // 2. Munculkan loader setelah klik OK
     document.getElementById('loading').classList.remove('d-none');
-    
+
     try {
-        const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const d = new Date();
-        const bulanSekarang = daftarBulan[d.getMonth()] + " " + d.getFullYear();
-
-        const batch = db.batch();
         const studentRef = db.collection('students').doc(id);
-        const historyRef = studentRef.collection('payments').doc(bulanSekarang);
+        const batch = db.batch();
 
+        // 1. KUNCI UTAMA: Hapus dokumen spesifik bulan ini di sub-collection
+        const paymentDocRef = studentRef.collection('payments').doc(bulanTarget);
+        batch.delete(paymentDocRef);
+
+        // 2. Bersihkan semua pemicu di dokumen utama (Wajib agar lonceng mati)
         batch.update(studentRef, {
             infaqStatus: false,
-            paymentMethod: firebase.firestore.FieldValue.delete(), 
+            paymentMethod: firebase.firestore.FieldValue.delete(), // Hapus metode bayar
+            lastConfirmation: firebase.firestore.FieldValue.delete(), // Hapus tgl konfirmasi
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        batch.delete(historyRef);
-
+        // Eksekusi sekaligus
         await batch.commit();
 
-        // 3. Matikan loader
         document.getElementById('loading').classList.add('d-none');
+        Swal.fire("Berhasil", `Riwayat ${bulanTarget} telah dibersihkan.`, "success");
+        
+        // Render ulang daftar kartu
+        if (typeof renderStudents === "function") renderStudents();
 
-        await Swal.fire("Berhasil", "Status " + nama + " dikembalikan ke BELUM LUNAS & Riwayat dihapus.", "success");
-        
-        await renderStudents(); 
-        
     } catch (error) {
         document.getElementById('loading').classList.add('d-none');
-        Swal.fire("Error", "Gagal membatalkan: " + error.message, "error");
+        Swal.fire("Gagal", "Error: " + error.message, "error");
     }
-}
+};
+
+// Samakan tombol batalkanVerifikasi dengan resetPembayaran
+window.batalkanVerifikasi = window.resetPembayaran;
 
 function playBeep() {
     try {
@@ -2386,49 +2385,46 @@ function showPaymentToast(pesan, tipe) {
     toast.show();
 }
 
-async function loadPaymentHistory(studentId) {
+window.loadPaymentHistory = function(studentId) {
     const historyList = document.getElementById('paymentHistoryList');
-    
-    try {
-        // Mengambil data riwayat pembayaran, diurutkan dari yang terbaru
-        const snapshot = await db.collection('students').doc(studentId)
-            .collection('payments').orderBy('date', 'desc').get();
+    if (!historyList) return;
 
-        if (snapshot.empty) {
-            historyList.innerHTML = `
-                <div class="list-group-item text-center py-4">
-                    <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png" style="width: 50px; opacity: 0.5;">
-                    <p class="text-muted small mt-2 mb-0">Belum ada riwayat pembayaran.</p>
-                </div>`;
-            return;
-        }
+    // Pasang Antena (onSnapshot) agar otomatis update jika data dihapus
+    db.collection('students').doc(studentId).collection('payments')
+        .onSnapshot((snapshot) => {
+            // Jika kosong, langsung bersihkan tampilan
+            if (snapshot.empty) {
+                historyList.innerHTML = `
+                    <div class="text-center py-4 text-muted border rounded bg-light" style="border-style: dashed !important;">
+                        <i class="fas fa-history mb-2"></i><br>
+                        <small>Tidak ada riwayat pembayaran.</small>
+                    </div>`;
+                return;
+            }
 
-        let html = '';
-        snapshot.forEach(doc => {
-            const pay = doc.data();
-            // Format tanggal (misal: 15 Jan 2024)
-            const date = pay.date ? new Date(pay.date.seconds * 1000).toLocaleDateString('id-ID', {
-                day: 'numeric', month: 'short', year: 'numeric'
-            }) : '-';
-
-            html += `
-                <div class="list-group-item list-group-item-action border-0 mb-2 shadow-sm rounded d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="fw-bold small">${pay.month || 'Infaq'}</div>
-                    </div>
-                    <div class="text-end">
-                        <span class="badge rounded-pill bg-light text-success border border-success">Rp ${Number(pay.amount).toLocaleString('id-ID')}</span>
-                        <div class="text-success fw-bold" style="font-size: 0.6rem;"><i class="fas fa-check-circle"></i> Dibayar</div>
-                    </div>
-                </div>`;
+            // Jika ada data, render dengan rapi
+            let html = '<div class="list-group shadow-sm">';
+            snapshot.forEach(doc => {
+                const p = doc.data();
+                const tgl = p.date ? new Date(p.date.seconds * 1000).toLocaleDateString('id-ID') : '-';
+                
+                html += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center border-start-success">
+                        <div>
+                            <div class="fw-bold text-dark" style="font-size: 0.85rem;">${p.month || doc.id}</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">Lunas pada: ${tgl}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success rounded-pill px-3" style="font-size: 0.65rem;">Rp 100.000</span>
+                        </div>
+                    </div>`;
+            });
+            html += '</div>';
+            historyList.innerHTML = html;
+        }, (err) => {
+            console.error("Gagal memantau riwayat:", err);
         });
-        historyList.innerHTML = html;
-
-    } catch (error) {
-        console.error("Error load riwayat:", error);
-        historyList.innerHTML = '<p class="text-danger small p-3 text-center">Gagal memuat riwayat.</p>';
-    }
-}
+};
 
 function filterSantri() {
     // 1. Ambil kata kunci pencarian (ubah ke huruf kecil agar tidak sensitif)
@@ -2585,29 +2581,27 @@ async function resetTTD(studentId, studentName) {
 async function tandaiDibaca(id, type, nama) {
     try {
         if (type === 'infaq') {
-        approvePembayaran(id, nama);
-    } else if (type === 'signature') {
-        // Tambahkan Konfirmasi SweetAlert untuk TTD
-        const result = await Swal.fire({
-            title: "Verifikasi TTD",
-            text: `Konfirmasi Tanda Tangan dari Wali ${nama}?`,
-            icon: "info",
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Verifikasi',
-            cancelButtonText: 'Batal'
-        });
+            // UPDATE: Swal.fire dihapus agar tidak dobel.
+            // Langsung panggil fungsi approvePembayaran (karena konfirmasi sudah ada di dalam fungsi tersebut)
+            approvePembayaran(id, nama);
+            
+        } else if (type === 'signature') {
+            // ... (kode signature Kakak sudah benar dan tetap dipertahankan)
+            const result = await Swal.fire({
+                title: "Verifikasi TTD",
+                text: `Konfirmasi Tanda Tangan dari Wali ${nama}?`,
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Verifikasi'
+            });
 
-        if (!result.isConfirmed) {
-                return;
-            }
+            if (!result.isConfirmed) return;
 
             await db.collection('students').doc(id).update({
-                ttdNotifRead: true // Field penanda agar tidak muncul lagi di lonceng
+                ttdNotifRead: true,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             showPaymentToast("Berhasil memverifikasi TTD Wali " + nama, "info");
-        } else if (type === 'infaq') {
-            // Untuk infaq biasanya sekalian approve atau diarahkan ke fungsi approve
-            approvePembayaran(id, nama);
         }
     } catch (error) {
         console.error("Error menandai dibaca:", error);
