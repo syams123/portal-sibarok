@@ -1955,8 +1955,8 @@ async function konfirmasiBayar() {
 
     // 1. Tampilkan Konfirmasi SweetAlert DULU (Layar masih bersih)
     const result = await Swal.fire({
-        title: "Konfirmasi Sekarang?",
-        text: `Anda memilih metode: ${metode}. Kirim konfirmasi pembayaran sekarang?`,
+        title: "Konfirmasi Pembayaran",
+        text: `Metode Pembayaran: ${metode}. Konfirmasi pembayaran sekarang?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: '#198754',
