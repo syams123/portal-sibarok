@@ -1157,7 +1157,7 @@ async function loadChildData(email, selectedId = null) {
                 }
 
                 // 3. Render tombol-tombol nama anak
-                let btnHtml = '<p class="small fw-bold mb-2 text-success"><i class="fas fa-users me-1"></i> Pilih Data Ananda:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
+                let btnHtml = '<p class="small fw-bold mb-2 text-success"> Pilih Data Anak:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
 
 snapshot.forEach((doc) => {
     const childData = doc.data();
