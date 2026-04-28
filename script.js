@@ -2181,8 +2181,10 @@ window.resetPembayaran = async function(id, nama) {
         const batch = db.batch();
 
         // 1. KUNCI UTAMA: Hapus dokumen spesifik bulan ini di sub-collection
-        const paymentDocRef = studentRef.collection('payments').doc(bulanTarget);
-        batch.delete(paymentDocRef);
+        const snapHistory = await studentRef.collection('payments').get();
+snapHistory.forEach(doc => {
+    batch.delete(doc.ref);
+});
 
         // 2. Bersihkan semua pemicu di dokumen utama (Wajib agar lonceng mati)
         batch.update(studentRef, {
@@ -2326,13 +2328,24 @@ function showPaymentToast(pesan, tipe) {
     toast.show();
 }
 
+// 1. Buat variabel global untuk menyimpan status antena di luar fungsi
+let currentPaymentListener = null;
+
 window.loadPaymentHistory = function(studentId) {
     const historyList = document.getElementById('paymentHistoryList');
     if (!historyList) return;
 
-    // Pasang Antena (onSnapshot) agar otomatis update jika data dihapus
-    db.collection('students').doc(studentId).collection('payments')
+    // 2. KUNCI UTAMA: Matikan antena lama jika masih menyala (Cegah Hantu UI)
+    if (currentPaymentListener) {
+        currentPaymentListener(); 
+    }
+
+    historyList.innerHTML = '<div class="text-center p-3"><span class="spinner-border spinner-border-sm text-success"></span></div>';
+
+    // 3. Pasang antena baru dan simpan remotenya ke currentPaymentListener
+    currentPaymentListener = db.collection('students').doc(studentId).collection('payments')
         .onSnapshot((snapshot) => {
+            
             // Jika kosong, langsung bersihkan tampilan
             if (snapshot.empty) {
                 historyList.innerHTML = `
@@ -2364,6 +2377,7 @@ window.loadPaymentHistory = function(studentId) {
             historyList.innerHTML = html;
         }, (err) => {
             console.error("Gagal memantau riwayat:", err);
+            historyList.innerHTML = '<p class="text-danger small text-center">Gagal memuat riwayat.</p>';
         });
 };
 
