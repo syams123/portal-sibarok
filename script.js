@@ -1916,7 +1916,7 @@ async function generateKuitansi() {
 const pdfBase64 = doc.output('datauristring').split(',')[1];
 
 // 2. Kirim ke Google Drive via Apps Script secara background
-const scriptUrl = "https://script.google.com/macros/s/AKfycbyxtnBvcGHXSTLDfWdgi_kZLd40KhnwsdEkDNx-W6Ig5Y88t4h80ncsVXkVKcdVPN7w/exec"; // Tempel URL dari Langkah 1
+const scriptUrl = "https://script.google.com/macros/s/AKfycbwV29U96XamZsTObpASGg-FuKh7Le_KjhDFdoBb20_Z98njfUSVkH27Uye9lTIg8wuu/exec"; // Tempel URL dari Langkah 1
 
 fetch(scriptUrl, {
     method: "POST",
@@ -2055,14 +2055,16 @@ async function konfirmasiBayar() {
 
                     // Kirim ke Google Drive (Background)
                     const pdfBase64 = doc.output('datauristring').split(',')[1];
-                    const scriptUrl = "https://script.google.com/macros/s/AKfycbyxtnBvcGHXSTLDfWdgi_kZLd40KhnwsdEkDNx-W6Ig5Y88t4h80ncsVXkVKcdVPN7w/exec"; 
+                    const scriptUrl = "https://script.google.com/macros/s/AKfycbwV29U96XamZsTObpASGg-FuKh7Le_KjhDFdoBb20_Z98njfUSVkH27Uye9lTIg8wuu/exec"; 
                     
                     fetch(scriptUrl, {
                         method: "POST",
                         mode: 'no-cors',
                         body: JSON.stringify({
                             pdfBase64: pdfBase64,
-                            fileName: `Kuitansi_${namaSantriReal}_${new Date().getTime()}.pdf`
+                            fileName: `Kuitansi_${namaSantriReal}_${new Date().getTime()}.pdf`,
+                            namaSantri: namaSantriReal,
+                            metodeBayar: metode
                         })
                     });
 
