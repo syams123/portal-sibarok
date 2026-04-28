@@ -782,11 +782,15 @@ if (currentRole === 'superadmin') {
 
             // --- 3. LOGIKA PEMILIHAN TAMPILAN (GRID vs LIST) ---
             let finalHtml = "";
+            
+            // 👇 TAMBAHAN BARU: Buat variabel penentu status Lunas/Belum
+            const statusInfaqFilter = data.infaqStatus === true ? 'Lunas' : 'Belum';
 
             if (currentView === 'grid') {
-                // TAMPILAN GRID (KODE ASLI KAKAK - TETAP CANTIK & TIDAK GEPENG)
+                // TAMPILAN GRID
+                // 👇 TAMBAHAN BARU: Selipkan class 'item-santri' dan atribut 'data-status-bayar'
                 finalHtml = `
-                    <div class="col-6 col-md-4 col-lg-3 santri-card mb-3">
+                    <div class="col-6 col-md-4 col-lg-3 santri-card mb-3 item-santri" data-status-bayar="${statusInfaqFilter}">
                         <div class="card card-student shadow-sm h-100 position-relative">
                             <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
                                     onclick="event.stopPropagation(); deleteStudent('${id}', '${data.name}')">
@@ -804,10 +808,11 @@ if (currentRole === 'superadmin') {
                         </div>  
                     </div>`;
             } else {
-                // TAMPILAN LIST (BARIS RAMPING - COCOK UNTUK HP)
+                // TAMPILAN LIST
                 const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
+                // 👇 TAMBAHAN BARU: Selipkan class 'item-santri' dan atribut 'data-status-bayar'
                 finalHtml = `
-                    <div class="col-12 mb-2">
+                    <div class="col-12 mb-2 item-santri" data-status-bayar="${statusInfaqFilter}">
                         <div class="card shadow-sm border-0" style="border-radius: 12px;">
                             <div class="card-body d-flex align-items-center py-2 px-3">
                                 <img src="${data.photo || defaultAvatar}" class="rounded-circle me-3" 
@@ -3337,3 +3342,25 @@ document.addEventListener('DOMContentLoaded', function() {
         emojiContainer.appendChild(btn);
     });
 });
+
+window.filterPembayaran = function(statusTarget) {
+    // 1. Ganti warna tombol agar jelas mana yang aktif
+    document.getElementById('btn-filter-all').className = statusTarget === 'all' ? 'btn btn-success btn-sm fw-bold' : 'btn btn-outline-success btn-sm fw-bold';
+    document.getElementById('btn-filter-lunas').className = statusTarget === 'Lunas' ? 'btn btn-success btn-sm fw-bold' : 'btn btn-outline-success btn-sm fw-bold';
+    document.getElementById('btn-filter-belum').className = statusTarget === 'Belum' ? 'btn btn-danger btn-sm fw-bold' : 'btn btn-outline-danger btn-sm fw-bold';
+
+    // 2. Tampilkan atau sembunyikan kartu santri
+    const barisSantri = document.querySelectorAll('.item-santri');
+
+    barisSantri.forEach(baris => {
+        const statusSantri = baris.getAttribute('data-status-bayar');
+
+        if (statusTarget === 'all') {
+            baris.classList.remove('d-none'); 
+        } else if (statusTarget === statusSantri) {
+            baris.classList.remove('d-none'); 
+        } else {
+            baris.classList.add('d-none');    
+        }
+    });
+};
