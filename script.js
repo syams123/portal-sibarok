@@ -1431,49 +1431,6 @@ if (typeof data !== 'undefined' && data) {
     }
 }
 
-// Fungsi Pendukung Riwayat Pembayaran
-async function loadPaymentHistory(studentId) {
-    const historyList = document.getElementById('paymentHistoryList');
-    if (!historyList) return;
-
-    try {
-        const snapshot = await db.collection('students').doc(studentId).collection('payments').orderBy('date', 'desc').get();
-        
-        // Memastikan ada jarak bawah yang konsisten
-        historyList.classList.add('mb-4');
-
-        if (snapshot.empty) {
-            historyList.innerHTML = `
-                <div class="list-group-item border rounded p-4 text-center bg-white shadow-sm">
-                    <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png" style="width: 40px; opacity: 0.3;">
-                    <p class="text-muted small mt-2 mb-0">Belum ada riwayat pembayaran.</p>
-                </div>`;
-            return;
-        }
-
-        let html = '';
-        snapshot.forEach(doc => {
-            const p = doc.data();
-            const tgl = p.date ? new Date(p.date.seconds * 1000).toLocaleDateString('id-ID') : '-';
-            html += `
-                <div class="list-group-item border shadow-sm mb-3 rounded d-flex justify-content-between align-items-center bg-white py-3">
-                    <div>
-                        <small class="fw-bold d-block text-dark">${p.month || 'Infaq'}</small>
-                        <small class="text-muted" style="font-size: 0.7rem;">${tgl}</small>
-                    </div>
-                    <span class="badge bg-light text-success border border-success px-3">Rp ${Number(p.amount || 0).toLocaleString('id-ID')}</span>
-                </div>`;
-        });
-        historyList.innerHTML = html;
-        
-        // Hilangkan shadow pada container utama agar tidak dobel dengan shadow per item
-        historyList.classList.remove('shadow-sm', 'list-group'); 
-        
-    } catch (e) { 
-        console.error(e); 
-    }
-}
-
 // --- PROFIL ---
 async function loadProfile() {
     const user = firebase.auth().currentUser;
