@@ -544,7 +544,7 @@ function hitungPeriodeInfaq() {
 
     return {
         periode: `${namaBulan} ${tahun}`,
-        tanggalKuitansi: `${hari} ${namaBulan} ${tahun}`
+        tanggalKuitansi: `05 ${namaBulan} ${tahun}`
     };
 }
 
