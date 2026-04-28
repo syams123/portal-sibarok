@@ -1816,17 +1816,26 @@ async function generateKuitansi() {
 
     try {
         // --- 1. AMBIL DATA REAL DARI FIREBASE ---
-        const user = firebase.auth().currentUser;
-        const snapshot = await db.collection('students').where('parentEmail', '==', user.email).limit(1).get();
+        // UPDATE: Gunakan ID santri yang sedang aktif (Siti Faizah)
+        const selectedId = window.activeChildId;
         
-        let metodeBayarReal = "Tunai Langsung"; // Default jika data tidak ditemukan
+        if (!selectedId) {
+            Swal.fire("Error", "ID Ananda tidak ditemukan. Silakan pilih ananda terlebih dahulu.", "error");
+            return;
+        }
+
+        // Tembak langsung dokumen santri tersebut
+        const docSnap = await db.collection('students').doc(selectedId).get();
+        
+        let metodeBayarReal = "Tunai Langsung";
         let namaSantriReal = document.getElementById('childNameDisplay').innerText || "Santri";
 
-        if (!snapshot.empty) {
-            const dataSantri = snapshot.docs[0].data();
-            // MENGAMBIL METODE ASLI DARI DATABASE (Transfer Mandiri, DANA, dll)
+        if (docSnap.exists) {
+            const dataSantri = docSnap.data();
             metodeBayarReal = dataSantri.paymentMethod || "Tunai Langsung";
             namaSantriReal = dataSantri.name || namaSantriReal;
+        } else {
+            throw new Error("Data santri tidak ditemukan di database.");
         }
 
         // Panggil fungsi penentu periode
