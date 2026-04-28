@@ -334,9 +334,19 @@
                 </button>
             </div>
         </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3 py-2 border-top border-bottom" style="background-color: #f8f9fa; border-radius: 8px; padding-left: 10px; padding-right: 10px;">
+            <span class="text-muted small fw-bold"><i class="fas fa-filter me-1"></i> Filter Status Infaq:</span>
+            
+            <div class="btn-group shadow-sm" role="group">
+                <button type="button" class="btn btn-success btn-sm fw-bold" id="btn-filter-all" onclick="filterPembayaran('all')">Semua</button>
+                <button type="button" class="btn btn-outline-success btn-sm fw-bold" id="btn-filter-lunas" onclick="filterPembayaran('Lunas')">Lunas</button>
+                <button type="button" class="btn btn-outline-danger btn-sm fw-bold" id="btn-filter-belum" onclick="filterPembayaran('Belum')">Belum</button>
+            </div>
+        </div>
+
     </div>
 </div>
-
 <div id="searchAreaSticky" class="sticky-top p-3 filter-container-adaptive pt-1 pb-2" style="top: 80px; z-index: 1019;">
     <div class="container p-0">
         <div class="input-group shadow-sm">
