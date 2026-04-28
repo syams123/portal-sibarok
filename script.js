@@ -746,19 +746,19 @@ if (currentRole === 'superadmin' && notifList) {
             // --- 2. LOGIKA BADGE DI KARTU (TETAP SAMA) ---
             let statusBadgeHtml = "";
             if (currentRole === 'superadmin') {
-                if (data.infaqStatus === true) {
-                    statusBadgeHtml = `
-                        <div class="d-flex flex-column gap-1">
-                            <span class="badge bg-success w-100 py-2">Sudah Lunas</span>
-                            <button class="btn btn-xs btn-outline-danger w-100 py-1" style="font-size: 0.65rem;" 
-                                    onclick="event.stopPropagation(); batalkanVerifikasi('${id}', '${data.name}')">
-                                <i class="fas fa-undo"></i> Reset
-                            </button>
-                        </div>`;
-                } else {
-                    statusBadgeHtml = `<span class="badge bg-light text-muted w-100 py-2 border">Belum Bayar</span>`;
-                }
-            }
+                if (isLunasValid) { // Ganti data.infaqStatus menjadi isLunasValid
+        statusBadgeHtml = `
+            <div class="d-flex flex-column gap-1">
+                <span class="badge bg-success w-100 py-2">Sudah Lunas</span>
+                <button class="btn btn-xs btn-outline-danger w-100 py-1" style="font-size: 0.65rem;" 
+                        onclick="event.stopPropagation(); batalkanVerifikasi('${id}', '${data.name}')">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>`;
+    } else {
+        statusBadgeHtml = `<span class="badge bg-light text-muted w-100 py-2 border">Belum Bayar</span>`;
+    }
+}
 
             let walletBadgeHtml = "";
             let ttdStatusHtml = ""; 
@@ -1340,27 +1340,26 @@ if (data.notes) {
             const btnCetak = document.getElementById('btnCetakKuitansi');
             const cardInfaq = document.getElementById('cardInfaq'); 
             
-            if (data.infaqStatus === true || data.infaqStatus === "Lunas") {
-                // Tampilan Lunas
-                if(statusText) { statusText.innerText = "Lunas"; statusText.className = "text-success fw-bold"; }
-                if(btnCetak) btnCetak.classList.remove('d-none');
-                
-                // Ganti Border ke Hijau
-                if(cardInfaq) {
-                    cardInfaq.classList.remove('border-danger');
-                    cardInfaq.classList.add('border-success');
-                }
-            } else {
-                // Tampilan Belum Lunas
-                if(statusText) { statusText.innerText = "Belum Lunas"; statusText.className = "text-danger fw-bold"; }
-                if(btnCetak) btnCetak.classList.add('d-none');
-                
-                // Ganti Border ke Merah
-                if(cardInfaq) {
-                    cardInfaq.classList.remove('border-success');
-                    cardInfaq.classList.add('border-danger');
-                }
-            }   
+            const periodeAktif = hitungPeriodeInfaq().periode;
+const isLunasValid = (data.infaqStatus === true && data.lastPaidPeriod === periodeAktif);
+
+if (isLunasValid) {
+    // Tampilan Lunas (Gunakan isLunasValid sebagai penentu)
+    if(statusText) { statusText.innerText = "Lunas"; statusText.className = "text-success fw-bold"; }
+    if(btnCetak) btnCetak.classList.remove('d-none');
+    if(cardInfaq) {
+        cardInfaq.classList.remove('border-danger');
+        cardInfaq.classList.add('border-success');
+    }
+} else {
+    // Tampilan Belum Lunas
+    if(statusText) { statusText.innerText = "Belum Lunas"; statusText.className = "text-danger fw-bold"; }
+    if(btnCetak) btnCetak.classList.add('d-none');
+    if(cardInfaq) {
+        cardInfaq.classList.remove('border-success');
+        cardInfaq.classList.add('border-danger');
+    }
+}   
 
             // --- D. UPDATE OTOMATIS: Riwayat Pembayaran ---
             if (typeof loadPaymentHistory === 'function') loadPaymentHistory(studentId);
@@ -2082,7 +2081,8 @@ async function konfirmasiBayar() {
                             fileName: `Kuitansi_${namaSantriReal}_${new Date().getTime()}.pdf`,
                             namaSantri: namaSantriReal,
                             metodeBayar: metode,
-                            emailWali: emailWaliReal
+                            emailWali: emailWaliReal,
+                            periode: dataPeriode.periode
                         })
                     });
 
@@ -2210,9 +2210,9 @@ snapHistory.forEach(doc => {
 
         // 2. Bersihkan semua pemicu di dokumen utama (Wajib agar lonceng mati)
         batch.update(studentRef, {
-            infaqStatus: false,
-            paymentMethod: firebase.firestore.FieldValue.delete(), // Hapus metode bayar
-            lastConfirmation: firebase.firestore.FieldValue.delete(), // Hapus tgl konfirmasi
+            infaqStatus: true,
+            lastPaidPeriod: bulanSekarang,
+            paymentNotifRead: true, // Ubah ke true karena sudah diproses (angka merah di lonceng hilang)
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -2366,6 +2366,7 @@ window.loadPaymentHistory = function(studentId) {
 
     // 3. Pasang antena baru dan simpan remotenya ke currentPaymentListener
     currentPaymentListener = db.collection('students').doc(studentId).collection('payments')
+        .orderBy('date', 'desc')
         .onSnapshot((snapshot) => {
             
             // Jika kosong, langsung bersihkan tampilan
