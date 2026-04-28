@@ -269,9 +269,9 @@
 </section>
 
 <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-success d-none sticky-top">
-    <div class="container flex-nowrap align-items-center">
+    <div class="container align-items-center">
         
-        <a class="navbar-brand d-flex align-items-center me-auto" href="#" style="gap: 8px; overflow: hidden; min-width: 0;">
+        <a class="navbar-brand d-flex align-items-center me-auto me-lg-0" href="#" style="gap: 8px; overflow: hidden; min-width: 0;">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZTUnovmOq9QQvT4Nc0AI4aJ5hA_yqjj7frwkOyyhUJP-ohR8V2YSXsueIibUipTwU-bjXsDOv-at0dFzcJ_q7-YD50Y9wBcNIE6kFJGuiq-94CCE1aEh80rHBSCIs3DXhcRKZJpyqir3HascTXnuU1fNad19VVRAM8s4RceRIzo5ySEzeHt1CmU_hubc/s1600/TPQ%20Al-Mubarok%20LOGO%20PUTIH.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;">
             
             <div class="d-flex flex-column justify-content-center" style="line-height: 1.1; min-width: 0;">
@@ -280,7 +280,7 @@
             </div>
         </a>
 
-        <div class="d-flex align-items-center gap-3 order-lg-3 flex-shrink-0">
+        <div class="d-flex align-items-center gap-3 order-lg-3 flex-shrink-0 me-lg-5">
             
             <div style="cursor: pointer;" onclick="toggleDarkMode()" class="d-flex align-items-center">
                 <i id="darkModeIcon" class="fas fa-moon fs-5 text-white"></i>
@@ -300,14 +300,15 @@
                 <span class="navbar-toggler-icon" style="width: 1.3rem; height: 1.3rem;"></span>
             </button>
         </div>
-    </div>
 
-    <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
-        <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0 px-3 px-lg-0">
-            <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
-            <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('profile')">Profil</a></li>
-            <li class="nav-item mt-2 mt-lg-0"><a class="nav-link nav-custom-link text-warning fw-bold" href="#" onclick="logoutUser()">Keluar</a></li>
-        </ul>
+        <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
+            <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0 px-3 px-lg-0 me-lg-4">
+                <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
+                <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('profile')">Profil</a></li>
+                <li class="nav-item"><a class="nav-link nav-custom-link text-warning fw-bold" href="#" onclick="logoutUser()">Keluar</a></li>
+            </ul>
+        </div>
+
     </div>
 </nav>
     
