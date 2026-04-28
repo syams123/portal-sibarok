@@ -526,25 +526,25 @@ async function setupProfilePage(role, userDataInput, studentIdInput = null) {
 // --- RUMUS PENENTU BULAN TAGIHAN (CUT-OFF TGL 25) ---
 function hitungPeriodeInfaq() {
     const tgl = new Date();
-    const tanggal = tgl.getDate();
-    let bulan = tgl.getMonth(); 
+    const hari = tgl.getDate();
+    let bulan = tgl.getMonth();
     let tahun = tgl.getFullYear();
 
-    // Logika Cut-Off: Jika bayar >= tanggal 25, masuk tagihan bulan depan
-    if (tanggal >= 25) {
-        bulan = bulan + 1;
+    // Logika permintaan Kakak: Jika tanggal 25 ke atas, masuk ke bulan depan
+    if (hari >= 25) {
+        bulan++;
         if (bulan > 11) {
             bulan = 0;
-            tahun = tahun + 1;
+            tahun++;
         }
     }
 
-    const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    const bulanTagihan = namaBulan[bulan];
-    
+    const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const namaBulan = daftarBulan[bulan];
+
     return {
-        periode: `${bulanTagihan} ${tahun}`,           // Contoh: "Mei 2026"
-        tanggalKuitansi: `05 ${bulanTagihan} ${tahun}` // Contoh: "05 Mei 2026"
+        periode: `${namaBulan} ${tahun}`,
+        tanggalKuitansi: `${hari} ${namaBulan} ${tahun}`
     };
 }
 
@@ -708,7 +708,7 @@ if (isAlreadyGraded) {
 } else {
     raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border" style="font-size: 0.6rem;">Belum Diisi</span>`;
 }
-			
+            
 // --- 1. LOGIKA NOTIFIKASI TERPISAH (SISI LONCENG) ---
 if (currentRole === 'superadmin' && notifList) {
     // A. Notifikasi Infaq
@@ -796,7 +796,7 @@ if (currentRole === 'superadmin') {
                             <div class="card-body p-2 text-center">
                                 <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
                                 <small class="text-muted d-block mb-1">${data.class}</small>
-				                ${raporBadgeHtml}
+                                ${raporBadgeHtml}
                                 ${ttdStatusHtml}
                                 ${walletBadgeHtml}
                                 ${statusBadgeHtml}
@@ -805,7 +805,7 @@ if (currentRole === 'superadmin') {
                     </div>`;
             } else {
                 // TAMPILAN LIST (BARIS RAMPING - COCOK UNTUK HP)
-				const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
+                const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
                 finalHtml = `
                     <div class="col-12 mb-2">
                         <div class="card shadow-sm border-0" style="border-radius: 12px;">
@@ -818,7 +818,7 @@ if (currentRole === 'superadmin') {
                                     <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
                                     <div class="d-flex align-items-center gap-2">
                                         <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
-										${sudahDiisi ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
+                                        ${sudahDiisi ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
                                     </div>
                                 </div>
 
@@ -883,7 +883,7 @@ async function openDetail(id) {
     document.getElementById('loading').classList.add('d-none');
     const doc = await db.collection('students').doc(id).get();
     const data = doc.data();
-	const jilidSelect = document.getElementById('studentLevel');
+    const jilidSelect = document.getElementById('studentLevel');
 if (jilidSelect && data.jilid) {
     jilidSelect.value = data.jilid; 
 }
@@ -1053,7 +1053,7 @@ async function saveGrades() {
             absensiSakit: parseInt(sakit),
             absensiIzin: parseInt(izin),
             absensiLain: parseInt(lain),
-	    rapor_status: 'selesai'
+        rapor_status: 'selesai'
         });
         
         // Menampilkan notifikasi sukses menggunakan SweetAlert
@@ -1186,7 +1186,7 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             // KODE ASLI KAKAK DI BAWAH INI TETAP UTUH 100% TANPA DIUBAH
             const data = docSnap.data();
             const studentId = docSnap.id; 
-			window.activeChildId = studentId;
+            window.activeChildId = studentId;
             
             const tgl = new Date();
             const tanggalHariIni = tgl.getDate();
@@ -1368,30 +1368,36 @@ if (data.notes) {
 
     // 2. ANTENA REAL-TIME: Notifikasi Lonceng
     db.collection('notifications')
-        .where('parentEmail', '==', email)
-        .orderBy('timestamp', 'desc')
-        .limit(5)
-        .onSnapshot((notifSnapshot) => {
-            const notifCount = document.getElementById('notifCount');
-            const notifList = document.getElementById('notifList');
-            
-            if (!notifSnapshot.empty) {
-                if(notifCount) {
-                    notifCount.innerText = notifSnapshot.size;
-                    notifCount.classList.remove('d-none');
-                }
-                if(notifList) {
-                    notifList.innerHTML = '';
-                    notifSnapshot.forEach(doc => {
-                        const n = doc.data();
-                        notifList.innerHTML += `
-                            <div class="list-group-item p-2 small">
-                                <b class="text-primary">${n.title || 'Info'}</b><br>${n.message}
-                            </div>`;
-                    });
-                }
+    .where('parentEmail', '==', email)
+    .where('studentName', '==', data.name) // KUNCI: Filter berdasarkan nama anak yang sedang aktif
+    .orderBy('timestamp', 'desc')
+    .limit(5)
+    .onSnapshot((notifSnapshot) => {
+        const notifCount = document.getElementById('notifCount');
+        const notifList = document.getElementById('notifList');
+        
+        if (!notifSnapshot.empty) {
+            if(notifCount) {
+                notifCount.innerText = notifSnapshot.size;
+                notifCount.classList.remove('d-none');
             }
-        });
+            if(notifList) {
+                notifList.innerHTML = '';
+                notifSnapshot.forEach(doc => {
+                    const n = doc.data();
+                    // Tampilan notifikasi hanya untuk anak yang dipilih
+                    notifList.innerHTML += `
+                        <div class="list-group-item p-2 small">
+                            <b class="text-success">${n.title || 'Info'}</b><br>${n.message}
+                        </div>`;
+                });
+            }
+        } else {
+            // Jika tidak ada notifikasi untuk anak ini, sembunyikan badge
+            if(notifCount) notifCount.classList.add('d-none');
+            if(notifList) notifList.innerHTML = '<div class="p-3 text-center small text-muted">Tidak ada notifikasi untuk ananda ini.</div>';
+        }
+    });
 }
 
 // --- SINKRONISASI TANDA TANGAN ---
@@ -1431,6 +1437,7 @@ if (typeof data !== 'undefined' && data) {
         }
     }
 }
+
 
 // --- PROFIL ---
 async function loadProfile() {
@@ -2224,30 +2231,6 @@ function playBeep() {
     } catch(e) { console.log("Audio diblokir browser"); }
 }
 
-async function resetPembayaran(id, nama) {
-    if (!confirm(`Batalkan status Lunas untuk ${nama}? Status akan kembali menjadi 'Belum Lunas'.`)) return;
-
-    document.getElementById('loading').classList.remove('d-none');
-
-    try {
-        await db.collection('students').doc(id).update({
-            infaqStatus: false, // Mengubah kembali ke belum lunas
-            paymentMethod: firebase.firestore.FieldValue.delete(), // Menghapus riwayat lapor lama agar bersih
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        Swal.fire("Berhasil", "Status " + nama + " berhasil dikembalikan ke Belum Lunas.", "success");
-        
-        // Refresh daftar agar kartu berubah warna
-        renderStudents();
-
-    } catch (error) {
-        console.error("Gagal reset:", error);
-        Swal.fire("Error", "Terjadi kesalahan: " + error.message, "error");
-    } finally {
-        document.getElementById('loading').classList.add('d-none');
-    }
-}
 
 function updatePaymentDetails() {
     const method = document.getElementById('selectMetodeBayar').value;
@@ -2453,13 +2436,14 @@ async function saveSignature(studentId, studentName) {
         // 2. KIRIM NOTIFIKASI KE LONCENG (Penting agar lonceng Ustadzah update)
         // Kita buat dokumen baru di koleksi 'notifications'
         await db.collection('notifications').add({
-            title: "Rapor TTD",
-            studentName: studentName,
-            message: `Wali dari ${studentName} telah menandatangani rapor.`,
-            type: "signature", // Tipe ini untuk membedakan dengan Infaq
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            status: "unread"
-        });
+    title: "Rapor TTD",
+    studentName: studentName, // Harus ada
+    parentEmail: currentUser.email, // Harus ada untuk difilter di dashboard wali
+    message: `Wali dari ${studentName} telah menandatangani rapor.`,
+    type: "signature",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    status: "unread"
+});
 
         Swal.fire("Berhasil", "Alhamdulillah, tanda tangan berhasil terkirim!", "success");
         // Jangan reload dulu agar data tersinkron sempurna
