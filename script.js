@@ -2067,9 +2067,6 @@ async function konfirmasiBayar() {
                     doc.setFont("helvetica", "bold");
                     doc.text("Mohamad Samsul Hadi, Lc., M.Pd", 155, 133, { align: "center" });
 
-                    const currentUser = firebase.auth().currentUser;
-                    const emailWaliReal = currentUser ? currentUser.email : "";
-
                     // Kirim ke Google Drive (Background)
                     const pdfBase64 = doc.output('datauristring').split(',')[1];
                     const scriptUrl = "https://script.google.com/macros/s/AKfycbwV29U96XamZsTObpASGg-FuKh7Le_KjhDFdoBb20_Z98njfUSVkH27Uye9lTIg8wuu/exec"; 
@@ -2081,8 +2078,7 @@ async function konfirmasiBayar() {
                             pdfBase64: pdfBase64,
                             fileName: `Kuitansi_${namaSantriReal}_${new Date().getTime()}.pdf`,
                             namaSantri: namaSantriReal,
-                            metodeBayar: metode,
-                            emailWali: emailWaliReal
+                            metodeBayar: metode
                         })
                     });
 
