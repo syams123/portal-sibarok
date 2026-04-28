@@ -1922,7 +1922,9 @@ fetch(scriptUrl, {
     method: "POST",
     body: JSON.stringify({
         pdfBase64: pdfBase64,
-        fileName: `Kuitansi_${namaSantriReal}_${new Date().getTime()}.pdf`
+        fileName: `Kuitansi_${namaSantriReal}_${new Date().getTime()}.pdf`,
+        namaSantri: namaSantriReal,
+        metodeBayar: metodeBayarReal
     })
 })
 .then(res => res.json())
