@@ -1186,6 +1186,7 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             // KODE ASLI KAKAK DI BAWAH INI TETAP UTUH 100% TANPA DIUBAH
             const data = docSnap.data();
             const studentId = docSnap.id; 
+			window.activeChildId = studentId;
             
             const tgl = new Date();
             const tanggalHariIni = tgl.getDate();
