@@ -642,42 +642,35 @@ function renderStudents() {
     const notifList = document.getElementById('notifList'); 
     const notifCount = document.getElementById('notifCount'); 
     
-    // 1. Ambil nilai filter dari dropdown
     const filterElement = document.getElementById('filterClass');
     const filter = filterElement ? filterElement.value : 'all';
     
     let query = db.collection('students');
 
-    // 2. LOGIKA FILTER OTOMATIS BERDASARKAN ROLE
     if (currentRole === 'admin') {
-        // Jika Admin (Ustadzah Salwa), paksa ke kelasnya sendiri
         const classToFilter = window.userClass || "TK-SD (Sunan Giri)";
         query = query.where('class', '==', classToFilter);
-        
-        // Sembunyikan area filter dropdown agar tidak bisa intip kelas lain
         const filterArea = document.getElementById('filterClassArea');
         if (filterArea) filterArea.classList.add('d-none');
     } 
     else if (currentRole === 'superadmin') {
-        // Jika Superadmin (Ustadzah Fika), gunakan filter dropdown
         if (filter !== 'all') {
             query = query.where('class', '==', filter);
         }
-        // Tampilkan kembali area filter
         const filterArea = document.getElementById('filterClassArea');
         if (filterArea) filterArea.classList.remove('d-none');
     }
 
-    // 3. PENGURUTAN (Wajib buat Index di Firebase jika menggunakan where + orderBy)
     query = query.orderBy('name', 'asc');
 
-    // 4. REALTIME LISTENER
     query.onSnapshot((snapshot) => {
         listDiv.innerHTML = '';
         if (notifList) notifList.innerHTML = ''; 
         let pendingCount = 0;
 
-        // Update Counter Total Santri otomatis sesuai hasil filter
+        // --- 🌟 UPDATE PERIODE: Ambil periode tagihan aktif saat ini 🌟 ---
+        const periodeAktif = hitungPeriodeInfaq().periode; 
+
         const totalSantriElement = document.getElementById('totalSantriCount');
         if (totalSantriElement) {
             totalSantriElement.innerText = snapshot.size; 
@@ -697,98 +690,91 @@ function renderStudents() {
             const defaultAvatar = data.gender === 'Perempuan' ? avatarPerempuan : avatarLaki;
             const photoUrl = data.photo || defaultAvatar;
 
-// --- LOGIKA BADGE RAPOR (VERSI LEBIH PINTAR) ---
-let raporBadgeHtml = "";
+            let raporBadgeHtml = "";
+            const isAlreadyGraded = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
 
-// Cek apakah statusnya 'selesai' ATAU apakah field grades sudah memiliki isi (untuk data lama)
-const isAlreadyGraded = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
-
-if (isAlreadyGraded) {
-    raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1" style="font-size: 0.6rem;"><i class="fas fa-check-circle me-1"></i> Input Selesai</span>`;
-} else {
-    raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border" style="font-size: 0.6rem;">Belum Diisi</span>`;
-}
+            if (isAlreadyGraded) {
+                raporBadgeHtml = `<span class="badge bg-success w-100 mb-1 py-1" style="font-size: 0.6rem;"><i class="fas fa-check-circle me-1"></i> Input Selesai</span>`;
+            } else {
+                raporBadgeHtml = `<span class="badge bg-light text-muted w-100 mb-1 py-1 border" style="font-size: 0.6rem;">Belum Diisi</span>`;
+            }
             
-// --- 1. LOGIKA NOTIFIKASI TERPISAH (SISI LONCENG) ---
-if (currentRole === 'superadmin' && notifList) {
-    // A. Notifikasi Infaq
-    if (data.paymentMethod && !data.infaqStatus) {
-        pendingCount++;
-        notifList.innerHTML += `
-            <div class="list-group-item p-2 border-bottom bg-light" style="cursor: pointer;" onclick="tandaiDibaca('${id}', 'infaq', '${data.name}')">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div style="font-size: 0.75rem;">
-                        <span class="badge bg-warning text-dark mb-1">Infaq Baru</span><br>
-                        <strong>${data.name}</strong> - ${data.paymentMethod}
-                    </div>
-                </div>
-            </div>`;
-    }
-    
-    // B. Notifikasi TTD Rapor
-    if (data.reportSignature && !data.ttdNotifRead) {
-    pendingCount++; 
-    notifList.innerHTML += `
-        <div class="list-group-item p-2 border-bottom" style="cursor: pointer;" 
-             onclick="tandaiDibaca('${id}', 'signature', '${data.name}')">
-            <div class="d-flex align-items-center">
-                <div class="me-2 text-info"><i class="fas fa-file-signature fa-lg"></i></div>
-                <div style="font-size: 0.75rem;">
-                    <span class="badge bg-info text-white mb-1">TTD Wali Baru</span><br>
-                    <strong>Wali dari ${data.name}</strong><br>
-                    <span class="text-muted" style="font-size: 0.65rem;">Klik untuk verifikasi TTD</span>
-                </div>
-            </div>
-        </div>`;
-    }
-}
+            if (currentRole === 'superadmin' && notifList) {
+                if (data.paymentMethod && !data.infaqStatus) {
+                    pendingCount++;
+                    notifList.innerHTML += `
+                        <div class="list-group-item p-2 border-bottom bg-light" style="cursor: pointer;" onclick="tandaiDibaca('${id}', 'infaq', '${data.name}')">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div style="font-size: 0.75rem;">
+                                    <span class="badge bg-warning text-dark mb-1">Infaq Baru</span><br>
+                                    <strong>${data.name}</strong> - ${data.paymentMethod}
+                                </div>
+                            </div>
+                        </div>`;
+                }
+                
+                if (data.reportSignature && !data.ttdNotifRead) {
+                    pendingCount++; 
+                    notifList.innerHTML += `
+                        <div class="list-group-item p-2 border-bottom" style="cursor: pointer;" 
+                             onclick="tandaiDibaca('${id}', 'signature', '${data.name}')">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2 text-info"><i class="fas fa-file-signature fa-lg"></i></div>
+                                <div style="font-size: 0.75rem;">
+                                    <span class="badge bg-info text-white mb-1">TTD Wali Baru</span><br>
+                                    <strong>Wali dari ${data.name}</strong><br>
+                                    <span class="text-muted" style="font-size: 0.65rem;">Klik untuk verifikasi TTD</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            }
 
-            // --- 2. LOGIKA BADGE DI KARTU (TETAP SAMA) ---
+            // --- 🌟 UPDATE PERIODE: Logika Cek Lunas Berdasarkan Bulan 🌟 ---
+            // Santri dianggap lunas hanya jika infaqStatus true DAN bulannya cocok
+            const isLunasValid = (data.infaqStatus === true && data.lastPaidPeriod === periodeAktif);
+            
+            // Variabel untuk filter tombol (Lunas/Belum)
+            const statusInfaqFilter = isLunasValid ? 'Lunas' : 'Belum';
+
             let statusBadgeHtml = "";
             if (currentRole === 'superadmin') {
-                if (isLunasValid) { // Ganti data.infaqStatus menjadi isLunasValid
-        statusBadgeHtml = `
-            <div class="d-flex flex-column gap-1">
-                <span class="badge bg-success w-100 py-2">Sudah Lunas</span>
-                <button class="btn btn-xs btn-outline-danger w-100 py-1" style="font-size: 0.65rem;" 
-                        onclick="event.stopPropagation(); batalkanVerifikasi('${id}', '${data.name}')">
-                    <i class="fas fa-undo"></i> Reset
-                </button>
-            </div>`;
-    } else {
-        statusBadgeHtml = `<span class="badge bg-light text-muted w-100 py-2 border">Belum Bayar</span>`;
-    }
-}
+                if (isLunasValid) { // Menggunakan validasi periode
+                    statusBadgeHtml = `
+                        <div class="d-flex flex-column gap-1">
+                            <span class="badge bg-success w-100 py-2">Sudah Lunas</span>
+                            <button class="btn btn-xs btn-outline-danger w-100 py-1" style="font-size: 0.65rem;" 
+                                    onclick="event.stopPropagation(); batalkanVerifikasi('${id}', '${data.name}')">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>`;
+                } else {
+                    statusBadgeHtml = `<span class="badge bg-light text-muted w-100 py-2 border">Belum Bayar</span>`;
+                }
+            }
 
-            let walletBadgeHtml = "";
             let ttdStatusHtml = ""; 
-if (currentRole === 'superadmin') {
-    if (data.reportSignature) {
-        ttdStatusHtml = `
-            <div class="mb-2">
-                <span class="badge bg-info text-dark w-100 py-1" style="font-size: 0.6rem;">
-                    <i class="fas fa-check-circle"></i> Rapor Diterima
-                </span>
-                <button class="btn btn-xs btn-outline-secondary w-100 mt-1" 
-                        style="font-size: 0.55rem; padding: 2px;" 
-                        onclick="event.stopPropagation(); resetTTD('${id}', '${data.name}')">
-                    <i class="fas fa-eraser"></i> Reset TTD
-                </button>
-            </div>`;
-    } else {
-        ttdStatusHtml = `<div class="mb-2"><span class="badge bg-light text-muted w-100 py-1 border" style="font-size: 0.6rem;">Belum TTD</span></div>`;
-    }
-}
+            if (currentRole === 'superadmin') {
+                if (data.reportSignature) {
+                    ttdStatusHtml = `
+                        <div class="mb-2">
+                            <span class="badge bg-info text-dark w-100 py-1" style="font-size: 0.6rem;">
+                                <i class="fas fa-check-circle"></i> Rapor Diterima
+                            </span>
+                            <button class="btn btn-xs btn-outline-secondary w-100 mt-1" 
+                                    style="font-size: 0.55rem; padding: 2px;" 
+                                    onclick="event.stopPropagation(); resetTTD('${id}', '${data.name}')">
+                                <i class="fas fa-eraser"></i> Reset TTD
+                            </button>
+                        </div>`;
+                } else {
+                    ttdStatusHtml = `<div class="mb-2"><span class="badge bg-light text-muted w-100 py-1 border" style="font-size: 0.6rem;">Belum TTD</span></div>`;
+                }
+            }
 
-            // --- 3. LOGIKA PEMILIHAN TAMPILAN (GRID vs LIST) ---
             let finalHtml = "";
-            
-            // 👇 TAMBAHAN BARU: Buat variabel penentu status Lunas/Belum
-            const statusInfaqFilter = data.infaqStatus === true ? 'Lunas' : 'Belum';
 
             if (currentView === 'grid') {
-                // TAMPILAN GRID
-                // 👇 TAMBAHAN BARU: Selipkan class 'item-santri' dan atribut 'data-status-bayar'
                 finalHtml = `
                     <div class="col-6 col-md-4 col-lg-3 santri-card mb-3 item-santri" data-status-bayar="${statusInfaqFilter}">
                         <div class="card card-student shadow-sm h-100 position-relative">
@@ -802,15 +788,11 @@ if (currentRole === 'superadmin') {
                                 <small class="text-muted d-block mb-1">${data.class}</small>
                                 ${raporBadgeHtml}
                                 ${ttdStatusHtml}
-                                ${walletBadgeHtml}
                                 ${statusBadgeHtml}
                             </div>
                         </div>  
                     </div>`;
             } else {
-                // TAMPILAN LIST
-                const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
-                // 👇 TAMBAHAN BARU: Selipkan class 'item-santri' dan atribut 'data-status-bayar'
                 finalHtml = `
                     <div class="col-12 mb-2 item-santri" data-status-bayar="${statusInfaqFilter}">
                         <div class="card shadow-sm border-0" style="border-radius: 12px;">
@@ -823,12 +805,12 @@ if (currentRole === 'superadmin') {
                                     <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
                                     <div class="d-flex align-items-center gap-2">
                                         <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
-                                        ${sudahDiisi ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
+                                        ${isAlreadyGraded ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
                                     </div>
                                 </div>
 
                                 <div class="d-flex align-items-center gap-2">
-                                    ${data.infaqStatus === true ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
+                                    ${isLunasValid ? '<i class="fas fa-check-circle text-success" title="Lunas"></i>' : ''}
                                     <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="openDetail('${id}')">
                                         <i class="fas fa-chevron-right text-muted"></i>
                                     </button>
@@ -838,36 +820,23 @@ if (currentRole === 'superadmin') {
                     </div>`;
             }
 
-            // Masukkan hasil pilihan ke dalam container utama
             listDiv.innerHTML += finalHtml;
         });
 
-        // --- UPDATE LONCENG & HIDE LOADER ---
         if (notifCount) {
             notifCount.innerText = pendingCount;
-            
             if (pendingCount > 0) {
-                // Tampilkan angka badge
                 notifCount.classList.remove('d-none');
-                
-                // --- PAKSA ANIMASI PULSE MENYALA ---
-                // Kita hapus dulu class-nya, lalu pasang lagi agar browser men-trigger animasi dari awal
                 notifCount.classList.remove('notif-pulse');
-                void notifCount.offsetWidth; // Trik "Reflow" agar animasi me-reset
+                void notifCount.offsetWidth; 
                 notifCount.classList.add('notif-pulse');
-                
-                // Update Judul Dropdown secara otomatis
                 const notifHeader = document.getElementById('notifHeader');
                 if (notifHeader) notifHeader.innerText = "Pemberitahuan Baru";
-                
-                // Pastikan area lonceng terlihat
                 const notifArea = document.getElementById('notifArea');
                 if (notifArea) notifArea.classList.remove('d-none');
             } else {
-                // Jika tidak ada notif, sembunyikan angka dan matikan animasi
                 notifCount.classList.add('d-none');
                 notifCount.classList.remove('notif-pulse');
-                
                 const notifHeader = document.getElementById('notifHeader');
                 if (notifHeader) notifHeader.innerText = "Tidak ada Notifikasi";
             }
@@ -1162,7 +1131,7 @@ async function loadChildData(email, selectedId = null) {
                 }
 
                 // 3. Render tombol-tombol nama anak
-                let btnHtml = '<p class="small fw-bold mb-2 text-success"> Pilih Data Anak:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
+                let btnHtml = '<p class="small fw-bold mb-2 text-success"><i class="fas fa-users me-1"></i> Pilih Data Ananda:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
 
 snapshot.forEach((doc) => {
     const childData = doc.data();
@@ -1192,7 +1161,7 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             const data = docSnap.data();
             const studentId = docSnap.id; 
             window.activeChildId = studentId;
-            
+
             const tgl = new Date();
             const tanggalHariIni = tgl.getDate();
             let bulanIndex = tgl.getMonth();
@@ -1212,10 +1181,11 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             const namaBulanFix = daftarBulan[bulanIndex];
             
-            const displayBulan = document.getElementById('currentMonthDisplay');
-            if (displayBulan) {
-                displayBulan.innerText = "Bulan " + namaBulanFix + " " + tahunIni;
-            }
+            const displayBulan = document.getElementById('currentMonthDisplay'); 
+if (displayBulan) {
+    const infoPeriode = hitungPeriodeInfaq();
+    displayBulan.innerText = "Bulan " + infoPeriode.periode; 
+}
 
             // --- A. Sinkronisasi Foto & Profil ---
             const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
@@ -1336,15 +1306,15 @@ if (data.notes) {
             if (ldr) ldr.classList.add('d-none');
             
             // --- C. Sinkronisasi Status Infaq Otomatis ---
+            const infoPeriode = hitungPeriodeInfaq();
             const statusText = document.getElementById('childInfaqStatus');
             const btnCetak = document.getElementById('btnCetakKuitansi');
             const cardInfaq = document.getElementById('cardInfaq'); 
             
             const periodeAktif = hitungPeriodeInfaq().periode;
-const isLunasValid = (data.infaqStatus === true && data.lastPaidPeriod === periodeAktif);
+const isLunasValid = (data.infaqStatus === true && data.lastPaidPeriod === infoPeriode.periode);
 
 if (isLunasValid) {
-    // Tampilan Lunas (Gunakan isLunasValid sebagai penentu)
     if(statusText) { statusText.innerText = "Lunas"; statusText.className = "text-success fw-bold"; }
     if(btnCetak) btnCetak.classList.remove('d-none');
     if(cardInfaq) {
@@ -1352,7 +1322,7 @@ if (isLunasValid) {
         cardInfaq.classList.add('border-success');
     }
 } else {
-    // Tampilan Belum Lunas
+    // Jika hari ini tanggal 28 April, maka status yang muncul adalah "Belum Lunas" untuk bulan MEI
     if(statusText) { statusText.innerText = "Belum Lunas"; statusText.className = "text-danger fw-bold"; }
     if(btnCetak) btnCetak.classList.add('d-none');
     if(cardInfaq) {
@@ -1970,8 +1940,8 @@ async function konfirmasiBayar() {
 
     // 1. Tampilkan Konfirmasi SweetAlert DULU (Layar masih bersih)
     const result = await Swal.fire({
-        title: "Konfirmasi Pembayaran",
-        text: `Metode Pembayaran: ${metode}. Konfirmasi pembayaran sekarang?`,
+        title: "Konfirmasi Sekarang?",
+        text: `Anda memilih metode: ${metode}. Kirim konfirmasi pembayaran sekarang?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: '#198754',
@@ -2155,7 +2125,8 @@ async function approvePembayaran(id, nama) {
 
         batch.update(studentRef, {
             infaqStatus: true,
-            paymentNotifRead: false, 
+            lastPaidPeriod: bulanSekarang,
+            paymentNotifRead: true, 
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -2210,9 +2181,9 @@ snapHistory.forEach(doc => {
 
         // 2. Bersihkan semua pemicu di dokumen utama (Wajib agar lonceng mati)
         batch.update(studentRef, {
-            infaqStatus: true,
-            lastPaidPeriod: bulanSekarang,
-            paymentNotifRead: true, // Ubah ke true karena sudah diproses (angka merah di lonceng hilang)
+            infaqStatus: false,
+            paymentMethod: firebase.firestore.FieldValue.delete(), // Hapus metode bayar
+            lastConfirmation: firebase.firestore.FieldValue.delete(), // Hapus tgl konfirmasi
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -2312,7 +2283,7 @@ function listenPaymentStatus(parentEmail) {
                     // 1. CEK TTD TERLEBIH DAHULU
                     // Muncul HANYA jika ada data TTD DAN notif belum dibaca
                     if (data.reportSignature && data.ttdNotifRead === false) {
-                        showPaymentToast("Berhasil mengonfirmasi tanda tangan " + nama, "info");
+    showPaymentToast("Berhasil mengonfirmasi tanda tangan " + data.name, "info");
                         return; // PENTING: Berhenti di sini agar tidak lanjut ke cek Infaq
                     }
                     
@@ -2366,8 +2337,8 @@ window.loadPaymentHistory = function(studentId) {
 
     // 3. Pasang antena baru dan simpan remotenya ke currentPaymentListener
     currentPaymentListener = db.collection('students').doc(studentId).collection('payments')
-        .orderBy('date', 'desc')
-        .onSnapshot((snapshot) => {
+    .orderBy('date', 'desc') // Tambahkan ini agar urut yang terbaru
+    .onSnapshot((snapshot) => {
             
             // Jika kosong, langsung bersihkan tampilan
             if (snapshot.empty) {
