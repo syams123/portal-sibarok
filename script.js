@@ -3439,3 +3439,77 @@ window.filterPembayaran = function(statusTarget) {
         }
     });
 };
+
+// =============================================================================
+// 🔄 AUTO-RESET INFAQ: Setiap tanggal 26, status lunas direset ke belum lunas
+// Menggunakan koleksi 'app_config' di Firestore sebagai "kunci" agar reset
+// hanya terjadi SEKALI per bulan, tidak berulang setiap kali halaman dibuka.
+// =============================================================================
+async function cekDanResetInfaqBulanan() {
+    const tgl = new Date();
+    const hariIni = tgl.getDate();
+
+    // Hanya jalankan logika reset jika hari ini tanggal 26 ke atas
+    if (hariIni < 26) return;
+
+    // Buat kunci unik per bulan, contoh: "reset_2025_06" untuk Juni 2025
+    const bulanIni = tgl.getMonth(); // 0-11
+    const tahunIni = tgl.getFullYear();
+    const kunciReset = `reset_${tahunIni}_${String(bulanIni + 1).padStart(2, '0')}`;
+
+    try {
+        const configRef = db.collection('app_config').doc('infaq_reset');
+        const configDoc = await configRef.get();
+
+        // Ambil data konfigurasi (jika ada)
+        const configData = configDoc.exists ? configDoc.data() : {};
+
+        // Cek apakah reset untuk bulan ini sudah pernah dilakukan
+        if (configData.lastResetKey === kunciReset) {
+            // Sudah di-reset bulan ini, tidak perlu lagi
+            console.log(`[Auto-Reset Infaq] Reset bulan ini (${kunciReset}) sudah dilakukan sebelumnya.`);
+            return;
+        }
+
+        // ====== BELUM DI-RESET BULAN INI: Mulai proses reset ======
+        console.log(`[Auto-Reset Infaq] Memulai reset infaq untuk periode ${kunciReset}...`);
+
+        // Ambil semua santri yang saat ini berstatus lunas (infaqStatus === true)
+        const snapshot = await db.collection('students').where('infaqStatus', '==', true).get();
+
+        if (snapshot.empty) {
+            console.log('[Auto-Reset Infaq] Tidak ada santri dengan status lunas. Hanya memperbarui kunci reset.');
+        } else {
+            // Gunakan batch write agar semua update dilakukan sekaligus (efisien & aman)
+            const batch = db.batch();
+
+            snapshot.forEach(doc => {
+                batch.update(doc.ref, {
+                    infaqStatus: false,
+                    paymentMethod: firebase.firestore.FieldValue.delete() // Bersihkan metode bayar lama
+                });
+            });
+
+            await batch.commit();
+            console.log(`[Auto-Reset Infaq] Berhasil mereset ${snapshot.size} santri.`);
+        }
+
+        // Simpan kunci reset ke Firestore agar bulan depan tidak reset lagi
+        // tanggalReset disimpan untuk keperluan audit/log
+        await configRef.set({
+            lastResetKey: kunciReset,
+            tanggalReset: firebase.firestore.FieldValue.serverTimestamp(),
+            jumlahSantriDireset: snapshot.size
+        });
+
+        console.log(`[Auto-Reset Infaq] Kunci reset ${kunciReset} berhasil disimpan.`);
+
+    } catch (error) {
+        // Error ditangkap diam-diam agar tidak mengganggu tampilan utama
+        console.error('[Auto-Reset Infaq] Terjadi kesalahan:', error);
+    }
+}
+
+// Panggil fungsi reset otomatis setiap kali halaman dimuat
+// Fungsi ini aman dipanggil berulang karena sudah ada pengecekan kunci per bulan
+cekDanResetInfaqBulanan();
