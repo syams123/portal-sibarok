@@ -418,18 +418,10 @@ async function setupProfilePage(role, userDataInput, studentIdInput = null) {
                     const childData = doc.data();
                     if (!childData) return;
 
-                    let jilidRaw = childData.jilid || "Jilid PAUD";
-                    let jilidClean = jilidRaw.replace("Jilid ", ""); 
-                    let numericJilid;
-                    if (jilidClean === "PAUD") {
-                        numericJilid = 0.5;
-                    } else if (jilidClean === "Al-Quran" || jilidClean === "Al-Qur'an") {
-                        numericJilid = 6;
-                    } else {
-                        numericJilid = parseInt(jilidClean) || 0;
-                    }
+                    let jilidRaw = childData.jilid || (isMadinClass(childData.class) ? "Level 1" : "Jilid PAUD");
+                    let numericJilid = getProgressFromLevel(jilidRaw, childData.class);
                     const progress = Math.min((numericJilid / 6) * 100, 100);
-                    const displayJilid = (jilidRaw.includes("Jilid") || jilidRaw.includes("Al-Qur")) ? jilidRaw : " " + jilidRaw;
+                    const displayJilid = formatLevelLabel(jilidRaw, childData.class);
                     const avatar = childData.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg';
 
                     cardWrapper.innerHTML = `
@@ -567,6 +559,140 @@ function cekAksesKonfirmasi() {
     };
 }
 
+
+// --- HELPER KHUSUS KELAS MADIN: gunakan istilah Level, bukan Jilid ---
+function isMadinClass(className) {
+    return (className || '').toString().toUpperCase().includes('MADIN');
+}
+
+function cleanLevelNumber(value) {
+    return (value || '-')
+        .toString()
+        .replace(/Jilid\s*/i, '')
+        .replace(/Level\s*/i, '')
+        .trim();
+}
+
+function formatLevelLabel(value, className) {
+    const raw = (value || '-').toString();
+    if (isMadinClass(className)) {
+        const angka = cleanLevelNumber(raw);
+        return angka === '-' ? '-' : `Level ${angka}`;
+    }
+    if (raw.includes('Jilid') || raw.includes('Al-Qur')) return raw;
+    return raw === '-' ? '-' : `Jilid ${raw}`;
+}
+
+function getProgressFromLevel(value, className) {
+    const clean = cleanLevelNumber(value);
+    if (clean === 'PAUD') return 0.5;
+    if (clean === 'Al-Quran' || clean === "Al-Qur'an") return 6;
+    return parseInt(clean) || 0;
+}
+
+function setLevelSelectOptions(selectEl, className, selectedValue = '') {
+    if (!selectEl) return;
+    const isMadin = isMadinClass(className);
+    const options = isMadin
+        ? [1, 2, 3, 4, 5, 6].map(n => ({ value: `Level ${n}`, label: `Level ${n}` }))
+        : [
+            { value: 'Jilid PAUD', label: 'PAUD' },
+            { value: 'Jilid 1', label: 'Jilid 1' },
+            { value: 'Jilid 2', label: 'Jilid 2' },
+            { value: 'Jilid 3', label: 'Jilid 3' },
+            { value: 'Jilid 4', label: 'Jilid 4' },
+            { value: 'Jilid 5', label: 'Jilid 5' },
+            { value: 'Jilid 6', label: 'Jilid 6' },
+            { value: "Al-Qur'an", label: "Al-Qur'an" }
+        ];
+
+    selectEl.innerHTML = options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
+
+    if (selectedValue) {
+        const normalizedValue = isMadin && !selectedValue.toString().includes('Level')
+            ? `Level ${cleanLevelNumber(selectedValue)}`
+            : selectedValue;
+        selectEl.value = normalizedValue;
+    }
+}
+
+window.updateStdJilidOptions = function() {
+    const classSelect = document.getElementById('studentClass');
+    const levelSelect = document.getElementById('stdJilid');
+    const levelLabel = document.getElementById('stdJilidLabel');
+    const selectedClass = classSelect ? classSelect.value : '';
+
+    if (levelLabel) levelLabel.innerText = isMadinClass(selectedClass) ? 'Level' : 'Jilid';
+    setLevelSelectOptions(levelSelect, selectedClass);
+};
+
+
+// --- PENGAMAN UI MADIN & DARK MODE ---
+// Fungsi ini membuat update tetap aman meskipun index.html kakak belum sempat diganti.
+function ensureMadinUiSupport() {
+    // 1. Pastikan pilihan MADIN ada di filter kelas dan modal tambah santri
+    ['filterClass', 'studentClass'].forEach(selectId => {
+        const selectEl = document.getElementById(selectId);
+        if (selectEl && !Array.from(selectEl.options).some(opt => opt.value === 'MADIN')) {
+            const opt = document.createElement('option');
+            opt.value = 'MADIN';
+            opt.textContent = 'MADIN';
+            selectEl.appendChild(opt);
+        }
+    });
+
+    // 2. Pastikan dropdown Level/Jilid berubah otomatis saat kelas diganti
+    const studentClassSelect = document.getElementById('studentClass');
+    if (studentClassSelect && !studentClassSelect.dataset.madinListenerAttached) {
+        studentClassSelect.addEventListener('change', () => {
+            if (typeof updateStdJilidOptions === 'function') updateStdJilidOptions();
+        });
+        studentClassSelect.dataset.madinListenerAttached = 'true';
+    }
+
+    // 3. Pastikan area Filter Status Infaq punya ID dan label class untuk dark mode
+    let filterBox = document.getElementById('infaqFilterBox');
+    if (!filterBox) {
+        filterBox = Array.from(document.querySelectorAll('div')).find(div => {
+            return div.textContent && div.textContent.includes('Filter Status Infaq') && div.querySelector('#btn-filter-all');
+        });
+        if (filterBox) filterBox.id = 'infaqFilterBox';
+    }
+    if (filterBox) {
+        const label = filterBox.querySelector('span');
+        if (label) label.classList.add('filter-infaq-label');
+    }
+
+    // 4. Inject CSS dark mode khusus filter infaq jika belum ada di HTML
+    if (!document.getElementById('infaq-filter-darkmode-style')) {
+        const style = document.createElement('style');
+        style.id = 'infaq-filter-darkmode-style';
+        style.textContent = `
+            body.dark-mode #infaqFilterBox {
+                background-color: #1f2937 !important;
+                border-color: #374151 !important;
+                box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            }
+            body.dark-mode #infaqFilterBox .filter-infaq-label {
+                color: #e5e7eb !important;
+            }
+            body.dark-mode #infaqFilterBox .btn-outline-success {
+                color: #86efac !important;
+                border-color: #22c55e !important;
+                background-color: transparent !important;
+            }
+            body.dark-mode #infaqFilterBox .btn-outline-danger {
+                color: #fca5a5 !important;
+                border-color: #ef4444 !important;
+                background-color: transparent !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    if (typeof updateStdJilidOptions === 'function') updateStdJilidOptions();
+}
+
 // --- FITUR ADMIN (USTADZAH) ---
 
 /// 1. Simpan Data Santri (Create/Update)
@@ -593,6 +719,8 @@ async function saveStudent() {
         sClass = document.getElementById('studentClass').value;
         if (sClass === "TK-SD (Sunan Giri)") {
             teacher = "Ustadzah Salwa";
+        } else if (sClass === "MADIN") {
+            teacher = "Ustadzah Fika";
         } else {
             teacher = "Ustadzah Fika";
         }
@@ -908,9 +1036,9 @@ async function openDetail(id) {
     const doc = await db.collection('students').doc(id).get();
     const data = doc.data();
     const jilidSelect = document.getElementById('studentLevel');
-if (jilidSelect && data.jilid) {
-    jilidSelect.value = data.jilid; 
-}
+    const levelLabel = document.getElementById('studentLevelLabel');
+    if (levelLabel) levelLabel.innerText = isMadinClass(data.class) ? 'Level Santri' : 'Jilid Santri';
+    setLevelSelectOptions(jilidSelect, data.class, data.jilid);
     
     document.getElementById('gradeStudentId').value = id;
     document.getElementById('gradeNotes').value = data.notes || '';
@@ -979,9 +1107,11 @@ if (jilidSelect && data.jilid) {
     <h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
 `;
 
-    let subjects = data.class.includes("Pra-TK") 
-        ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
-        : ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
+    let subjects = isMadinClass(data.class)
+        ? ["Level", "Fiqih", "Aqidah Akhlak", "SKI", "Bahasa Arab", "Qurdis"]
+        : data.class.includes("Pra-TK") 
+            ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
+            : ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
 
     const savedGrades = data.grades || {};
 
@@ -1081,7 +1211,7 @@ async function saveGrades() {
         });
         
         // Menampilkan notifikasi sukses menggunakan SweetAlert
-        Swal.fire("Berhasil", "Nilai, Jilid, Absensi, dan Email Wali berhasil disimpan!", "success");
+        Swal.fire("Berhasil", "Nilai, Level/Jilid, Absensi, dan Email Wali berhasil disimpan!", "success");
         
         // Menutup modal setelah data berhasil disimpan
         const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
@@ -1243,9 +1373,8 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
             if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
 
-            let teksJilid = (data.jilid || "-").toString().replace("Jilid ", "");
             if (document.getElementById('childJilidDisplay')) {
-                document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
+                document.getElementById('childJilidDisplay').innerText = formatLevelLabel(data.jilid, data.class);
             }
 
             // --- B. Sinkronisasi Nilai, Absensi, & TTD ---
@@ -2811,8 +2940,12 @@ function renderReportCard(studentId, data) {
     const kelasAnak = (data.class || "");
     let subjects = [];
 
+    // Jika kelas MADIN, gunakan istilah Level dan materi MADIN
+    if (isMadinClass(kelasAnak)) {
+        subjects = ["Level", "Fiqih", "Aqidah Akhlak", "SKI", "Bahasa Arab", "Qurdis"];
+    }
     // Jika kelas mengandung kata "Pra-TK", tampilkan 3 materi ini
-    if (kelasAnak.includes("Pra-TK")) {
+    else if (kelasAnak.includes("Pra-TK")) {
         subjects = ["Jilid", "Akidah Akhlak", "Kitabaty"];
     } 
     // Jika selain Pra-TK (TK-SD), tampilkan 6 materi lengkap
@@ -2983,8 +3116,7 @@ function updateBerandaData(studentId) {
         if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
         if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
         
-        let teksJilid = (data.jilid || "-").toString().replace("Jilid ", "");
-        if (document.getElementById('childJilidDisplay')) document.getElementById('childJilidDisplay').innerText = "Jilid " + teksJilid;
+        if (document.getElementById('childJilidDisplay')) document.getElementById('childJilidDisplay').innerText = formatLevelLabel(data.jilid, data.class);
 
         // --- B. Logika Bulan & Infaq (Sistem Cut-Off Tgl 25) ---
         const tgl = new Date();
@@ -3264,8 +3396,8 @@ async function cetakPDFRapor(id, btnElement) {
                         <td style="padding: 4px;">: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
                     </tr>
                     <tr>
-                        <td style="font-weight: bold; padding: 4px;">Jilid</td>
-                        <td colspan="3" style="padding: 4px;">: ${data.jilid ? "Jilid " + data.jilid.toString().replace("Jilid ", "") : "-"}</td>
+                        <td style="font-weight: bold; padding: 4px;">${isMadinClass(data.class) ? "Level" : "Jilid"}</td>
+                        <td colspan="3" style="padding: 4px;">: ${formatLevelLabel(data.jilid, data.class)}</td>
                     </tr>
                 </table>
 
@@ -3513,3 +3645,16 @@ async function cekDanResetInfaqBulanan() {
 // Panggil fungsi reset otomatis setiap kali halaman dimuat
 // Fungsi ini aman dipanggil berulang karena sudah ada pengecekan kunci per bulan
 cekDanResetInfaqBulanan();
+
+// Sinkronkan dropdown Jilid/Level dan UI MADIN saat halaman/modal tambah santri dibuka
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof ensureMadinUiSupport === 'function') ensureMadinUiSupport();
+
+    const addStudentModal = document.getElementById('addStudentModal');
+    if (addStudentModal) {
+        addStudentModal.addEventListener('shown.bs.modal', () => {
+            if (typeof ensureMadinUiSupport === 'function') ensureMadinUiSupport();
+            if (typeof updateStdJilidOptions === 'function') updateStdJilidOptions();
+        });
+    }
+});
