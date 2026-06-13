@@ -3658,3 +3658,77 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+
+// --- FIX DINAMIS MADIN: dropdown Jilid berubah menjadi Level 1-6 saat kelas MADIN dipilih ---
+(function () {
+    function isMadinValue(value) {
+        return (value || '').toString().toUpperCase().includes('MADIN');
+    }
+
+    window.forceMadinLevelOptions = function () {
+        const classSelect = document.getElementById('studentClass');
+        const levelLabel = document.getElementById('stdJilidLabel');
+        const levelSelect = document.getElementById('stdJilid');
+
+        if (!classSelect || !levelSelect) return;
+
+        const selectedClass = classSelect.value || '';
+        const isMadin = isMadinValue(selectedClass);
+
+        if (levelLabel) {
+            levelLabel.textContent = isMadin ? 'Level' : 'Jilid';
+        }
+
+        const currentValue = levelSelect.value || '';
+
+        if (isMadin) {
+            levelSelect.innerHTML = `
+                <option value="Level 1">Level 1</option>
+                <option value="Level 2">Level 2</option>
+                <option value="Level 3">Level 3</option>
+                <option value="Level 4">Level 4</option>
+                <option value="Level 5">Level 5</option>
+                <option value="Level 6">Level 6</option>
+            `;
+
+            // Jika sebelumnya sudah tersimpan Level/Jilid angka, pertahankan angkanya.
+            const angka = (currentValue.match(/[1-6]/) || [])[0];
+            levelSelect.value = angka ? `Level ${angka}` : 'Level 1';
+        } else {
+            levelSelect.innerHTML = `
+                <option value="Jilid PAUD">PAUD</option>
+                <option value="Jilid 1">1</option>
+                <option value="Jilid 2">2</option>
+                <option value="Jilid 3">3</option>
+                <option value="Jilid 4">4</option>
+                <option value="Jilid 5">5</option>
+                <option value="Jilid 6">6</option>
+                <option value="Al-Qur'an">Al-Qur'an</option>
+            `;
+
+            if (currentValue && !currentValue.toString().includes('Level')) {
+                levelSelect.value = currentValue;
+            } else {
+                levelSelect.value = 'Jilid PAUD';
+            }
+        }
+    };
+
+    function attachMadinLevelListener() {
+        const classSelect = document.getElementById('studentClass');
+        if (classSelect && !classSelect.dataset.forceMadinListener) {
+            classSelect.addEventListener('change', window.forceMadinLevelOptions);
+            classSelect.dataset.forceMadinListener = 'true';
+        }
+        window.forceMadinLevelOptions();
+    }
+
+    document.addEventListener('DOMContentLoaded', attachMadinLevelListener);
+
+    document.addEventListener('shown.bs.modal', function (event) {
+        if (event.target && event.target.id === 'addStudentModal') {
+            attachMadinLevelListener();
+        }
+    });
+})();
