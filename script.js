@@ -1069,53 +1069,51 @@ async function openDetail(id) {
 
     // ISI DATA (Harus SETELAH innerHTML di atas agar tidak tertimpa)
     document.getElementById('gradeNotes').value = data.notes || "";
+    // --- TAMBAHKAN BLOK INI SEBELUM formContainer.innerHTML ---
+    let classHtml = `<small class="text-muted fw-bold d-block">${data.class}</small>`;
+    
+    // Jika Superadmin, ubah teks kelas menjadi Dropdown Select
+    if (currentRole === 'superadmin') {
+        classHtml = `
+            <select id="updateStudentClass" class="form-select form-select-sm mt-1 mb-1 shadow-sm border-success" 
+                    style="max-width: 200px; font-size: 0.75rem; font-weight: bold;" 
+                    onchange="changeClassDynamically('${id}', this.value, '${data.class}')">
+                <option value="Pra-TK (Sunan Bonang)" ${data.class === 'Pra-TK (Sunan Bonang)' ? 'selected' : ''}>Pra-TK (Sunan Bonang)</option>
+                <option value="TK-SD (Sunan Giri)" ${data.class === 'TK-SD (Sunan Giri)' ? 'selected' : ''}>TK-SD (Sunan Giri)</option>
+                <option value="TK-SD (Sunan Muria)" ${data.class === 'TK-SD (Sunan Muria)' ? 'selected' : ''}>TK-SD (Sunan Muria)</option>
+                <option value="MADIN" ${data.class === 'MADIN' ? 'selected' : ''}>MADIN</option>
+            </select>
+        `;
+    }
+
+    // --- TIMPA BAGIAN formContainer.innerHTML DENGAN INI ---
     formContainer.innerHTML = `
     <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
         <div class="position-relative">
-    <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
-         class="rounded-circle border border-2 border-white shadow-sm"
-         style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' || currentRole === 'admin' ? 'pointer' : 'default'};"
-         onclick="${currentRole === 'superadmin' || currentRole === 'admin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
-    
-    ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
-</div>
-        <div class="ms-3">
+            <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
+                 class="rounded-circle border border-2 border-white shadow-sm"
+                 style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' || currentRole === 'admin' ? 'pointer' : 'default'};"
+                 onclick="${currentRole === 'superadmin' || currentRole === 'admin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
+            
+            ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
+        </div>
+        <div class="ms-3 w-100">
             <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
-            <small class="text-muted fw-bold">${data.class}</small>
+            ${classHtml}
             <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
         </div>
     </div>
-
+    
     <div class="mb-4 p-3 bg-light rounded border">
         <label class="form-label small fw-bold text-success"><i class="fas fa-envelope me-1"></i> Email Login Wali Santri</label>
         <input type="email" id="updateParentEmail" class="form-control form-control-sm" 
-               value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
+                value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
         <div class="form-text" style="font-size: 0.65rem;">Ganti email asli jika sudah ada</div>
     </div>
 
     <hr>
     
     <h6 class="fw-bold mb-3">Daftar Kehadiran Santri:</h6>
-    <div class="row g-2 mb-4">
-        <div class="col-4 text-center">
-            <label class="form-label small fw-bold text-danger">Sakit</label>
-            <input type="number" id="absensiSakit" class="form-control form-control-sm text-center" 
-                   value="${data.absensiSakit || 0}" min="0">
-        </div>
-        <div class="col-4 text-center">
-            <label class="form-label small fw-bold text-warning">Izin</label>
-            <input type="number" id="absensiIzin" class="form-control form-control-sm text-center" 
-                   value="${data.absensiIzin || 0}" min="0">
-        </div>
-        <div class="col-4 text-center">
-            <label class="form-label small fw-bold text-secondary">Lain-lain</label>
-            <input type="number" id="absensiLain" class="form-control form-control-sm text-center" 
-                   value="${data.absensiLain || 0}" min="0">
-        </div>
-    </div>
-
-    <hr>
-    <h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
 `;
 
     let subjects = isMadinClass(data.class)
@@ -1183,7 +1181,62 @@ async function openDetail(id) {
             ${billingBtn}
         `;
     }
-}  
+}
+
+window.changeClassDynamically = async function(studentId, newClass, oldClass) {
+    if (newClass === oldClass) return; // Jika tidak ada perubahan, abaikan
+
+    const result = await Swal.fire({
+        title: 'Ubah Kelas Santri?',
+        html: `Anda akan memindahkan santri dari kelas <b>${oldClass}</b> ke <b>${newClass}</b>.<br><br><span class="text-danger">Peringatan: Mata pelajaran akan otomatis disesuaikan dan nilai rapor sebelumnya akan direset.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Ubah Kelas',
+        cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+        // Tentukan penanggung jawab guru berdasarkan kelas baru
+        let newTeacher = "Ustadzah Fika"; 
+        if (newClass.includes("Sunan Bonang") || newClass.includes("Sunan Giri")) {
+            newTeacher = "Ustadzah Salwa";
+        } else if (newClass.includes("Sunan Muria")) {
+            newTeacher = "Ustadzah Valyne";
+        }
+
+        const loader = document.getElementById('loading');
+        if(loader) loader.classList.remove('d-none');
+
+        try {
+            await db.collection('students').doc(studentId).update({
+                class: newClass,
+                teacher: newTeacher,
+                jilid: isMadinClass(newClass) ? 'Level 1' : 'Jilid PAUD', 
+                grades: {} // Reset list mapel/nilai karena beda jenjang
+            });
+            
+            // Render ulang isi detail agar Form Mapel berubah otomatis
+            await openDetail(studentId);
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Kelas Diperbarui',
+                text: 'Data santri dan mata pelajaran telah disesuaikan.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+        } catch(e) {
+            if(loader) loader.classList.add('d-none');
+            Swal.fire('Error', 'Gagal memindahkan kelas: ' + e.message, 'error');
+        }
+    } else {
+        // Jika dibatalkan, kembalikan posisi select ke opsi semula
+        document.getElementById('updateStudentClass').value = oldClass;
+    }
+};
 // 4. Simpan Nilai
 async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
