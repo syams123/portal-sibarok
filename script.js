@@ -711,18 +711,30 @@ async function saveStudent() {
     let teacher = "";
 
     if (currentRole === 'admin') {
-        // Jika login sebagai Ustadzah Salwa, paksa nilai ke Sunan Giri
-        sClass = window.userClass; // Pastikan ini berisi "TK-SD (Sunan Giri)"
-        teacher = "Ustadzah Salwa";
-    } else {
-        // Jika Superadmin, ambil dari dropdown yang terlihat
-        sClass = document.getElementById('studentClass').value;
-        if (sClass === "TK-SD (Sunan Giri)") {
+        // Khusus ADMIN BIASA (Ustadzah Salwa & Ustadzah Valyne)
+        // Kelas dikunci otomatis dari profil mereka, tidak bisa pilih dari dropdown
+        sClass = window.userClass; 
+        
+        if (sClass.includes("Sunan Bonang") || sClass.includes("Sunan Giri")) {
             teacher = "Ustadzah Salwa";
-        } else if (sClass === "MADIN") {
-            teacher = "Ustadzah Fika";
+        } else if (sClass.includes("Sunan Muria")) {
+            teacher = "Ustadzah Valyne";
         } else {
-            teacher = "Ustadzah Fika";
+            teacher = window.userName || "Pengajar"; 
+        }
+
+    } else {
+        // Khusus SUPERADMIN (Hanya Ustadzah Fika)
+        // Mengambil nilai kelas dari dropdown yang dipilih Ustadzah Fika
+        sClass = document.getElementById('studentClass').value;
+        
+        if (sClass.includes("Sunan Bonang") || sClass.includes("Sunan Giri")) {
+            teacher = "Ustadzah Salwa";
+        } else if (sClass.includes("Sunan Muria")) {
+            teacher = "Ustadzah Valyne";
+        } else {
+            // Jika Ustadzah Fika menginput kelas Sunan Ampel, MADIN, atau Sunan Kalijaga, otomatis namanya sendiri
+            teacher = "Ustadzah Fika"; 
         }
     }
 
