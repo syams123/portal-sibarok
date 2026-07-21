@@ -1439,14 +1439,19 @@ if (data.notes) {
                     </div>`;
 
                 // 3. Logika Wali Kelas
-                let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
-                let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
-                const kelasSantri = data.class || "";
+                let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; // Ustadzah Fika
+        let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
+        
+        // Sesuaikan variabel penampung kelas agar fleksibel di 3 fungsi berbeda
+        const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
 
-                if (kelasSantri.includes("Sunan Giri")) {
-                    namaWaliKelas = "Salwa Kamilatuz Zakiyah";
-                    linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
-                }
+        if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
+            namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+            linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
+        } else if (kelasAktif.includes("Sunan Muria")) {
+            namaWaliKelas = "Meylan Gabby Ovalyne";
+            linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png"; // INFO: Jangan lupa ganti URL ini dengan link Imgur TTD asli Ustadzah Valyne jika sudah ada
+        }
 
                 const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -2999,13 +3004,19 @@ function renderReportCard(studentId, data) {
         </div>`;
 
     // 4. LOGIKA WALI KELAS (Otomatis ganti jika kelas berbeda)
-    let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; 
-    let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
+    let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; // Ustadzah Fika
+        let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
+        
+        // Sesuaikan variabel penampung kelas agar fleksibel di 3 fungsi berbeda
+        const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
 
-    if (kelasAnak.toLowerCase().includes("sunan giri")) {
-        namaWaliKelas = "Salwa Kamilatuz Zakiyah";
-        linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
-    }
+        if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
+            namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+            linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
+        } else if (kelasAktif.includes("Sunan Muria")) {
+            namaWaliKelas = "Meylan Gabby Ovalyne";
+            linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png"; // INFO: Jangan lupa ganti URL ini dengan link Imgur TTD asli Ustadzah Valyne jika sudah ada
+        }
 
     const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -3317,13 +3328,18 @@ async function cetakPDFRapor(id, btnElement) {
         const tglSekarang = tanggalSekarangObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
         // 4. Siapkan variabel guru/wali kelas
-        let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
-        let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png";
-        const kelasSantri = data.class || "";
+        let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; // Ustadzah Fika
+        let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
+        
+        // Sesuaikan variabel penampung kelas agar fleksibel di 3 fungsi berbeda
+        const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
 
-        if (kelasSantri.includes("Sunan Giri")) {
+        if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
             namaWaliKelas = "Salwa Kamilatuz Zakiyah";
-            linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png";
+            linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
+        } else if (kelasAktif.includes("Sunan Muria")) {
+            namaWaliKelas = "Meylan Gabby Ovalyne";
+            linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png"; // INFO: Jangan lupa ganti URL ini dengan link Imgur TTD asli Ustadzah Valyne jika sudah ada
         }
 
         // 5. Mulai rakit tabel Nilai
