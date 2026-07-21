@@ -1076,10 +1076,12 @@ async function openDetail(id) {
     if (currentRole === 'superadmin') {
         classHtml = `
             <select id="updateStudentClass" class="form-select form-select-sm mt-1 mb-1 shadow-sm border-success" 
-                    style="max-width: 200px; font-size: 0.75rem; font-weight: bold;" 
+                    style="max-width: 220px; font-size: 0.75rem; font-weight: bold;" 
                     onchange="changeClassDynamically('${id}', this.value, '${data.class}')">
+                <option value="Pra-TK (Sunan Ampel)" ${data.class === 'Pra-TK (Sunan Ampel)' ? 'selected' : ''}>Pra-TK (Sunan Ampel)</option>
                 <option value="Pra-TK (Sunan Bonang)" ${data.class === 'Pra-TK (Sunan Bonang)' ? 'selected' : ''}>Pra-TK (Sunan Bonang)</option>
                 <option value="TK-SD (Sunan Giri)" ${data.class === 'TK-SD (Sunan Giri)' ? 'selected' : ''}>TK-SD (Sunan Giri)</option>
+                <option value="TK-SD (Sunan Kalijaga)" ${data.class === 'TK-SD (Sunan Kalijaga)' ? 'selected' : ''}>TK-SD (Sunan Kalijaga)</option>
                 <option value="TK-SD (Sunan Muria)" ${data.class === 'TK-SD (Sunan Muria)' ? 'selected' : ''}>TK-SD (Sunan Muria)</option>
                 <option value="MADIN" ${data.class === 'MADIN' ? 'selected' : ''}>MADIN</option>
             </select>
@@ -1117,7 +1119,7 @@ async function openDetail(id) {
 `;
 
     let subjects = isMadinClass(data.class)
-        ? ["Level", "Fiqih", "Aqidah Akhlak", "SKI", "Bahasa Arab", "Qurdis"]
+        ? ["Qur'an", "Jilid", "Kitabaty", "Ilmu Tajwid", "Hadits", "Fiqih", "Tauhid"]
         : data.class.includes("Pra-TK") 
             ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
             : ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
@@ -1198,11 +1200,12 @@ window.changeClassDynamically = async function(studentId, newClass, oldClass) {
     });
 
     if (result.isConfirmed) {
-        // Tentukan penanggung jawab guru berdasarkan kelas baru
-        let newTeacher = "Ustadzah Fika"; 
-        if (newClass.includes("Sunan Bonang") || newClass.includes("Sunan Giri")) {
+        // --- LOGIKA PENENTUAN WALI KELAS SESUAI RINCIAN ---
+        let newTeacher = "Ustadzah Fika"; // Default (Ampel, Kalijaga, MADIN)
+        
+        if (newClass === "Pra-TK (Sunan Bonang)" || newClass === "TK-SD (Sunan Giri)") {
             newTeacher = "Ustadzah Salwa";
-        } else if (newClass.includes("Sunan Muria")) {
+        } else if (newClass === "TK-SD (Sunan Muria)") {
             newTeacher = "Ustadzah Valyne";
         }
 
@@ -3011,14 +3014,10 @@ function renderReportCard(studentId, data) {
 
     // Jika kelas MADIN, gunakan istilah Level dan materi MADIN
     if (isMadinClass(kelasAnak)) {
-        subjects = ["Level", "Fiqih", "Aqidah Akhlak", "SKI", "Bahasa Arab", "Qurdis"];
-    }
-    // Jika kelas mengandung kata "Pra-TK", tampilkan 3 materi ini
-    else if (kelasAnak.includes("Pra-TK")) {
+        subjects = ["Qur'an", "Jilid", "Kitabaty", "Ilmu Tajwid", "Hadits", "Fiqih", "Tauhid"];
+    } else if (kelasAnak.includes("Pra-TK")) {
         subjects = ["Jilid", "Akidah Akhlak", "Kitabaty"];
-    } 
-    // Jika selain Pra-TK (TK-SD), tampilkan 6 materi lengkap
-    else {
+    } else {
         subjects = ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
     }
 
