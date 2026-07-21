@@ -110,12 +110,20 @@ let currentView = 'grid';
                 statusSebelumnya = userData.isApproved;
 
                 if (currentRole === 'admin') {
-                    window.userClass = userData.class || "TK-SD (Sunan Giri)";
-                    const filterArea = document.getElementById('filterClassArea');
+                    // Setel otomatis kelas pegangan masing-masing ustadzah untuk keperluan input santri baru
+                    let namaAdmin = userData.nama || userData.name || "";
+                    if (namaAdmin.includes("Valyne") || namaAdmin.includes("Meylan")) {
+                        window.userClass = "TK-SD (Sunan Muria)";
+                    } else if (namaAdmin.includes("Salwa")) {
+                        window.userClass = "TK-SD (Sunan Giri)";
+                    } else {
+                        window.userClass = userData.class || "TK-SD (Sunan Giri)";
+                    }
+
                     const classInputContainer = document.getElementById('classInputContainer');
                     const studentClassInput = document.getElementById('studentClass');
 
-                    if (filterArea) filterArea.classList.add('d-none');
+                    // Sembunyikan pilihan kelas di form agar Admin tidak salah input kelas lain
                     if (classInputContainer) classInputContainer.classList.add('d-none');
                     if (studentClassInput) studentClassInput.value = window.userClass;
                 }
@@ -244,8 +252,8 @@ async function showPage(page) {
         // Munculkan tombol plus kembali
         if (floatingBtn) floatingBtn.classList.add('d-none');
 
-        // Logika Filter: Hanya muncul jika Superadmin
-        if (currentRole === 'superadmin') {
+        // Logika Filter: Sekarang Admin dan Superadmin bisa lihat fitur pencarian kelas
+        if (currentRole === 'superadmin' || currentRole === 'admin') {
             if (filterClassArea) filterClassArea.style.setProperty('display', 'block', 'important');
         } else {
             if (filterClassArea) filterClassArea.style.setProperty('display', 'none', 'important');
@@ -808,23 +816,14 @@ function renderStudents() {
     let query = db.collection('students');
 
     // 2. LOGIKA FILTER OTOMATIS BERDASARKAN ROLE
-    if (currentRole === 'admin') {
-        // Jika Admin (Ustadzah Salwa), paksa ke kelasnya sendiri
-        const classToFilter = window.userClass || "TK-SD (Sunan Giri)";
-        query = query.where('class', '==', classToFilter);
-        
-        // Sembunyikan area filter dropdown agar tidak bisa intip kelas lain
-        const filterArea = document.getElementById('filterClassArea');
-        if (filterArea) filterArea.classList.add('d-none');
-    } 
-    else if (currentRole === 'superadmin') {
-        // Jika Superadmin (Ustadzah Fika), gunakan filter dropdown
-        if (filter !== 'all') {
-            query = query.where('class', '==', filter);
-        }
-        // Tampilkan kembali area filter
-        const filterArea = document.getElementById('filterClassArea');
-        if (filterArea) filterArea.classList.remove('d-none');
+    // Sekarang Admin dan Superadmin menggunakan filter yang sama untuk melihat semua santri
+    if (filter !== 'all') {
+        query = query.where('class', '==', filter);
+    }
+    
+    // Pastikan area filter tampil di aplikasi
+    const filterArea = document.getElementById('filterClassArea');
+    if (filterArea) filterArea.classList.remove('d-none');
     }
 
     // 3. PENGURUTAN (Wajib buat Index di Firebase jika menggunakan where + orderBy)
