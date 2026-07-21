@@ -824,7 +824,7 @@ function renderStudents() {
     // Pastikan area filter tampil di aplikasi
     const filterArea = document.getElementById('filterClassArea');
     if (filterArea) filterArea.classList.remove('d-none');
-    }
+    
 
     // 3. PENGURUTAN (Wajib buat Index di Firebase jika menggunakan where + orderBy)
     query = query.orderBy('name', 'asc');
