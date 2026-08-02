@@ -3108,7 +3108,6 @@ function renderReportCard(studentId, data) {
 
     if (typeof checkSignatureStatus === 'function') {
         checkSignatureStatus(studentId, data);
-    }
 }
     
     const btnDownload = document.getElementById('btnDownloadPDF');
