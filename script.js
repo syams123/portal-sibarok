@@ -3118,6 +3118,7 @@ function renderReportCard(studentId, data) {
             btnDownload.style.display = 'none';
         }
     }
+}
 
 function updateBerandaData(studentId) {
     const loader = document.getElementById('loading');
