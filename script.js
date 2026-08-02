@@ -2905,16 +2905,33 @@ function displayGreeting(name) {
     let roleGreeting = "";
     
     if (currentRole === 'superadmin' || currentRole === 'admin') {
-        // Logika mengambil Gelar + Nama Depan saja
-        if (name) {
-            const parts = name.split(' ');
-            // Jika ada lebih dari satu kata (misal: "Ustadzah Salwa..."), ambil 2 kata pertama
-            roleGreeting = parts.length > 1 ? `${parts[0]} ${parts[1]}` : name;
+        const cleanName = (name || "").trim();
+
+        // 1. PEMETAAN KHUSUS NAMA PANGGULAN REAL
+        if (/Hafi|Rofi'ah|Fika/i.test(cleanName)) {
+            roleGreeting = "Ustadzah Fika";
+        } else if (/Salwa/i.test(cleanName)) {
+            roleGreeting = "Ustadzah Salwa";
+        } else if (/Meylan|Gabby|Ovalyne|Valyn/i.test(cleanName)) {
+            roleGreeting = "Ustadzah Valyn";
+        } 
+        // 2. OTOMATIS UNTUK USTADZ / USTADZAH BARU
+        else if (cleanName) {
+            const parts = cleanName.split(' ');
+            
+            // Jika nama sudah berawalan Ustadz/Ustadzah (misal: "Ustadzah Anisa Fitri")
+            if (/^Ustadz|^Ustadzah/i.test(parts[0])) {
+                // Ambil "Ustadzah" + nama depan (panggilan pertama) -> "Ustadzah Anisa"
+                roleGreeting = parts.length > 1 ? `${parts[0]} ${parts[1]}` : parts[0];
+            } else {
+                // Jika hanya nama murni (misal: "Anisa Fitri"), otomatis tambah Ustadzah
+                roleGreeting = `Ustadzah ${parts[0]}`;
+            }
         } else {
             roleGreeting = "Pengajar";
         }
     } else if (currentRole === 'parent') {
-        // Untuk wali, cukup nama depan saja
+        // Untuk wali santri, cukup nama depan saja
         roleGreeting = name ? name.split(' ')[0] : "Wali Santri";
     } else {
         roleGreeting = name || "User";
