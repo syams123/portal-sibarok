@@ -602,7 +602,15 @@ function setLevelSelectOptions(selectEl, className, selectedValue = '') {
     if (!selectEl) return;
     const isMadin = isMadinClass(className);
     const options = isMadin
-        ? [1, 2, 3, 4, 5, 6].map(n => ({ value: `Level ${n}`, label: `Level ${n}` }))
+        ? [
+            { value: 'Level 1', label: 'Level 1' },
+            { value: 'Level 2', label: 'Level 2' },
+            { value: 'Level 3', label: 'Level 3' },
+            { value: 'Level 4', label: 'Level 4' },
+            { value: 'Level 5', label: 'Level 5' },
+            { value: 'Level 6', label: 'Level 6' },
+            { value: "Level Al-Qur'an", label: "Level Al-Qur'an" } // 👈 TAMBAHAN BARU
+          ]
         : [
             { value: 'Jilid PAUD', label: 'PAUD' },
             { value: 'Jilid 1', label: 'Jilid 1' },
@@ -617,13 +625,9 @@ function setLevelSelectOptions(selectEl, className, selectedValue = '') {
     selectEl.innerHTML = options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
 
     if (selectedValue) {
-        const normalizedValue = isMadin && !selectedValue.toString().includes('Level')
-            ? `Level ${cleanLevelNumber(selectedValue)}`
-            : selectedValue;
-        selectEl.value = normalizedValue;
+        selectEl.value = selectedValue;
     }
 }
-
 window.updateStdJilidOptions = function() {
     const classSelect = document.getElementById('studentClass');
     const levelSelect = document.getElementById('stdJilid');
@@ -1089,33 +1093,48 @@ async function openDetail(id) {
     }
 
     // --- TIMPA BAGIAN formContainer.innerHTML DENGAN INI ---
-    formContainer.innerHTML = `
-    <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
-        <div class="position-relative">
-            <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
-                 class="rounded-circle border border-2 border-white shadow-sm"
-                 style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' || currentRole === 'admin' ? 'pointer' : 'default'};"
-                 onclick="${currentRole === 'superadmin' || currentRole === 'admin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
-            
-            ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
-        </div>
-        <div class="ms-3 w-100">
-            <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
-            ${classHtml}
-            <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
-        </div>
+formContainer.innerHTML = `
+<div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
+    <div class="position-relative">
+        <img id="detailFotoSantri" src="${data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg')}" 
+             class="rounded-circle border border-2 border-white shadow-sm"
+             style="width: 65px; height: 65px; object-fit: cover; cursor: ${currentRole === 'superadmin' || currentRole === 'admin' ? 'pointer' : 'default'};"
+             onclick="${currentRole === 'superadmin' || currentRole === 'admin' ? "document.getElementById('inputFotoSantri').click()" : ""}">
+        
+        ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
     </div>
-    
-    <div class="mb-4 p-3 bg-light rounded border">
-        <label class="form-label small fw-bold text-success"><i class="fas fa-envelope me-1"></i> Email Login Wali Santri</label>
-        <input type="email" id="updateParentEmail" class="form-control form-control-sm" 
-                value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
-        <div class="form-text" style="font-size: 0.65rem;">Ganti email asli jika sudah ada</div>
+    <div class="ms-3 w-100">
+        <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
+        ${classHtml}
+        <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
     </div>
+</div>
 
-    <hr>
-    
-    <h6 class="fw-bold mb-3">Daftar Kehadiran Santri:</h6>
+<div class="mb-3 p-3 bg-light rounded border">
+    <label class="form-label small fw-bold text-success"><i class="fas fa-envelope me-1"></i> Email Login Wali Santri</label>
+    <input type="email" id="updateParentEmail" class="form-control form-control-sm" 
+            value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
+</div>
+
+<!-- INPUT ABSENSI (Mencegah Crash saat disimpan) -->
+<h6 class="fw-bold mb-2">Daftar Kehadiran Santri:</h6>
+<div class="row g-2 mb-3">
+    <div class="col-4">
+        <label class="small text-muted">Sakit</label>
+        <input type="number" id="absensiSakit" class="form-control form-control-sm" value="${data.absensiSakit || 0}" min="0">
+    </div>
+    <div class="col-4">
+        <label class="small text-muted">Izin</label>
+        <input type="number" id="absensiIzin" class="form-control form-control-sm" value="${data.absensiIzin || 0}" min="0">
+    </div>
+    <div class="col-4">
+        <label class="small text-muted">Lain-lain</label>
+        <input type="number" id="absensiLain" class="form-control form-control-sm" value="${data.absensiLain || 0}" min="0">
+    </div>
+</div>
+
+<hr>
+<h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
 `;
 
     let subjects = isMadinClass(data.class)
@@ -1245,22 +1264,45 @@ async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
     const inputs = document.querySelectorAll('.grade-input');
     
-    // --- AMBIL DATA EMAIL WALI DARI INPUT MODAL ---
-    const parentEmail = document.getElementById('updateParentEmail').value;
+    const parentEmail = document.getElementById('updateParentEmail') ? document.getElementById('updateParentEmail').value : '';
+    const notes = document.getElementById('gradeNotes') ? document.getElementById('gradeNotes').value : '';
+    const levelValue = document.getElementById('studentLevel') ? document.getElementById('studentLevel').value : '';
     
-    const notes = document.getElementById('gradeNotes').value;
-    const levelValue = document.getElementById('studentLevel').value;
-    
-    // --- AMBIL NILAI ABSENSI DARI INPUT ---
-    // Pastikan ID input di HTML Kakak sesuai (contoh: absensiSakit, absensiIzin, absensiLain)
-    const sakit = document.getElementById('absensiSakit').value || 0;
-    const izin = document.getElementById('absensiIzin').value || 0;
-    const lain = document.getElementById('absensiLain').value || 0;
+    // --- AMBIL NILAI ABSENSI SECARA AMAN ---
+    const sakitEl = document.getElementById('absensiSakit');
+    const izinEl = document.getElementById('absensiIzin');
+    const lainEl = document.getElementById('absensiLain');
+
+    const sakit = sakitEl ? parseInt(sakitEl.value) || 0 : 0;
+    const izin = izinEl ? parseInt(izinEl.value) || 0 : 0;
+    const lain = lainEl ? parseInt(lainEl.value) || 0 : 0;
     
     let gradesObj = {};
     inputs.forEach(input => {
         gradesObj[input.dataset.subject] = input.value;
     });
+
+    try {
+        await db.collection('students').doc(id).update({
+            grades: gradesObj,
+            notes: notes,
+            jilid: levelValue,
+            parentEmail: parentEmail,
+            absensiSakit: sakit,
+            absensiIzin: izin,
+            absensiLain: lain,
+            rapor_status: 'selesai'
+        });
+        
+        Swal.fire("Berhasil", "Nilai & Level/Jilid berhasil disimpan!", "success");
+        const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
+        if (modal) modal.hide();
+        
+    } catch (error) {
+        console.error("Error saat menyimpan data: ", error);
+        Swal.fire("Gagal", "Terjadi kesalahan: " + error.message, "error");
+    }
+}
 
     // --- UPDATE DATABASE ---
     try {
