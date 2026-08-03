@@ -3092,7 +3092,7 @@ function renderReportCard(studentId, data) {
 
     const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // 6. AREA TANDA TANGAN (TANPA DUPLIKASI TOMBOL PEMBAYARAN)
+    // 6. AREA TANDA TANGAN
     contentHtml += `
     <div id="signatureWrapper" class="mt-4">
         <div class="row text-center align-items-start g-0">
@@ -3119,22 +3119,23 @@ function renderReportCard(studentId, data) {
                 <p class="small fw-bold mb-0" style="font-size: 0.6rem; text-decoration: underline;">${data.parentName || "( Nama Wali )"}</p>
             </div>
         </div>
-    </div>`;
+    </div>
+    
+    <!-- 👈 ELEMEN PENAMPUNG KANVAS TTD DITAMBAHKAN DI SINI -->
+    <div id="signatureInputArea"></div>`;
 
     reportDiv.innerHTML = contentHtml;
 
+    // Memanggil fungsi pembuat kanvas TTD jika wali santri belum tanda tangan
     if (typeof checkSignatureStatus === 'function') {
         checkSignatureStatus(studentId, data);
-}
+    }
     
     const btnDownload = document.getElementById('btnDownloadPDF');
     if (btnDownload) {
-        if (data.reportSignature) {
-            btnDownload.style.display = 'block';
-        } else {
-            btnDownload.style.display = 'none';
-        }
+        btnDownload.style.display = data.reportSignature ? 'block' : 'none';
     }
+  }
 }
 
 function updateBerandaData(studentId) {
