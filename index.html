@@ -289,27 +289,33 @@
     </div>
 </section>
 
-<nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-success d-none sticky-top">
-    <div class="container align-items-center">
+<nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-success d-none sticky-top py-2">
+    <div class="container d-flex flex-nowrap align-items-center justify-content-between">
         
-        <a class="navbar-brand d-flex align-items-center me-auto me-lg-0" href="#" style="gap: 8px; overflow: hidden; min-width: 0;">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZTUnovmOq9QQvT4Nc0AI4aJ5hA_yqjj7frwkOyyhUJP-ohR8V2YSXsueIibUipTwU-bjXsDOv-at0dFzcJ_q7-YD50Y9wBcNIE6kFJGuiq-94CCE1aEh80rHBSCIs3DXhcRKZJpyqir3HascTXnuU1fNad19VVRAM8s4RceRIzo5ySEzeHt1CmU_hubc/s1600/TPQ%20Al-Mubarok%20LOGO%20PUTIH.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; flex-shrink: 0;">
+        <!-- LOGO & JUDUL (OTOMATIS MENGECIL DI HP) -->
+        <a class="navbar-brand d-flex align-items-center me-2 text-decoration-none" href="#" style="min-width: 0; flex-shrink: 1;">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2ZTUnovmOq9QQvT4Nc0AI4aJ5hA_yqjj7frwkOyyhUJP-ohR8V2YSXsueIibUipTwU-bjXsDOv-at0dFzcJ_q7-YD50Y9wBcNIE6kFJGuiq-94CCE1aEh80rHBSCIs3DXhcRKZJpyqir3HascTXnuU1fNad19VVRAM8s4RceRIzo5ySEzeHt1CmU_hubc/s1600/TPQ%20Al-Mubarok%20LOGO%20PUTIH.png" 
+                 alt="Logo" 
+                 style="width: 34px; height: 34px; object-fit: contain; flex-shrink: 0;" class="me-2">
             
             <div class="d-flex flex-column justify-content-center" style="line-height: 1.1; min-width: 0;">
-                <span class="fw-bold text-truncate" style="font-size: clamp(0.85rem, 4vw, 1.25rem);">TPQ & MADIN Al-Mubarok</span>
-                <small style="font-size: 0.65rem; opacity: 0.85;" class="text-truncate">ARC BB03-09</small>
+                <span class="fw-bold text-truncate text-white" style="font-size: clamp(0.72rem, 3.2vw, 1.1rem);">TPQ & MADIN Al-Mubarok</span>
+                <small style="font-size: 0.6rem; opacity: 0.85;" class="text-truncate text-white-50">ARC BB03-09</small>
             </div>
         </a>
 
-        <div class="d-flex align-items-center gap-3 order-lg-3 flex-shrink-0 me-lg-5">
+        <!-- IKON NAVIGASI (KUMPUL DALAM 1 BARIS SEJAJAR) -->
+        <div class="d-flex align-items-center gap-2 gap-sm-3 order-lg-3 flex-shrink-0 ms-auto">
             
-            <div style="cursor: pointer;" onclick="toggleDarkMode()" class="d-flex align-items-center">
-                <i id="darkModeIcon" class="fas fa-moon fs-5 text-white"></i>
+            <!-- Dark Mode Icon -->
+            <div style="cursor: pointer;" onclick="toggleDarkMode()" class="d-flex align-items-center p-1">
+                <i id="darkModeIcon" class="fas fa-moon fs-6 fs-sm-5 text-white"></i>
             </div>
 
-            <div class="position-relative d-none d-flex align-items-center" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
-                <i class="fas fa-bell fs-5 text-white"></i>
-                <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.6rem; border: 1px solid #198754; padding: 0.25em 0.4em;">0</span>
+            <!-- Notification Bell -->
+            <div class="position-relative d-none d-flex align-items-center p-1" id="notifArea" style="cursor: pointer;" onclick="toggleNotification()">
+                <i class="fas fa-bell fs-6 fs-sm-5 text-white"></i>
+                <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 0.55rem; border: 1px solid #198754; padding: 0.2em 0.35em;">0</span>
                 
                 <div id="notifDropdown" class="card shadow-lg d-none" style="position: absolute; right: -10px; top: 40px; width: 280px; z-index: 2000; border-radius: 12px; overflow: hidden;">
                     <div id="notifHeader" class="card-header bg-white text-dark py-2 small fw-bold border-bottom">Pemberitahuan Baru</div>
@@ -317,11 +323,13 @@
                 </div>
             </div>
 
-            <button class="navbar-toggler border-0 shadow-none p-0 ms-1 flex-shrink-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon" style="width: 1.3rem; height: 1.3rem;"></span>
+            <!-- Hamburger Button -->
+            <button class="navbar-toggler border-0 shadow-none p-1 flex-shrink-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="width: 1.2rem; height: 1.2rem;"></span>
             </button>
         </div>
 
+        <!-- MENU DRAWER (RESPONSIF) -->
         <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
             <ul class="navbar-nav ms-auto text-end pt-3 pt-lg-0 px-3 px-lg-0 me-lg-4">
                 <li class="nav-item"><a class="nav-link nav-custom-link text-white fw-bold" href="#" onclick="showPage('home')">Beranda</a></li>
@@ -332,6 +340,7 @@
 
     </div>
 </nav>
+
     
 <div id="headerArea" class="p-3 filter-container-adaptive pb-0">
     <div class="container p-0">
