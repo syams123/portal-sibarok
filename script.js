@@ -1260,7 +1260,6 @@ window.changeClassDynamically = async function(studentId, newClass, oldClass) {
     }
 };
 // 4. Simpan Nilai
-// 4. Simpan Nilai (Versi Bersih & Tunggal)
 async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
     const inputs = document.querySelectorAll('.grade-input');
@@ -1269,7 +1268,6 @@ async function saveGrades() {
     const notes = document.getElementById('gradeNotes') ? document.getElementById('gradeNotes').value : '';
     const levelValue = document.getElementById('studentLevel') ? document.getElementById('studentLevel').value : '';
     
-    // --- AMBIL NILAI ABSENSI SECARA AMAN ---
     const sakitEl = document.getElementById('absensiSakit');
     const izinEl = document.getElementById('absensiIzin');
     const lainEl = document.getElementById('absensiLain');
@@ -2659,17 +2657,17 @@ function filterSantri() {
     });
 }
 
-// --- FUNGSI TAMBAHAN UNTUK LOGIKA TTD (UPDATE) ---
+// --- FUNGSI LOGIKA TTD (DIPERBAIKI) ---
 function checkSignatureStatus(studentId, data) {
     const inputArea = document.getElementById('signatureInputArea');
     if (!inputArea) return;
 
     if (!data.reportSignature) {
         inputArea.innerHTML = `
-            <div class="mt-4 p-2 border rounded bg-light" style="border: 1px solid #198754 !important;">
-                <p class="small fw-bold text-center mb-1" style="font-size: 11px;">Silakan Tanda Tangan di Bawah Ini:</p>
-                <div style="background: white; border: 1px dashed #ccc; border-radius: 5px;">
-                    <canvas id="signature-pad" style="width: 100%; height: 130px; touch-action: none;"></canvas>
+            <div class="mt-4 p-3 border rounded bg-light shadow-sm" style="border: 1px solid #198754 !important;">
+                <p class="small fw-bold text-center mb-1 text-success" style="font-size: 11px;">Silakan Tanda Tangan di Bawah Ini:</p>
+                <div style="background: white; border: 1px dashed #28a745; border-radius: 5px; touch-action: none;">
+                    <canvas id="signature-pad" style="width: 100%; height: 140px; display: block;"></canvas>
                 </div>
                 <div class="d-flex gap-2 mt-2">
                     <button class="btn btn-sm btn-outline-danger w-100" style="font-size: 10px;" onclick="clearSignature()">Hapus</button>
@@ -2677,12 +2675,19 @@ function checkSignatureStatus(studentId, data) {
                 </div>
             </div>`;
         
-        const canvas = document.getElementById('signature-pad');
-        if (canvas) window.signaturePad = new SignaturePad(canvas);
+        // Jeda singkat agar DOM selesai merender canvas sebelum di-inisialisasi
+        setTimeout(() => {
+            const canvas = document.getElementById('signature-pad');
+            if (canvas && typeof SignaturePad !== 'undefined') {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight || 140;
+                window.signaturePad = new SignaturePad(canvas, { penColor: 'rgb(0, 0, 0)' });
+            }
+        }, 50);
     } else {
-        inputArea.innerHTML = ''; // Hilangkan area input jika sudah TTD
+        inputArea.innerHTML = ''; 
     }
-}   
+}
 
 // Fungsi Menghapus Goresan TTD
 function clearSignature() {
