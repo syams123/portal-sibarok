@@ -1,7 +1,7 @@
 body {
     background-color: #f0f2f5;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .card-student {
@@ -92,17 +92,47 @@ body {
     }
 }
 
-/* Animasi Berkedip untuk Lonceng */
+/* --- ANIMASI PULSE LONCENG (LIGHT & DARK MODE) --- */
 .notif-pulse {
-    animation: pulse-yellow 2s infinite !important;
-    border-radius: 50% !important;
-    display: inline-block !important;
+    animation: pulseGlowLight 1.5s infinite !important;
 }
 
-@keyframes pulse-yellow {
-    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
-    70% { box-shadow: 0 0 0 15px rgba(255, 193, 7, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+@keyframes pulseGlowLight {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.8);
+    }
+    70% {
+        transform: translate(-50%, -50%) scale(1.2);
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+body.dark-mode #notifCount {
+    border: 1px solid #fbbf24 !important;
+}
+
+body.dark-mode .notif-pulse {
+    animation: pulseGlowDark 1.5s infinite !important;
+}
+
+@keyframes pulseGlowDark {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.9);
+    }
+    70% {
+        transform: translate(-50%, -50%) scale(1.25);
+        box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+    }
 }
 
 /* Spinner Custom Si Barok */
@@ -134,18 +164,18 @@ body {
 }
 
 #registerModal .modal-dialog {
-        display: flex !important;
-        align-items: center !important;
-        min-height: calc(100% - 3.5rem) !important; /* Memaksa kalkulasi tengah vertikal */
-        margin: auto !important; /* Memastikan margin kiri-kanan seimbang */
-    }
+    display: flex !important;
+    align-items: center !important;
+    min-height: calc(100% - 3.5rem) !important; /* Memaksa kalkulasi tengah vertikal */
+    margin: auto !important; /* Memastikan margin kiri-kanan seimbang */
+}
     
-    @media (max-width: 576px) {
-        #registerModal .modal-dialog {
-            min-height: calc(100% - 1rem) !important;
-            margin: 0.5rem !important;
-        }
+@media (max-width: 576px) {
+    #registerModal .modal-dialog {
+        min-height: calc(100% - 1rem) !important;
+        margin: 0.5rem !important;
     }
+}
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -155,6 +185,7 @@ body {
 #profileSection, #adminDashboard, #parentDashboard {
     animation: fadeIn 0.4s ease-in-out;
 }
+
 /* Menghindari tombol TTD meluber ke samping kolom */
 #boxSignatureArea canvas {
     width: 100% !important;
@@ -181,7 +212,7 @@ body {
     transform: none !important;
 }
 
-/* Container Utama */
+/* Container Utama Zoom Foto */
 #zoomContainer {
     display: none; 
     position: fixed; 
@@ -192,7 +223,6 @@ body {
     backdrop-filter: blur(8px); 
     justify-content: center; 
     align-items: center;
-    /* EFEK FADE DISINI */
     opacity: 0;
     transition: opacity 0.4s ease;
 }
@@ -209,7 +239,7 @@ body {
     height: 280px; 
     border-radius: 50%;  
     object-fit: cover; 
-    transform: scale(0.5); /* Mulai dari agak kecil */
+    transform: scale(0.5); 
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -221,7 +251,6 @@ body {
 
 @media (max-width: 576px) {
     #notifDropdown {
-        /* Menggeser agar pas di pojok kanan layar HP */
         right: -25px !important; 
         width: 260px !important;
         top: 45px !important;
@@ -234,13 +263,12 @@ body {
         margin-right: 1rem !important;
     }
     
-    /* Memastikan ikon tetap terlihat putih di navbar hijau */
     #darkModeIcon {
         vertical-align: middle;
     }
 }
 
-/* Warna standar saat Dark Mode aktif */
+/* --- DARK MODE STYLES --- */
 body.dark-mode {
     background-color: #121212 !important;
     color: #e0e0e0 !important;
@@ -262,12 +290,10 @@ body.dark-mode {
     border-color: #444 !important;
 }
 
-/* Warna placeholder (Cari nama santri...) saat Dark Mode */
 .dark-mode .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.7) !important; /* Putih agak transparan agar estetik */
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* Memastikan icon search juga ikut terang */
 .dark-mode .input-group-text i {
     color: #ffffff !important;
     opacity: 0.8;
@@ -278,86 +304,72 @@ body.dark-mode {
     color: #ffffff !important;
 }
 
-/* Mengubah background dropdown agar tidak putih mencolok */
 .dark-mode select, 
 .dark-mode .form-select {
-    background-color: #2b2b2b !important; /* Warna abu gelap seperti input cari */
-    color: #ffffff !important; /* Teks putih */
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
     border-color: #444 !important;
 }
 
-/* Memastikan ikon panah dropdown di Bootstrap tetap terlihat putih */
 .dark-mode .form-select {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
 }
 
-/* Mengubah semua tombol putih menjadi gelap saat Dark Mode */
 .dark-mode .btn-light, 
 .dark-mode .btn-outline-secondary,
 .dark-mode .list-group-item {
-    background-color: #2b2b2b !important; /* Warna abu-abu gelap */
-    color: #ffffff !important; /* Teks putih */
-    border-color: #444 !important; /* Border tipis agar tetap terlihat dimensinya */
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
 }
 
-/* Khusus untuk tombol yang statusnya masih 'putih' secara manual */
 .dark-mode [style*="background-color: white"],
 .dark-mode [style*="background-color: #fff"] {
     background-color: #2b2b2b !important;
     color: #ffffff !important;
 }
 
-/* Efek saat tombol ditekan (Hover) agar tetap terlihat interaktif */
 .dark-mode .btn-light:hover {
     background-color: #3d3d3d !important;
 }
 
-/* Menargetkan badge bg-light agar menjadi gelap */
 .dark-mode .badge.bg-light {
-    background-color: #2b2b2b !important; /* Hitam abu-abu */
-    color: #ffffff !important; /* Teks putih terang */
-    border-color: #444 !important; /* Border supaya tetap terlihat batasnya */
+    background-color: #2b2b2b !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
 }
 
-/* Mengubah text-muted (abu-abu tua) menjadi putih transparan agar terbaca */
 .dark-mode .text-muted {
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* Jika Kakak ingin teks di dalam badge "Belum Bayar" benar-benar putih bersih */
 .dark-mode .badge.text-muted {
     color: #ffffff !important;
 }
 
-/* Menghitamkan kotak Email Login Wali Santri */
 .dark-mode .bg-light.rounded.border {
-    background-color: #2b2b2b !important; /* Abu gelap konsisten */
+    background-color: #2b2b2b !important;
     border-color: #444 !important;
     color: #ffffff !important;
 }
 
-/* Memastikan label Email tetap hijau tapi terbaca */
 .dark-mode .text-success {
-    color: #2ecc71 !important; /* Hijau yang sedikit lebih terang agar kontras */
+    color: #2ecc71 !important;
 }
 
-/* Memastikan teks kecil di bawah input (Ganti email...) tetap putih transparan */
 .dark-mode .form-text {
     color: rgba(255, 255, 255, 0.6) !important;
 }
 
-/* Meratakan judul kecil (h6) Input Nilai Rapor */
 .dark-mode h6 {
     color: #ffffff !important;
 }
 
-/* Garis pemisah (hr) agar tidak terlalu putih */
 .dark-mode hr {
     border-top: 1px solid #444 !important;
     opacity: 1;
 }
 
-/* Warna kartu santri saat Dark Mode */
 .dark-mode .card-santri-dynamic {
     background: linear-gradient(135deg, #1e1e1e 0%, #142b1a 100%) !important;
 }
@@ -371,91 +383,79 @@ body.dark-mode {
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* Background Progress Bar agar tidak terlalu terang */
 .dark-mode .card-santri-dynamic .progress {
     background-color: #333 !important;
 }
 
-/* QR Code tetap background putih sedikit agar mudah di-scan */
 .dark-mode #qrcode {
     background-color: #ffffff !important;
     padding: 4px;
 }
 
-/* --- MODE TERANG (Default) --- */
+/* --- MODE TERANG (Default Kartu Santri) --- */
 .card-santri-dynamic {
     background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
 }
-.text-card-title { color: #212529 !important; } /* Hitam saat terang */
-.text-card-muted { color: #6c757d !important; } /* Abu-abu saat terang */
+.text-card-title { color: #212529 !important; }
+.text-card-muted { color: #6c757d !important; }
 .custom-progress { background-color: #e9ecef !important; }
 .qrcode-wrapper { background-color: #ffffff !important; }
 
-/* --- MODE GELAP --- */
+/* --- MODE GELAP (Kartu Santri) --- */
 .dark-mode .card-santri-dynamic {
     background: linear-gradient(135deg, #1e1e1e 0%, #142b1a 100%) !important;
 }
 .dark-mode .text-card-title { 
-    color: #ffffff !important; /* Putih saat gelap */
+    color: #ffffff !important;
 }
 .dark-mode .text-card-muted { 
-    color: rgba(255, 255, 255, 0.7) !important; /* Putih pudar saat gelap */
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 .dark-mode .custom-progress { 
     background-color: #333 !important; 
 }
 
-/* Transisi halus saat ganti warna */
-body {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Memaksa elemen di header kanan tetap horizontal di semua browser */
+/* Navbar & Nav Options */
 .order-lg-3 {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    flex-wrap: nowrap !important; /* Mencegah ikon turun ke bawah */
+    flex-wrap: nowrap !important;
 }
 
-/* Mengatur ukuran toggler agar tidak terlalu lebar di Opera */
 @media (max-width: 991.98px) {
     .navbar-toggler {
         width: 34px !important;
         height: 34px !important;
-        display: flex !important; /* Sekarang hanya flex di HP */
+        display: flex !important;
         align-items: center;
         justify-content: center;
     }
 }
 
-/* Sembunyikan paksa jika di layar Desktop (992px ke atas) */
 @media (min-width: 992px) {
     .navbar-toggler {
         display: none !important;
     }
 }
 
-/* Penyesuaian ikon agar simetris */
 #darkModeIcon, .fa-bell {
     vertical-align: middle;
 }
 
 .navbar-toggler:active,
 .navbar-toggler:focus {
-    /* Memberikan outline lembut berwarna putih agar kontras dengan bg-success */
     box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25) !important;
     border: 1px solid rgba(255, 255, 255, 0.5) !important;
     transition: box-shadow 0.2s ease-in-out;
 }
 
-/* Efek yang sama untuk ikon lonceng dan dark mode agar seragam */
 .px-2:active i, 
 #notifArea:active i {
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
 }
 
-/* TAMPILAN NORMAL (HIJAU) */
+/* Header Kepengurusan */
 .header-kepengurusan {
     background: linear-gradient(135deg, #198754 0%, #20c997 100%);
     transition: all 0.3s ease;
@@ -466,47 +466,40 @@ body {
     color: white;
 }
 
-/* TAMPILAN SAAT DARK MODE AKTIF */
 body.dark-mode .header-kepengurusan {
-    /* Warna gelap elegan untuk dark mode */
     background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 body.dark-mode .stats-badge {
     background: rgba(255, 255, 255, 0.1);
-    color: #20c997; /* Memberi aksen hijau tipis pada teks angka */
+    color: #20c997;
 }
 
-/* Pastikan card list di bawahnya juga ikut gelap jika belum */
 body.dark-mode .card {
     background-color: #1e1e1e !important;
     color: white !important;
     border: 1px solid #333 !important;
 }
 
-/* --- DARK MODE MODAL & PROFIL --- */
 body.dark-mode .modal-content {
     background-color: #121212 !important;
     color: #ffffff !important;
 }
 
 body.dark-mode .modal-header {
-    background-color: #333 !important; /* Hijau lebih gelap */
+    background-color: #333 !important;
 }
 
-/* Background form profil santri agar tidak silau */
 body.dark-mode .bg-light {
     background-color: #1e1e1e !important;
     border-color: #333 !important;
 }
 
-/* Border foto santri di dark mode */
 body.dark-mode #detailFotoSantri {
     border-color: #1e1e1e !important;
 }
 
-/* Input email dan nilai di dark mode */
 body.dark-mode .form-control, 
 body.dark-mode .form-select {
     background-color: #262626 !important;
@@ -520,7 +513,7 @@ body.dark-mode .swal2-popup {
     border: 1px solid #333 !important;
 }
 
-/* Warna Default (Terang) */
+/* Banner Status Santri */
 .status-banner-santri {
     background: linear-gradient(45deg, #2ecc71, #27ae60) !important;
 }
@@ -530,11 +523,8 @@ body.dark-mode .swal2-popup {
     border-radius: 10px;
 }
 
-/* --- FIX DARK MODE --- */
-/* Gunakan body.dark-mode di depan setiap selector */
-
 body.dark-mode .status-banner-santri {
-    background: #1b4332 !important; /* Hijau hutan gelap agar tidak silau */
+    background: #1b4332 !important;
     border: 1px solid #2d6a4f !important;
 }
 
@@ -548,17 +538,15 @@ body.dark-mode .status-banner-santri .count-banner {
 }
 
 body.dark-mode .status-banner-santri .subtitle-banner {
-    color: #b7e4c7 !important; /* Hijau sangat muda/pudar untuk teks kecil */
+    color: #b7e4c7 !important;
 }
 
-/* Styling transisi */
 .filter-container-adaptive {
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* --- FIX DARK MODE --- */
 body.dark-mode .filter-container-adaptive {
-    background-color: #121212 !important; /* Warna gelap background utama */
+    background-color: #121212 !important;
     border-bottom: 1px solid #2d2d2d !important;
 }
 
@@ -578,118 +566,90 @@ body.dark-mode .select-adaptive {
     border-color: #333 !important;
 }
 
+/* Slide Down Filter Area */
 #filterArea {
     position: fixed; 
-    top: 60px; /* Jarak dari navbar */
+    top: 60px;
     left: 0;
     width: 100%;
     z-index: 1018;
-    background-color: white; /* Wajib ada agar tidak transparan */
+    background-color: white;
     padding: 15px;
-    
-    /* DEFAULT: Sembunyi (Tarik ke atas) */
     transform: translateY(-150%); 
     opacity: 0;
     transition: all 0.4s ease-in-out;
     pointer-events: none;
 }
 
-/* KELAS PEMUNCUL: Saat user gerak */
 #filterArea.show-filter {
-    transform: translateY(0); /* Slide Down */
+    transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
-
 }
 
-/* Dark Mode Fix */
 body.dark-mode #filterArea {
     background-color: #121212 !important;
     border-bottom: 1px solid #333;
 }
-}
 
-/* Ukuran default untuk Laptop/Tablet */
+/* Nama Santri Responsif */
 .nama-santri-detail {
     font-size: 1.25rem; 
 }
 
-/* KHUSUS TAMPILAN HP (Layar di bawah 576px) */
 @media (max-width: 576px) {
     .nama-santri-detail {
-        font-size: 0.95rem !important; /* Ukuran lebih kecil untuk HP */
+        font-size: 0.95rem !important;
         line-height: 1.2;
-    }
-}
-
-/* Dark Mode tetap aman karena kita hanya mengubah ukuran font */
-body.dark-mode .nama-santri-detail {
-    color: #2ecf94 !important; /* Hijau yang lebih terang untuk Dark Mode */
-}
-
-@media (max-width: 576px) {
-    .nama-santri-detail {
         display: block;
-        max-width: 180px; /* Sesuaikan lebar layar HP */
+        max-width: 180px;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis; /* Akan muncul titik-titik (...) jika nama kepanjangan */
+        text-overflow: ellipsis;
     }
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+body.dark-mode .nama-santri-detail {
+    color: #2ecf94 !important;
 }
 
 #backToTop:hover {
     transform: scale(1.1);
-    background-color: #157347; /* Warna hijau yang lebih gelap saat hover */
+    background-color: #157347;
 }
 
-/* --- PERBAIKAN VISUAL DARK MODE (ANTI SAKIT MATA) --- */
-
+/* Badges Dark Mode */
 body.dark-mode .badge {
-    /* Memberikan sedikit transparansi agar tidak terlalu neon */
     opacity: 0.85; 
-    /* Memberikan border halus agar badge tidak terlihat "melayang" di background hitam */
     border: 1px solid rgba(255, 255, 255, 0.15);
-    /* Menghaluskan bayangan */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* 1. Badge Nilai (Biru) */
 body.dark-mode .bg-primary {
-    background-color: #0d6efd !important; /* Biru yang sedikit lebih dalam */
+    background-color: #0d6efd !important;
 }
 
-/* 2. Badge Sakit (Merah) */
 body.dark-mode .bg-danger {
     background-color: #dc3545 !important;
 }
 
-/* 3. Badge Izin (Kuning) - Paling krusial agar tidak menyilaukan */
 body.dark-mode .bg-warning {
     background-color: #ffc107 !important;
-    color: #000 !important; /* Teks tetap hitam agar kontras tinggi tetap terjaga */
+    color: #000 !important;
 }
 
-/* 4. Badge Lain-lain (Abu-abu) */
 body.dark-mode .bg-secondary {
     background-color: #6c757d !important;
 }
 
-/* 5. Baris Pemisah Rapor */
 body.dark-mode .border-bottom {
     border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* 6. Teks Nama Mapel & Label Sakit/Izin */
 body.dark-mode .grade-row span {
     color: #e9ecef !important;
 }
 
-/* 7. Header "Kehadiran Santri" agar tidak kontras putih */
 body.dark-mode .bg-secondary.bg-opacity-25 {
     background-color: rgba(255, 255, 255, 0.05) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
@@ -707,16 +667,15 @@ select.form-select:disabled {
     padding-right: 0.75rem !important;
 }
 
-/* FAB Biru (Tambah Santri) */
+/* Floating Action Button (FAB) */
 .fab-button {
     position: fixed;
-    /* 30px (bottom hijau) + 50px (tinggi hijau) + 15px (jarak antar tombol) = 95px */
     bottom: 90px; 
-    right: 15px;  /* SAMA dengan tombol hijau */
-    width: 50px;  /* SAMA dengan tombol hijau */
-    height: 50px; /* SAMA dengan tombol hijau */
+    right: 15px;  
+    width: 50px;  
+    height: 50px; 
     border-radius: 50%;
-    z-index: 1000 !important; /* SAMA agar tumpukannya konsisten */
+    z-index: 1000 !important; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -725,13 +684,11 @@ select.form-select:disabled {
     padding: 0;
 }
 
-/* Tambahan agar hover-nya seragam dengan tombol hijau */
 .fab-button:hover {
     transform: translateY(-5px);
-    background-color: #0b5ed7; /* Biru lebih pekat saat hover */
+    background-color: #0b5ed7;
 }
 
-/* Animasi Pop In */
 .fab-animate {
     animation: fabPop 0.3s ease-out;
 }
@@ -742,17 +699,16 @@ select.form-select:disabled {
 }
 
 .btn-group .btn-outline-primary {
-    border-color: #dee2e6; /* Warna border halus */
+    border-color: #dee2e6;
     color: #6c757d;
 }
 
 .btn-group .btn-outline-primary.active {
-    background-color: #0d6efd; /* Biru sesuai tombol Tambah Santri Kakak */
+    background-color: #0d6efd;
     border-color: #0d6efd;
     color: white;
 }
 
-/* Memastikan di mobile teks "Tambah Santri" tidak membuat berantakan */
 @media (max-width: 576px) {
     .title-adaptive {
         font-size: 1.1rem;
@@ -768,20 +724,19 @@ select.form-select:disabled {
 .btn-outline-tpq:hover { background-color: #28a745; color: white; }
 .text-truncate-name { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
 
-/* Container Floating */
+/* Floating Tutorial Button */
 .floating-tutorial {
     position: fixed;
-    bottom: 85px; /* Di atas tombol backToTop sedikit */
+    bottom: 85px;
     right: 20px;
     z-index: 1050;
 }
 
-/* Tombol Lingkaran */
 .btn-float-tutorial {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background-color: #ffc107; /* Kuning Warning */
+    background-color: #ffc107;
     color: #000;
     border: 3px solid #fff;
     display: flex;
@@ -790,7 +745,7 @@ select.form-select:disabled {
     font-size: 22px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
-    animation: pulse-yellow 2s infinite;
+    animation: pulse-tutorial 2s infinite;
 }
 
 .btn-float-tutorial:hover {
@@ -799,14 +754,12 @@ select.form-select:disabled {
     color: #000;
 }
 
-/* Animasi Berdenyut */
-@keyframes pulse-yellow {
+@keyframes pulse-tutorial {
     0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
     70% { box-shadow: 0 0 0 15px rgba(255, 193, 7, 0); }
     100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
 }
 
-/* Label Melayang di Samping Tombol */
 .tutorial-hint {
     position: absolute;
     right: 65px;
