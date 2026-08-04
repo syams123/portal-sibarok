@@ -1260,6 +1260,7 @@ window.changeClassDynamically = async function(studentId, newClass, oldClass) {
     }
 };
 // 4. Simpan Nilai
+// 4. Simpan Nilai (Versi Bersih & Tunggal)
 async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
     const inputs = document.querySelectorAll('.grade-input');
@@ -1294,37 +1295,13 @@ async function saveGrades() {
             rapor_status: 'selesai'
         });
         
-        Swal.fire("Berhasil", "Nilai & Level/Jilid berhasil disimpan!", "success");
-        const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
-        if (modal) modal.hide();
-        
-    } catch (error) {
-        console.error("Error saat menyimpan data: ", error);
-        Swal.fire("Gagal", "Terjadi kesalahan: " + error.message, "error");
-    }
-}
-
-    // --- UPDATE DATABASE ---
-    try {
-        await db.collection('students').doc(id).update({
-            grades: gradesObj,
-            notes: notes,
-            jilid: levelValue,
-            // Simpan Email Wali Santri ke database
-            parentEmail: parentEmail,
-            // Simpan data absensi
-            absensiSakit: parseInt(sakit),
-            absensiIzin: parseInt(izin),
-            absensiLain: parseInt(lain),
-        rapor_status: 'selesai'
-        });
-        
-        // Menampilkan notifikasi sukses menggunakan SweetAlert
         Swal.fire("Berhasil", "Nilai, Level/Jilid, Absensi, dan Email Wali berhasil disimpan!", "success");
         
-        // Menutup modal setelah data berhasil disimpan
-        const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
-        modal.hide();
+        const modalEl = document.getElementById('gradeModal');
+        if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
         
     } catch (error) {
         console.error("Error saat menyimpan data: ", error);
