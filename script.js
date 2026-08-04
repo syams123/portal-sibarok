@@ -1092,7 +1092,7 @@ async function openDetail(id) {
         `;
     }
 
-    // --- TIMPA BAGIAN formContainer.innerHTML DENGAN INI ---
+// --- TIMPA BAGIAN formContainer.innerHTML DENGAN INI ---
 formContainer.innerHTML = `
 <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
     <div class="position-relative">
@@ -3177,7 +3177,6 @@ function renderReportCard(studentId, data) {
     if (btnDownload) {
         btnDownload.style.display = data.reportSignature ? 'block' : 'none';
     }
-  }
 }
 
 function updateBerandaData(studentId) {
@@ -3736,54 +3735,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.forceMadinLevelOptions = function () {
-        const classSelect = document.getElementById('studentClass');
-        const levelLabel = document.getElementById('stdJilidLabel');
-        const levelSelect = document.getElementById('stdJilid');
+    const classSelect = document.getElementById('studentClass');
+    const levelLabel = document.getElementById('stdJilidLabel');
+    const levelSelect = document.getElementById('stdJilid');
 
-        if (!classSelect || !levelSelect) return;
+    if (!classSelect || !levelSelect) return;
 
-        const selectedClass = classSelect.value || '';
-        const isMadin = isMadinValue(selectedClass);
+    const selectedClass = classSelect.value || '';
+    const isMadin = isMadinValue(selectedClass);
 
-        if (levelLabel) {
-            levelLabel.textContent = isMadin ? 'Level' : 'Jilid';
-        }
+    if (levelLabel) {
+        levelLabel.textContent = isMadin ? 'Level' : 'Jilid';
+    }
 
-        const currentValue = levelSelect.value || '';
+    const currentValue = levelSelect.value || '';
 
-        if (isMadin) {
-            levelSelect.innerHTML = `
-                <option value="Level 1">Level 1</option>
-                <option value="Level 2">Level 2</option>
-                <option value="Level 3">Level 3</option>
-                <option value="Level 4">Level 4</option>
-                <option value="Level 5">Level 5</option>
-                <option value="Level 6">Level 6</option>
-            `;
+    if (isMadin) {
+        levelSelect.innerHTML = `
+            <option value="Level 1">Level 1</option>
+            <option value="Level 2">Level 2</option>
+            <option value="Level 3">Level 3</option>
+            <option value="Level 4">Level 4</option>
+            <option value="Level 5">Level 5</option>
+            <option value="Level 6">Level 6</option>
+            <option value="Level Al-Qur'an">Level Al-Qur'an</option>
+        `;
 
-            // Jika sebelumnya sudah tersimpan Level/Jilid angka, pertahankan angkanya.
-            const angka = (currentValue.match(/[1-6]/) || [])[0];
-            levelSelect.value = angka ? `Level ${angka}` : 'Level 1';
+        if (currentValue && currentValue.includes('Level')) {
+            levelSelect.value = currentValue;
         } else {
-            levelSelect.innerHTML = `
-                <option value="Jilid PAUD">PAUD</option>
-                <option value="Jilid 1">1</option>
-                <option value="Jilid 2">2</option>
-                <option value="Jilid 3">3</option>
-                <option value="Jilid 4">4</option>
-                <option value="Jilid 5">5</option>
-                <option value="Jilid 6">6</option>
-                <option value="Al-Qur'an">Al-Qur'an</option>
-            `;
-
-            if (currentValue && !currentValue.toString().includes('Level')) {
-                levelSelect.value = currentValue;
-            } else {
-                levelSelect.value = 'Jilid PAUD';
-            }
+            levelSelect.value = 'Level 1';
         }
-    };
+    } else {
+        levelSelect.innerHTML = `
+            <option value="Jilid PAUD">PAUD</option>
+            <option value="Jilid 1">1</option>
+            <option value="Jilid 2">2</option>
+            <option value="Jilid 3">3</option>
+            <option value="Jilid 4">4</option>
+            <option value="Jilid 5">5</option>
+            <option value="Jilid 6">6</option>
+            <option value="Al-Qur'an">Al-Qur'an</option>
+        `;
 
+        if (currentValue && !currentValue.toString().includes('Level')) {
+            levelSelect.value = currentValue;
+        } else {
+            levelSelect.value = 'Jilid PAUD';
+        }
+    }
+};
+  
     function attachMadinLevelListener() {
         const classSelect = document.getElementById('studentClass');
         if (classSelect && !classSelect.dataset.forceMadinListener) {
