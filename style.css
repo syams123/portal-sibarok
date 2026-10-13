@@ -846,3 +846,131 @@ body.dark-mode #notifCount.notif-pulse::after {
         opacity: 0;
     }
 }
+
+/* Styling Shortcut Buku Besar Mini & Animatif (Light Mode) */
+.btn-buku-besar-mini {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border-radius: 12px;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Efek Shimmer Kilatan Cahaya Berjalan */
+.btn-buku-besar-mini::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.25),
+        transparent
+    );
+    transition: 0.5s;
+    animation: shimmerBukuBesar 3s infinite;
+}
+
+@keyframes shimmerBukuBesar {
+    0% { left: -100%; }
+    30% { left: 200%; }
+    100% { left: 200%; }
+}
+
+/* Hover State (Light Mode) */
+.btn-buku-besar-mini:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.35) !important;
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
+
+/* Ikon Animasi */
+.icon-box-animated {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.btn-buku-besar-mini:hover .icon-box-animated {
+    transform: scale(1.1) rotate(-5deg);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Teks Judul & Subtitle */
+.title-text {
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.sub-text {
+    font-size: 0.68rem;
+    color: #a7f3d0;
+    display: block;
+    line-height: 1;
+}
+
+/* Badge Tombol Aksi Kanan */
+.badge-action {
+    background: rgba(255, 255, 255, 0.18);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.btn-buku-besar-mini:hover .badge-action {
+    background: #ffffff;
+    color: #047857;
+    padding-right: 14px;
+}
+
+.btn-buku-besar-mini:hover .badge-action i {
+    transform: translateX(3px);
+    transition: transform 0.2s ease;
+}
+
+/* ==========================================================================
+   🌙 KHUSUS DARK MODE (Otomatis Aktif Saat .dark-mode Menyala)
+   ========================================================================== */
+body.dark-mode .btn-buku-besar-mini {
+    background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+    border-color: #059669;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .btn-buku-besar-mini:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.25) !important;
+}
+
+body.dark-mode .sub-text {
+    color: #6ee7b7;
+}
+
+body.dark-mode .badge-action {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .btn-buku-besar-mini:hover .badge-action {
+    background: #10b981;
+    color: #ffffff;
+}
