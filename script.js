@@ -305,6 +305,17 @@ async function showPage(page) {
         displayGreeting(nameToDisplay);
     }
 
+    // Di dalam fungsi showPage(page) di script.js
+const bukuBesarShortcut = document.getElementById('superadminBukuBesarShortcut');
+
+if ((page === 'home' || page === 'admin') && currentRole === 'superadmin') {
+    // Tampilkan shortcut hanya untuk Superadmin (Ustadzah Fika)
+    if (bukuBesarShortcut) bukuBesarShortcut.classList.remove('d-none');
+} else {
+    // Sembunyikan untuk Admin biasa / Ustadzah lain / Wali Santri
+    if (bukuBesarShortcut) bukuBesarShortcut.classList.add('d-none');
+}
+
     // --- 6. NAVIGASI HALAMAN (Logika Dashboard) ---
     if (page === 'home') {
         if (currentRole === 'admin' || currentRole === 'superadmin') {
