@@ -1363,6 +1363,53 @@ async function sendBillWA() {
 // --- FITUR WALI SANTRI ---
 let childListenerUnsubscribe = null;
 
+async function CekAksesRaporSisipan(studentId) {
+    const tgl = new Date();
+    const bulan = tgl.getMonth(); // 0 = Jan, 1 = Feb, ..., 9 = Okt, 11 = Des
+    let tahun = tgl.getFullYear();
+
+    let bulanSyarat = "";
+    
+    // Tentukan bulan acuan berdasarkan semester saat ini
+    if (bulan >= 5 && bulan <= 10) { 
+        // Bulan Juni (5) s/d November (10) -> Semester Gasal -> Wajib Lunas OKTOBER
+        bulanSyarat = `Oktober ${tahun}`;
+    } else {
+        // Bulan Desember (11) s/d Mei (4) -> Semester Genap -> Wajib Lunas FEBRUARI
+        if (bulan === 11) tahun++; 
+        bulanSyarat = `Februari ${tahun}`;
+    }
+
+    try {
+        // 1. Cek riwayat pembayaran di sub-koleksi 'payments'
+        const paymentDoc = await db.collection('students')
+            .doc(studentId)
+            .collection('payments')
+            .doc(bulanSyarat)
+            .get();
+
+        if (paymentDoc.exists) {
+            return { bolehAkses: true, bulanSyarat };
+        }
+
+        // 2. Cek status di dokumen utama santri
+        const studentDoc = await db.collection('students').doc(studentId).get();
+        if (studentDoc.exists) {
+            const data = studentDoc.data();
+            const infoPeriode = hitungPeriodeInfaq();
+            // Jika status infaq bernilai true DAN periode saat ini cocok dengan bulanSyarat
+            if (infoPeriode.periode === bulanSyarat && (data.infaqStatus === true || data.infaqStatus === "Lunas")) {
+                return { bolehAkses: true, bulanSyarat };
+            }
+        }
+
+        return { bolehAkses: false, bulanSyarat };
+    } catch (error) {
+        console.error("Error cek akses rapor:", error);
+        return { bolehAkses: false, bulanSyarat };
+    }
+}
+
 async function loadChildData(email, selectedId = null) {
     const loader = document.getElementById('loading');
     
@@ -3207,7 +3254,7 @@ function updateBerandaData(studentId) {
     const loader = document.getElementById('loading');
     
     // Antena Real-time berdasarkan ID santri yang dipilih
-    db.collection('students').doc(studentId).onSnapshot((doc) => {
+    db.collection('students').doc(studentId).onSnapshot(async (doc) => {
         if (loader) loader.classList.add('d-none');
         if (!doc.exists) return;
 
@@ -3247,11 +3294,44 @@ function updateBerandaData(studentId) {
             displayBulan.innerText = "Bulan " + namaBulanFix + " " + tahunIni;
         }
 
-        // --- C. Sinkronisasi Nilai & Rapor (ChildReportCard) ---
-        renderReportCard(sId, data);
+        // --- C. Sinkronisasi Nilai & Rapor DENGAN TRIGGER GEMBOK ---
+        const reportDiv = document.getElementById('childReportCard');
+        if (reportDiv) {
+            const akses = await CekAksesRaporSisipan(sId);
+
+            if (!akses.bolehAkses) {
+                // Tampilan Terkunci jika belum lunas Oktober (Gasal) / Februari (Genap)
+                reportDiv.innerHTML = `
+                    <div class="card border-0 shadow-sm rounded-4 text-center p-4 my-3 bg-light">
+                        <div class="my-3 text-warning">
+                            <i class="fas fa-lock fa-4x"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Rapor Sisipan Terkunci</h5>
+                        <p class="small text-muted mb-3" style="max-width: 450px; margin: 0 auto; line-height: 1.6;">
+                            Mohon maaf, Rapor Sisipan Ananda <strong>${data.name}</strong> belum dapat diakses.<br>
+                            Silakan selesaikan administrasi Infaq Bulanan periode <strong>${akses.bulanSyarat}</strong> terlebih dahulu untuk membuka akses.
+                        </p>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-success btn-sm rounded-pill px-4 shadow-sm" onclick="document.getElementById('cardInfaq').scrollIntoView({ behavior: 'smooth' })">
+                                <i class="fas fa-wallet me-1"></i> Bayar Infaq ${akses.bulanSyarat}
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Sembunyikan tombol download PDF jika ada
+                const btnDownload = document.getElementById('btnDownloadPDF');
+                if (btnDownload) btnDownload.style.display = 'none';
+            } else {
+                // Tampilan Normal jika sudah lunas
+                renderReportCard(sId, data);
+            }
+        }
 
         // --- D. Sinkronisasi Infaq & Riwayat ---
-        // Panggil fungsi updateInfaq Kakak di sini jika ada, kirimkan sId dan data
+        if (typeof loadPaymentHistory === 'function') {
+            loadPaymentHistory(sId);
+        }
     });
 }
 
