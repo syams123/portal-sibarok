@@ -1360,6 +1360,120 @@ async function sendBillWA() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
+// =============================================================================
+// 🔒 GERBANG RAPOR: rapor hanya terbuka jika infaq Oktober (gasal) / Februari (genap) LUNAS
+// Profil Santri tidak terpengaruh. Kartu infaq & riwayat tetap terbuka agar wali bisa membayar.
+// Izin manual: isi field  rapotDibuka: true  di dokumen santri (Firestore) untuk membuka paksa.
+// =============================================================================
+let _gerbangRaporToken = 0;
+const _gerbangRaporLunas = {}; // cache: "idSantri|Oktober 2026" -> true
+
+// Bulan infaq yang jadi syarat, mengikuti kalender hari ini:
+// Okt-Des -> Oktober tahun ini | Januari -> Oktober tahun lalu | Feb-Sep -> Februari tahun ini
+function hitungTargetInfaqRapor() {
+    const now = new Date();
+    const m = now.getMonth();
+    const y = now.getFullYear();
+    if (m >= 9)  return { semester: 'Gasal', bulan: 'Oktober',  periode: `Oktober ${y}` };
+    if (m === 0) return { semester: 'Gasal', bulan: 'Oktober',  periode: `Oktober ${y - 1}` };
+    return            { semester: 'Genap', bulan: 'Februari', periode: `Februari ${y}` };
+}
+
+async function cekInfaqUntukRapor(studentId, data, target) {
+    if (data.rapotDibuka === true) return true; // izin manual dari ustadzah
+    try {
+        const snap = await db.collection('students').doc(studentId)
+            .collection('payments').doc(target.periode).get();
+        if (snap.exists) return true;
+    } catch (e) {
+        console.error('[Gerbang Rapor] Gagal cek pembayaran, rapor dibiarkan terbuka:', e);
+        return true; // gangguan jaringan jangan sampai mengunci wali secara keliru
+    }
+    // Cadangan untuk data lama yang hanya punya infaqStatus pada periode berjalan
+    const sekarang = hitungPeriodeInfaq().periode;
+    return target.periode === sekarang && (data.infaqStatus === true || data.infaqStatus === 'Lunas');
+}
+
+function setBlurRapor(reportDiv, kunci) {
+    reportDiv.style.filter = kunci ? 'blur(6px)' : '';
+    reportDiv.style.pointerEvents = kunci ? 'none' : '';
+    reportDiv.style.userSelect = kunci ? 'none' : '';
+    reportDiv.setAttribute('aria-hidden', kunci ? 'true' : 'false');
+    const btnPdf = document.getElementById('btnDownloadPDF');
+    if (btnPdf) {
+        btnPdf.style.visibility = kunci ? 'hidden' : '';
+        btnPdf.style.pointerEvents = kunci ? 'none' : '';
+    }
+}
+
+function setBannerGerbangRapor(tampil, target, namaSantri) {
+    let banner = document.getElementById('bannerGerbangRapor');
+    if (!tampil) { if (banner) banner.remove(); return; }
+
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'bannerGerbangRapor';
+        banner.className = 'alert alert-danger d-flex align-items-center gap-3 shadow-sm border-0 rounded-4 mb-3';
+        banner.setAttribute('role', 'alert');
+        banner.innerHTML = `
+            <i class="fas fa-lock fs-3"></i>
+            <div class="flex-grow-1">
+                <div class="fw-bold">Rapor <span data-role="nama"></span> masih terkunci</div>
+                <div class="small" data-role="pesan"></div>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold text-nowrap" onclick="scrollKeKartuInfaq()">
+                <i class="fas fa-wallet me-1"></i> Bayar Infaq
+            </button>`;
+        const dash = document.getElementById('parentDashboard');
+        const nav = document.getElementById('multiChildNav');
+        if (nav) nav.insertAdjacentElement('afterend', banner);
+        else if (dash) dash.prepend(banner);
+    }
+    banner.querySelector('[data-role="nama"]').textContent = namaSantri || 'ananda';
+    banner.querySelector('[data-role="pesan"]').textContent =
+        `Infaq bulan ${target.periode} belum lunas. Rapor semester ${target.semester} bisa dibuka setelah infaq dilunasi dan diverifikasi ustadzah. Profil santri tetap bisa dibuka.`;
+}
+
+window.scrollKeKartuInfaq = function () {
+    const card = document.getElementById('cardInfaq');
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.transition = 'box-shadow .3s';
+    card.style.boxShadow = '0 0 0 4px rgba(220,53,69,.35)';
+    setTimeout(() => { card.style.boxShadow = ''; }, 2000);
+};
+
+async function terapkanGerbangRapor(studentId, data) {
+    const reportDiv = document.getElementById('childReportCard');
+    if (!reportDiv || !data) return;
+
+    const token = ++_gerbangRaporToken;
+    const target = hitungTargetInfaqRapor();
+    const cacheKey = `${studentId}|${target.periode}`;
+
+    // Sudah terbukti lunas / ada izin manual -> buka tanpa kedip
+    if (data.rapotDibuka === true || _gerbangRaporLunas[cacheKey]) {
+        setBlurRapor(reportDiv, false);
+        setBannerGerbangRapor(false);
+        return;
+    }
+
+    // Sambil menunggu cek database, kaburkan dulu isi rapor
+    setBlurRapor(reportDiv, true);
+
+    const lunas = await cekInfaqUntukRapor(studentId, data, target);
+    if (token !== _gerbangRaporToken) return; // ada pemanggilan yang lebih baru, abaikan
+
+    if (lunas) {
+        _gerbangRaporLunas[cacheKey] = true;
+        setBlurRapor(reportDiv, false);
+        setBannerGerbangRapor(false);
+    } else {
+        setBlurRapor(reportDiv, true);
+        setBannerGerbangRapor(true, target, data.name);
+    }
+}
+
 // --- FITUR WALI SANTRI ---
 let childListenerUnsubscribe = null;
 
@@ -1609,6 +1723,9 @@ if (data.notes) {
                     cardInfaq.classList.add('border-danger');
                 }
             }   
+
+            // --- GERBANG RAPOR: kunci rapor jika infaq Oktober/Februari belum lunas ---
+            terapkanGerbangRapor(studentId, data);
 
             // --- D. UPDATE OTOMATIS: Riwayat Pembayaran ---
             if (typeof loadPaymentHistory === 'function') loadPaymentHistory(studentId);
@@ -3170,6 +3287,9 @@ function renderReportCard(studentId, data) {
     if (btnDownload) {
         btnDownload.style.display = data.reportSignature ? 'block' : 'none';
     }
+
+    // --- GERBANG RAPOR ---
+    terapkanGerbangRapor(studentId, data);
 }
 
 function updateBerandaData(studentId) {
