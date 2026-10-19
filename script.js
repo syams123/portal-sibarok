@@ -3697,7 +3697,7 @@ async function cetakPDFRapor(id, btnElement) {
                     <div style="flex-grow: 1; text-align: center; margin-right: 80px;">
                         <h2 style="margin: 0; color: #198754; font-size: 18px; font-weight: bold;">RAPOR SISIPAN</h2>
                         <h4 style="margin: 3px 0 0 0; font-size: 15px; font-weight: normal;">TPQ & MADIN Al-Mubarok</h4>
-                        <p style="margin: 2px 0 0 0; font-size: 10px; color: #666;">Jl. Alana Regency Cemandi Blok BB03-09, Sidoarjo</p>
+                        <p style="margin: 2px 0 0 0; font-size: 10px; color: #666;">Jl. Alana Regency Cemandi Blok BB03-09, Sedati, Sidoarjo</p>
                     </div>
                 </div>
 
