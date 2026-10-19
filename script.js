@@ -1207,7 +1207,6 @@ formContainer.innerHTML = `
 </div>
 
 <hr>
-// --- UBAH BAGIAN HEADER INPUT NILAI DI openDetail() ---
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h6 class="fw-bold mb-0">Input Nilai Rapor:</h6>
     <button type="button" class="btn btn-xs btn-outline-danger shadow-sm py-1 px-2" 
