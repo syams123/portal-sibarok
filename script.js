@@ -3899,6 +3899,70 @@ window.filterPembayaran = function(statusTarget) {
 };
 
 // =============================================================================
+// 🔄 AUTO-RESET TTD WALI SANTRI (Setiap Awal Oktober & Februari)
+// =============================================================================
+async function cekDanResetTTDWaliSantri() {
+    try {
+        const now = new Date();
+        const bulan = now.getMonth(); // 0 = Jan, 1 = Feb, ..., 9 = Okt
+        const tahun = now.getFullYear();
+
+        // Tentukan periode reset hanya untuk Oktober (9) dan Februari (1)
+        let periodeResetKey = "";
+        if (bulan === 9) {
+            periodeResetKey = `reset_ttd_Oktober_${tahun}`;
+        } else if (bulan === 1) {
+            periodeResetKey = `reset_ttd_Februari_${tahun}`;
+        } else {
+            // Jika bukan bulan Oktober atau Februari, hentikan fungsi
+            return;
+        }
+
+        const configRef = db.collection('app_config').doc('ttd_reset');
+        const configDoc = await configRef.get();
+        const configData = configDoc.exists ? configDoc.data() : {};
+
+        // Jika periode bulan ini sudah pernah di-reset, tidak perlu jalankan reset lagi
+        if (configData.lastResetKey === periodeResetKey) {
+            console.log(`[Auto-Reset TTD] Periode ${periodeResetKey} sudah di-reset sebelumnya.`);
+            return;
+        }
+
+        console.log(`[Auto-Reset TTD] Memulai reset TTD Wali Santri untuk periode: ${periodeResetKey}...`);
+
+        // Cari seluruh santri yang sudah memiliki tanda tangan (reportSignature)
+        const snapshot = await db.collection('students').where('reportSignature', '!=', null).get();
+
+        if (!snapshot.empty) {
+            const batch = db.batch();
+            snapshot.forEach(doc => {
+                batch.update(doc.ref, {
+                    reportSignature: firebase.firestore.FieldValue.delete(),
+                    reportSignedAt: firebase.firestore.FieldValue.delete(),
+                    ttdNotifRead: false
+                });
+            });
+            await batch.commit();
+            console.log(`[Auto-Reset TTD] Berhasil mereset TTD dari ${snapshot.size} santri.`);
+        }
+
+        // Catat bahwa reset periode ini telah sukses dijalankan
+        await configRef.set({
+            lastResetKey: periodeResetKey,
+            tanggalReset: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        if (typeof renderStudents === "function") renderStudents();
+
+    } catch (error) {
+        console.error('[Auto-Reset TTD] Terjadi kesalahan:', error);
+    }
+}
+
+// Panggil fungsi secara otomatis saat aplikasi dimuat
+cekDanResetTTDWaliSantri();
+
+// =============================================================================
 // 🔄 AUTO-RESET INFAQ (VERSI PERBAIKAN)
 // Menggunakan periode aktif (misal: "Agustus 2026") sebagai kunci reset.
 // Otomatis mereset status santri begitu memasuki periode baru, kapan pun web dibuka.
