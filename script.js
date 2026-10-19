@@ -110,28 +110,23 @@ let currentView = 'grid';
                 statusSebelumnya = userData.isApproved;
 
                 if (currentRole === 'admin') {
-    // Setel otomatis kelas pegangan masing-masing ustadzah untuk keperluan input santri baru
-    let namaAdmin = userData.nama || userData.name || "";
-    if (namaAdmin.includes("Valyne") || namaAdmin.includes("Meylan")) {
-        window.userClass = "TK-SD (Sunan Muria)";
-    } else if (namaAdmin.includes("Salwa")) {
-        window.userClass = "TK-SD (Sunan Giri)";
-    } else {
-        // Jika userData.class bernilai 'MADIN', otomatis ditambahi ' (Sunan Gresik)'
-        let userCls = userData.class || "TK-SD (Sunan Giri)";
-        if (userCls === 'MADIN') {
-            userCls = "MADIN (Sunan Gresik)";
-        }
-        window.userClass = userCls;
-    }
+                    // Setel otomatis kelas pegangan masing-masing ustadzah untuk keperluan input santri baru
+                    let namaAdmin = userData.nama || userData.name || "";
+                    if (namaAdmin.includes("Valyne") || namaAdmin.includes("Meylan")) {
+                        window.userClass = "TK-SD (Sunan Muria)";
+                    } else if (namaAdmin.includes("Salwa")) {
+                        window.userClass = "TK-SD (Sunan Giri)";
+                    } else {
+                        window.userClass = userData.class || "TK-SD (Sunan Giri)";
+                    }
 
-    const classInputContainer = document.getElementById('classInputContainer');
-    const studentClassInput = document.getElementById('studentClass');
+                    const classInputContainer = document.getElementById('classInputContainer');
+                    const studentClassInput = document.getElementById('studentClass');
 
-    // Sembunyikan pilihan kelas di form agar Admin tidak salah input kelas lain
-    if (classInputContainer) classInputContainer.classList.add('d-none');
-    if (studentClassInput) studentClassInput.value = window.userClass;
-}
+                    // Sembunyikan pilihan kelas di form agar Admin tidak salah input kelas lain
+                    if (classInputContainer) classInputContainer.classList.add('d-none');
+                    if (studentClassInput) studentClassInput.value = window.userClass;
+                }
 
                 // ARAHKAN KE HALAMAN & MUNCULKAN TOMBOL PLUS
                 if (currentRole === 'admin' || currentRole === 'superadmin') {
@@ -958,15 +953,18 @@ if (currentRole === 'superadmin') {
     }
 }
 
-            // --- 3. LOGIKA PEMILIHAN TAMPILAN (GRID vs LIST) ---
+            // --- LOGIKA PEMILIHAN TAMPILAN (GRID vs LIST) ---
             let finalHtml = "";
-            
-            // 👇 TAMBAHAN BARU: Buat variabel penentu status Lunas/Belum
             const statusInfaqFilter = data.infaqStatus === true ? 'Lunas' : 'Belum';
+
+            // Formatter otomatis untuk kelas MADIN agar selalu menampilkan (Sunan Gresik)
+            const levelMadin = data.level || data.levelMadin || data.kelasMadin || '';
+            const displayClass = (data.class === 'MADIN')
+                ? (levelMadin ? `MADIN (${levelMadin})` : 'MADIN (Sunan Gresik)')
+                : (data.class || '');
 
             if (currentView === 'grid') {
                 // TAMPILAN GRID
-                // 👇 TAMBAHAN BARU: Selipkan class 'item-santri' dan atribut 'data-status-bayar'
                 finalHtml = `
                     <div class="col-6 col-md-4 col-lg-3 santri-card mb-3 item-santri" data-status-bayar="${statusInfaqFilter}">
                         <div class="card card-student shadow-sm h-100 position-relative">
@@ -977,7 +975,7 @@ if (currentRole === 'superadmin') {
                             <img src="${data.photo || defaultAvatar}" class="student-img-top" onclick="openDetail('${id}')">
                             <div class="card-body p-2 text-center">
                                 <h6 class="card-title fw-bold mb-1 nama-santri">${data.name}</h6>
-                                <small class="text-muted d-block mb-1">${data.class}</small>
+                                <small class="text-muted d-block mb-1">${displayClass}</small>
                                 ${raporBadgeHtml}
                                 ${ttdStatusHtml}
                                 ${walletBadgeHtml}
@@ -988,7 +986,6 @@ if (currentRole === 'superadmin') {
             } else {
                 // TAMPILAN LIST
                 const sudahDiisi = data.rapor_status === 'selesai' || (data.grades && Object.keys(data.grades).length > 0);
-                // 👇 TAMBAHAN BARU: Selipkan class 'item-santri' dan atribut 'data-status-bayar'
                 finalHtml = `
                     <div class="col-12 mb-2 item-santri" data-status-bayar="${statusInfaqFilter}">
                         <div class="card shadow-sm border-0" style="border-radius: 12px;">
@@ -1000,7 +997,7 @@ if (currentRole === 'superadmin') {
                                 <div class="flex-grow-1 overflow-hidden">
                                     <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.9rem;">${data.name}</h6>
                                     <div class="d-flex align-items-center gap-2">
-                                        <small class="text-muted" style="font-size: 0.75rem;">${data.class}</small>
+                                        <small class="text-muted" style="font-size: 0.75rem;">${displayClass}</small>
                                         ${sudahDiisi ? '<i class="fas fa-check-circle text-success animated bounceIn" title="Input Selesai" style="font-size: 0.8rem;"></i>' : ''}
                                     </div>
                                 </div>
@@ -1016,7 +1013,6 @@ if (currentRole === 'superadmin') {
                     </div>`;
             }
 
-            // Masukkan hasil pilihan ke dalam container utama
             listDiv.innerHTML += finalHtml;
         });
 
@@ -1059,10 +1055,69 @@ if (currentRole === 'superadmin') {
         if (document.getElementById('loader')) document.getElementById('loader').classList.add('d-none');
     });
 }
+// --- DRAF ISIAN RAPOR (isian tidak hilang walau popup tertutup) ---
+function raporDraftKey(id) { return 'raporDraft_' + id; }
+
+function simpanDrafRapor() {
+    const idEl = document.getElementById('gradeStudentId');
+    if (!idEl || !idEl.value) return;
+    const val = (elId) => { const el = document.getElementById(elId); return el ? el.value : ''; };
+    const draft = {
+        notes: val('gradeNotes'),
+        level: val('studentLevel'),
+        parentEmail: val('updateParentEmail'),
+        sakit: val('absensiSakit'),
+        izin: val('absensiIzin'),
+        lain: val('absensiLain'),
+        grades: {}
+    };
+    document.querySelectorAll('.grade-input').forEach(inp => {
+        draft.grades[inp.dataset.subject] = inp.value;
+    });
+    try { localStorage.setItem(raporDraftKey(idEl.value), JSON.stringify(draft)); } catch (e) {}
+}
+
+function pulihkanDrafRapor(id) {
+    let draft = null;
+    try { draft = JSON.parse(localStorage.getItem(raporDraftKey(id))); } catch (e) {}
+    if (!draft) return false;
+
+    const setVal = (elId, v) => {
+        const el = document.getElementById(elId);
+        if (!el || v === undefined || v === null) return;
+        // untuk <select>, hanya isi jika opsinya memang ada
+        if (el.tagName === 'SELECT' && !Array.from(el.options).some(o => o.value === v)) return;
+        el.value = v;
+    };
+    setVal('gradeNotes', draft.notes);
+    setVal('studentLevel', draft.level);
+    setVal('updateParentEmail', draft.parentEmail);
+    setVal('absensiSakit', draft.sakit);
+    setVal('absensiIzin', draft.izin);
+    setVal('absensiLain', draft.lain);
+
+    document.querySelectorAll('.grade-input').forEach(inp => {
+        const v = draft.grades && draft.grades[inp.dataset.subject];
+        if (v !== undefined && Array.from(inp.options).some(o => o.value === v)) inp.value = v;
+    });
+    return true;
+}
+
+function hapusDrafRapor(id) {
+    try { localStorage.removeItem(raporDraftKey(id)); } catch (e) {}
+}
+
 // 3. Buka Detail & Input Nilai
 async function openDetail(id) {
     const modal = new bootstrap.Modal(document.getElementById('gradeModal'));
     modal.show();
+    // Pasang pemantau draf (sekali saja): setiap ada ketikan/perubahan langsung disimpan
+    const gradeModalEl = document.getElementById('gradeModal');
+    if (gradeModalEl && !gradeModalEl.dataset.draftBound) {
+        gradeModalEl.dataset.draftBound = '1';
+        gradeModalEl.addEventListener('input', simpanDrafRapor);
+        gradeModalEl.addEventListener('change', simpanDrafRapor);
+    }
     document.getElementById('loading').classList.add('d-none');
     const doc = await db.collection('students').doc(id).get();
     const data = doc.data();
@@ -1103,12 +1158,13 @@ async function openDetail(id) {
                 <option value="TK-SD (Sunan Giri)" ${data.class === 'TK-SD (Sunan Giri)' ? 'selected' : ''}>TK-SD (Sunan Giri)</option>
                 <option value="TK-SD (Sunan Kalijaga)" ${data.class === 'TK-SD (Sunan Kalijaga)' ? 'selected' : ''}>TK-SD (Sunan Kalijaga)</option>
                 <option value="TK-SD (Sunan Muria)" ${data.class === 'TK-SD (Sunan Muria)' ? 'selected' : ''}>TK-SD (Sunan Muria)</option>
-                <option value="MADIN" ${data.class === 'MADIN' ? 'selected' : ''}>MADIN</option>
+                <option value="MADIN" ${data.class === 'MADIN' ? 'selected' : ''}>MADIN (Sunan Gresik)</option>
             </select>
         `;
     }
 
 // --- TIMPA BAGIAN formContainer.innerHTML DENGAN INI ---
+// --- UBAH BAGIAN HEADER FOTO & NAMA SANTRI ---
 formContainer.innerHTML = `
 <div class="d-flex align-items-center mb-4 p-2 bg-light rounded-3 shadow-sm border border-success border-opacity-25">
     <div class="position-relative">
@@ -1120,7 +1176,9 @@ formContainer.innerHTML = `
         ${currentRole === 'superadmin' || currentRole === 'admin' ? '<div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px; border: 2px solid white;"><i class="fas fa-camera" style="font-size: 10px;"></i></div>' : ''}
     </div>
     <div class="ms-3 w-100">
-        <h5 class="mb-0 fw-bold text-success">${data.name}</h5>
+        <!-- Input Nama Santri agar bisa direvisi jika ada typo -->
+        <input type="text" id="updateStudentName" class="form-control form-control-sm fw-bold text-success" 
+               value="${data.name || ''}" placeholder="Nama Lengkap Santri">
         ${classHtml}
         <div class="text-muted" style="font-size: 0.75rem;">Guru: ${data.teacher}</div>
     </div>
@@ -1132,7 +1190,6 @@ formContainer.innerHTML = `
             value="${data.parentEmail || ''}" placeholder="Masukkan email asli wali santri">
 </div>
 
-<!-- INPUT ABSENSI (Mencegah Crash saat disimpan) -->
 <h6 class="fw-bold mb-2">Daftar Kehadiran Santri:</h6>
 <div class="row g-2 mb-3">
     <div class="col-4">
@@ -1154,10 +1211,10 @@ formContainer.innerHTML = `
 `;
 
     let subjects = isMadinClass(data.class)
-        ? ["Qur'an", "Jilid", "Kitabaty", "Ilmu Tajwid", "Hadits", "Fiqih", "Tauhid"]
-        : data.class.includes("Pra-TK") 
-            ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
-            : ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
+    ? ["Jilid/Quran", "Ilmu tajwid", "Hadits", "Fiqih", "Tauhid", "Baca Tulis Pego"]
+    : data.class.includes("Pra-TK") 
+        ? ["Jilid", "Akidah Akhlak", "Kitabaty"] 
+        : ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
 
     const savedGrades = data.grades || {};
 
@@ -1180,6 +1237,9 @@ formContainer.innerHTML = `
             </div>
         `;
     });
+
+    // Pulihkan isian yang belum sempat disimpan (jika ada)
+    pulihkanDrafRapor(id);
 
     const modalFooter = document.querySelector('#gradeModal .modal-body .d-flex.gap-2');
     if (modalFooter) {
@@ -1235,6 +1295,7 @@ window.changeClassDynamically = async function(studentId, newClass, oldClass) {
     });
 
     if (result.isConfirmed) {
+        hapusDrafRapor(studentId); // mapel berubah, draf lama tidak berlaku
         // --- LOGIKA PENENTUAN WALI KELAS SESUAI RINCIAN ---
         let newTeacher = "Ustadzah Fika"; // Default (Ampel, Kalijaga, MADIN)
         
@@ -1280,6 +1341,8 @@ async function saveGrades() {
     const id = document.getElementById('gradeStudentId').value;
     const inputs = document.querySelectorAll('.grade-input');
     
+    // Ambil nama santri terbaru dari inputan modal
+    const updatedName = document.getElementById('updateStudentName') ? document.getElementById('updateStudentName').value.trim() : '';
     const parentEmail = document.getElementById('updateParentEmail') ? document.getElementById('updateParentEmail').value : '';
     const notes = document.getElementById('gradeNotes') ? document.getElementById('gradeNotes').value : '';
     const levelValue = document.getElementById('studentLevel') ? document.getElementById('studentLevel').value : '';
@@ -1292,6 +1355,11 @@ async function saveGrades() {
     const izin = izinEl ? parseInt(izinEl.value) || 0 : 0;
     const lain = lainEl ? parseInt(lainEl.value) || 0 : 0;
     
+    if (!updatedName) {
+        Swal.fire("Peringatan", "Nama santri tidak boleh kosong!", "warning");
+        return;
+    }
+
     let gradesObj = {};
     inputs.forEach(input => {
         gradesObj[input.dataset.subject] = input.value;
@@ -1299,6 +1367,7 @@ async function saveGrades() {
 
     try {
         await db.collection('students').doc(id).update({
+            name: updatedName, // Mengupdate revisi nama santri
             grades: gradesObj,
             notes: notes,
             jilid: levelValue,
@@ -1306,16 +1375,21 @@ async function saveGrades() {
             absensiSakit: sakit,
             absensiIzin: izin,
             absensiLain: lain,
-            rapor_status: 'selesai'
+            rapor_status: 'selesai',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        Swal.fire("Berhasil", "Nilai, Level/Jilid, Absensi, dan Email Wali berhasil disimpan!", "success");
+        hapusDrafRapor(id);
+        Swal.fire("Berhasil", "Data santri (Nama, Nilai, Level, Absensi) berhasil diperbarui!", "success");
         
         const modalEl = document.getElementById('gradeModal');
         if (modalEl) {
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
         }
+        
+        // Refresh daftar santri di beranda admin
+        if (typeof renderStudents === 'function') renderStudents();
         
     } catch (error) {
         console.error("Error saat menyimpan data: ", error);
@@ -3480,18 +3554,17 @@ async function cetakPDFRapor(id, btnElement) {
     let printContainer;
     
     try {
-        // 1. Ubah tombol jadi status loading
         if (btnElement) {
             btnElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyiapkan...`;
             btnElement.disabled = true;
         }
 
-        // 2. Ambil data terbaru dari Firestore
+        // 1. Ambil data santri terbaru dari Firestore (Portal)
         const doc = await db.collection('students').doc(id).get();
         if (!doc.exists) throw new Error("Data santri tidak ditemukan");
         const data = doc.data();
 
-        // 3. Logika Penentuan Semester Dinamis
+        // 2. Penentuan Semester
         const tanggalSekarangObj = new Date();
         const bulanIni = tanggalSekarangObj.getMonth();
         const tahunIni = tanggalSekarangObj.getFullYear();
@@ -3502,11 +3575,10 @@ async function cetakPDFRapor(id, btnElement) {
 
         const tglSekarang = tanggalSekarangObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-        // 4. Siapkan variabel guru/wali kelas
-        let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; // Ustadzah Fika
+        // 3. Siapkan variabel guru/wali kelas
+        let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; 
         let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
         
-        // Sesuaikan variabel penampung kelas agar fleksibel di 3 fungsi berbeda
         const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
 
         if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
@@ -3514,60 +3586,91 @@ async function cetakPDFRapor(id, btnElement) {
             linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
         } else if (kelasAktif.includes("Sunan Muria")) {
             namaWaliKelas = "Meylan Gabby Ovalyne";
-            linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png"; // INFO: Jangan lupa ganti URL ini dengan link Imgur TTD asli Ustadzah Valyne jika sudah ada
+            linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png"; 
         }
 
-        // 5. Mulai rakit tabel Nilai
+        // 4. Rakit tabel Nilai secara Dinamis & Presisi
         let tabelNilaiHTML = '';
-        if (data.grades && Object.keys(data.grades).length > 0) {
-            for (const [subj, grade] of Object.entries(data.grades)) {
-                tabelNilaiHTML += `
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #ddd; width: 70%;">${subj}</td>
-                        <td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; width: 30%;">${grade}</td>
-                    </tr>
-                `;
-            }
+        const savedGrades = data.grades || {};
+
+        let defaultSubjects = [];
+        if (typeof isMadinClass === 'function' && isMadinClass(data.class)) {
+            defaultSubjects = ["Jilid/Quran", "Ilmu tajwid", "Hadits", "Fiqih", "Tauhid", "Baca Tulis Pego"];
+        } else if ((data.class || '').includes("Pra-TK")) {
+            defaultSubjects = ["Jilid", "Akidah Akhlak", "Kitabaty"];
         } else {
-            tabelNilaiHTML = `<tr><td colspan="2" style="text-align:center; padding: 6px; border: 1px solid #ddd;">Belum ada nilai yang diinput</td></tr>`;
+            defaultSubjects = ["Jilid", "Bacaan Shalat", "Surat Pilihan", "Hadits Pilihan", "Aqidah Akhlak", "Kitabaty"];
         }
 
-        // =======================================================
-        // 🌟 TAHAP 1: KONVERTER GAMBAR BASE64 (OBAT ANTI-BLANK) 🌟
-        // =======================================================
-        // Fungsi ini memaksa gambar diunduh sepenuhnya dan diubah jadi kode base64, 
-        // sehingga html2pdf tidak perlu memuat internet lagi saat mencetak.
-        async function getBase64Image(url) {
-            try {
-                const response = await fetch(url, { mode: 'cors' });
-                const blob = await response.blob();
-                return await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            } catch (e) {
-                console.warn("CORS gagal untuk gambar:", url);
-                return url; // Fallback aman
+        defaultSubjects.forEach(subj => {
+            let nilaiFound = '-';
+            for (const [key, val] of Object.entries(savedGrades)) {
+                if (key.trim().toLowerCase() === subj.trim().toLowerCase() || key.replace(/[^a-zA-Z]/g, '') === subj.replace(/[^a-zA-Z]/g, '')) {
+                    if (val) nilaiFound = val;
+                    break;
+                }
             }
+
+            const isFilled = nilaiFound !== '-';
+            tabelNilaiHTML += `
+                <tr>
+                    <td style="padding: 6px; border: 1px solid #ddd; width: 70%;">${subj}</td>
+                    <td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold; width: 30%; color: ${isFilled ? '#000' : '#888'};">
+                        ${nilaiFound}
+                    </td>
+                </tr>
+            `;
+        });
+
+        // 5. HELPER KONVERSI GAMBAR (Metode Canvas yang lebih kuat melintasi domain)
+        function getBase64Image(src) {
+            return new Promise((resolve) => {
+                if (!src) return resolve(null);
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth || img.width;
+                    canvas.height = img.naturalHeight || img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    try {
+                        const dataURL = canvas.toDataURL('image/png');
+                        resolve(dataURL);
+                    } catch (e) {
+                        console.warn("Gagal ekspor canvas (CORS restriction):", src);
+                        resolve(src); // Fallback ke URL mentah
+                    }
+                };
+                img.onerror = function () {
+                    console.warn("Gagal memuat gambar dari URL:", src);
+                    resolve(null);
+                };
+                img.src = src;
+            });
         }
 
+        // Tautan Gambar & Foto Santri dari Portal
+        const linkLogoTPQ = "https://i.imgur.com/dzCdAFk.png";
+        const avatarLaki = 'https://i.imgur.com/HPPr16Q.jpeg';
+        const avatarPerempuan = 'https://i.imgur.com/NcNQ9R3.jpeg';
+        const defaultAvatar = data.gender === 'Perempuan' ? avatarPerempuan : avatarLaki;
+        
+        // FOTO SANTRI UTAMA
+        const linkFotoSantri = data.photo || defaultAvatar;
         const linkTtdKepala = "https://i.imgur.com/APp2Mt6.png";
         const linkTtdWaliSantri = data.reportSignature || null;
 
-        // Tunggu sampai KETIGA gambar benar-benar selesai diunduh 100%
-        const [b64Kepala, b64WaliKelas, b64WaliSantri] = await Promise.all([
+        // Unduh seluruh gambar ke Base64 secara paralel
+        const [b64Logo, b64Foto, b64Kepala, b64WaliKelas, b64WaliSantri] = await Promise.all([
+            getBase64Image(linkLogoTPQ),
+            getBase64Image(linkFotoSantri),
             getBase64Image(linkTtdKepala),
             getBase64Image(linkTtdWaliKelas),
             linkTtdWaliSantri ? getBase64Image(linkTtdWaliSantri) : Promise.resolve(null)
         ]);
 
-        // =======================================================
-        // 🌟 TAHAP 2: KOTAK KANVAS ABSOLUT (OBAT ANTI-MIRING) 🌟
-        // =======================================================
         printContainer = document.createElement('div');
-        // Kunci posisi di pojok kiri atas, di belakang layer website agar tidak merusak tampilan HP
         printContainer.style.position = 'fixed';
         printContainer.style.top = '0';
         printContainer.style.left = '0';
@@ -3576,33 +3679,56 @@ async function cetakPDFRapor(id, btnElement) {
         printContainer.style.width = '800px'; 
         printContainer.style.minWidth = '800px'; 
         
-        // Perhatikan penggunaan !important di lebar tabel untuk membunuh responsivitas bawaan Bootstrap
+        const displayClassPDF = (data.class === 'MADIN') ? 'MADIN (Sunan Gresik)' : (data.class || '-');
+
+        // Elemen Foto Santri
+        const fotoElementHtml = b64Foto 
+            ? `<img src="${b64Foto}" style="width: 65px; height: 85px; object-fit: cover; border-radius: 2px; display: block;">` 
+            : `<div style="width: 65px; height: 85px; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #aaa;">Foto</div>`;
+
         printContainer.innerHTML = `
             <div style="width: 800px !important; min-width: 800px !important; max-width: 800px !important; display: block !important; background-color: #ffffff; padding: 20px 40px 30px 40px; font-family: Arial, sans-serif; color: #333; line-height: 1.3; margin: 0; box-sizing: border-box; text-align: left;">
                 
-                <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #198754; font-size: 18px; font-weight: bold;">RAPOR SISIPAN</h2>
-                    <h4 style="margin: 3px 0 0 0; font-size: 16px; font-weight: normal;">Taman Pendidikan Al-Qur'an (TPQ) Al-Mubarok</h4>
+                <!-- KOP RAPOR DENGAN LOGO TPQ -->
+                <div style="display: flex; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                    <div style="width: 80px; text-align: left;">
+                        ${b64Logo ? `<img src="${b64Logo}" style="max-height: 65px; width: auto; object-fit: contain;">` : ''}
+                    </div>
+                    <div style="flex-grow: 1; text-align: center; margin-right: 80px;">
+                        <h2 style="margin: 0; color: #198754; font-size: 18px; font-weight: bold;">RAPOR SISIPAN</h2>
+                        <h4 style="margin: 3px 0 0 0; font-size: 15px; font-weight: normal;">Taman Pendidikan Al-Qur'an (TPQ) Al-Mubarok</h4>
+                        <p style="margin: 2px 0 0 0; font-size: 10px; color: #666;">Jl. Alana Regency Cemandi Blok BB03-09, Sidoarjo</p>
+                    </div>
                 </div>
 
-                <table style="width: 100% !important; min-width: 100% !important; max-width: none !important; margin-bottom: 15px; font-size: 13px; border-collapse: collapse; table-layout: fixed;">
-                    <tr>
-                        <td style="width: 15%; font-weight: bold; padding: 4px;">Nama Santri</td>
-                        <td style="width: 40%; padding: 4px;">: ${data.name || '-'}</td>
-                        <td style="width: 15%; font-weight: bold; padding: 4px;">Semester</td>
-                        <td style="width: 30%; padding: 4px;">: ${teksSemester}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; padding: 4px;">Kelas</td>
-                        <td style="padding: 4px;">: ${data.class || '-'}</td>
-                        <td style="font-weight: bold; padding: 4px;">Bulan</td>
-                        <td style="padding: 4px;">: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; padding: 4px;">${isMadinClass(data.class) ? "Level" : "Jilid"}</td>
-                        <td colspan="3" style="padding: 4px;">: ${formatLevelLabel(data.jilid, data.class)}</td>
-                    </tr>
-                </table>
+                <!-- INFO SANTRI DENGAN FOTO PORTAL -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                    <table style="width: 82% !important; font-size: 13px; border-collapse: collapse; table-layout: fixed;">
+                        <tr>
+                            <td style="width: 20%; font-weight: bold; padding: 3px 0;">Nama Santri</td>
+                            <td style="width: 45%; padding: 3px 0;">: ${data.name || '-'}</td>
+                            <td style="width: 15%; font-weight: bold; padding: 3px 0;">Semester</td>
+                            <td style="width: 20%; padding: 3px 0;">: ${teksSemester}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 3px 0;">Kelas</td>
+                            <td style="padding: 3px 0;">: ${displayClassPDF}</td>
+                            <td style="font-weight: bold; padding: 3px 0;">Bulan</td>
+                            <td style="padding: 3px 0;">: ${tglSekarang.split(' ')[1]} ${tglSekarang.split(' ')[2]}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 3px 0;">${(typeof isMadinClass === 'function' && isMadinClass(data.class)) ? "Level" : "Jilid"}</td>
+                            <td colspan="3" style="padding: 3px 0;">: ${(typeof formatLevelLabel === 'function') ? formatLevelLabel(data.jilid, data.class) : (data.jilid || '-')}</td>
+                        </tr>
+                    </table>
+
+                    <!-- BINGKAI PAS FOTO SANTRI -->
+                    <div style="width: 15%; text-align: right;">
+                        <div style="display: inline-block; padding: 3px; border: 1px solid #198754; border-radius: 4px; background: #fff;">
+                            ${fotoElementHtml}
+                        </div>
+                    </div>
+                </div>
 
                 <h4 style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 3px;">A. Nilai Mata Pelajaran</h4>
                 <table style="width: 100% !important; min-width: 100% !important; max-width: none !important; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; table-layout: fixed;">
@@ -3643,7 +3769,7 @@ async function cetakPDFRapor(id, btnElement) {
                         <p style="margin: 0 0 3px 0;">Mengetahui,</p>
                         <p style="font-weight: bold; margin: 0 0 5px 0;">Kepala TPQ</p>
                         <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            <img src="${b64Kepala}" style="max-height: 55px; width: auto; object-fit: contain;">
+                            ${b64Kepala ? `<img src="${b64Kepala}" style="max-height: 55px; width: auto; object-fit: contain;">` : ''}
                         </div>
                         <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">Hafi Dzotur Rofi'ah, Lc.</p>
                     </div>
@@ -3652,7 +3778,7 @@ async function cetakPDFRapor(id, btnElement) {
                         <p style="margin: 0 0 3px 0;">&nbsp;</p>
                         <p style="font-weight: bold; margin: 0 0 5px 0;">Wali Kelas</p>
                         <div style="height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            <img src="${b64WaliKelas}" style="max-height: 55px; width: auto; object-fit: contain;">
+                            ${b64WaliKelas ? `<img src="${b64WaliKelas}" style="max-height: 55px; width: auto; object-fit: contain;">` : ''}
                         </div>
                         <p style="text-decoration: underline; font-weight: bold; margin: 5px 0 0 0;">${namaWaliKelas}</p>
                     </div>
@@ -3669,12 +3795,11 @@ async function cetakPDFRapor(id, btnElement) {
             </div>
         `;
 
-        // Masukkan elemen ke dalam web sesaat agar bisa difoto oleh library
         document.body.appendChild(printContainer);
 
-        // =======================================================
-        // 🌟 TAHAP 3: KONFIGURASI PDF (PENGUNCI KAMERA) 🌟
-        // =======================================================
+        // Berikan jeda sebentar agar browser selesai merender gambar di DOM sebelum difoto html2pdf
+        await new Promise(resolve => setTimeout(resolve, 300));
+
         let namaSantri = data.name || 'Santri';
         const opt = {
             margin:       [0.1, 0.4, 0.4, 0.4], 
@@ -3683,9 +3808,10 @@ async function cetakPDFRapor(id, btnElement) {
             html2canvas:  { 
                 scale: 2, 
                 useCORS: true, 
+                allowTaint: true,
                 windowWidth: 800,
                 width: 800,
-                x: 0, // KUNCI PENTING: Paksa kamera memfoto pas dari pojok kiri (Tidak akan terpotong lagi)
+                x: 0, 
                 y: 0,
                 scrollY: 0, 
                 scrollX: 0
@@ -3693,19 +3819,16 @@ async function cetakPDFRapor(id, btnElement) {
             jsPDF:        { unit: 'in', format: 'A4', orientation: 'portrait' }
         };
 
-        // Eksekusi Pembuatan PDF
         await html2pdf().set(opt).from(printContainer.firstElementChild).save();
 
     } catch (error) {
         console.error("Gagal mencetak PDF:", error);
         alert("Terjadi kesalahan saat memproses PDF: Pastikan internet stabil.");
     } finally {
-        // 9. Pastikan tombol normal kembali
         if (btnElement) {
             btnElement.innerHTML = originalText;
             btnElement.disabled = false;
         }
-        // 10. Langsung hapus sampah elemen dari web agar tidak membebani memori HP
         if (printContainer && printContainer.parentNode) {
             printContainer.parentNode.removeChild(printContainer);
         }
