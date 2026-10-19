@@ -1207,7 +1207,15 @@ formContainer.innerHTML = `
 </div>
 
 <hr>
-<h6 class="fw-bold mb-3">Input Nilai Rapor:</h6>
+// --- UBAH BAGIAN HEADER INPUT NILAI DI openDetail() ---
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="fw-bold mb-0">Input Nilai Rapor:</h6>
+    <button type="button" class="btn btn-xs btn-outline-danger shadow-sm py-1 px-2" 
+            style="font-size: 0.75rem;" 
+            onclick="resetNilaiSantri('${id}')">
+        <i class="fas fa-undo me-1"></i> Reset Nilai
+    </button>
+</div>
 `;
 
     let subjects = isMadinClass(data.class)
@@ -3897,6 +3905,64 @@ window.filterPembayaran = function(statusTarget) {
         }
     });
 };
+
+// =============================================================================
+// 🧹 RESET NILAI RAPOR SANTRI
+// =============================================================================
+async function resetNilaiSantri(studentId) {
+    const result = await Swal.fire({
+        title: 'Reset Nilai Rapor?',
+        text: 'Semua nilai mata pelajaran, catatan, dan status input untuk santri ini akan dikosongkan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Reset Nilai!',
+        cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        // 1. Kosongkan semua input nilai di modal secara instan
+        const inputs = document.querySelectorAll('.grade-input');
+        inputs.forEach(input => {
+            input.value = '';
+        });
+
+        // 2. Kosongkan input catatan ustadzah di modal
+        const notesEl = document.getElementById('gradeNotes');
+        if (notesEl) notesEl.value = '';
+
+        // 3. Update Firestore untuk mengosongkan data grades & catatan
+        await db.collection('students').doc(studentId).update({
+            grades: firebase.firestore.FieldValue.delete(),
+            notes: firebase.firestore.FieldValue.delete(),
+            rapor_status: 'belum',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 4. Hapus draf nilai lokal jika ada
+        if (typeof hapusDrafRapor === 'function') {
+            hapusDrafRapor(studentId);
+        }
+
+        Swal.fire({
+            title: 'Berhasil!',
+            text: 'Nilai rapor berhasil direset.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        // Refresh daftar santri
+        if (typeof renderStudents === 'function') renderStudents();
+
+    } catch (error) {
+        console.error('Gagal mereset nilai:', error);
+        Swal.fire('Gagal', 'Terjadi kesalahan saat mereset nilai: ' + error.message, 'error');
+    }
+}
 
 // =============================================================================
 // 🔄 AUTO-RESET TTD WALI SANTRI (Setiap Awal Oktober & Februari)
