@@ -110,23 +110,28 @@ let currentView = 'grid';
                 statusSebelumnya = userData.isApproved;
 
                 if (currentRole === 'admin') {
-                    // Setel otomatis kelas pegangan masing-masing ustadzah untuk keperluan input santri baru
-                    let namaAdmin = userData.nama || userData.name || "";
-                    if (namaAdmin.includes("Valyne") || namaAdmin.includes("Meylan")) {
-                        window.userClass = "TK-SD (Sunan Muria)";
-                    } else if (namaAdmin.includes("Salwa")) {
-                        window.userClass = "TK-SD (Sunan Giri)";
-                    } else {
-                        window.userClass = userData.class || "TK-SD (Sunan Giri)";
-                    }
+    // Setel otomatis kelas pegangan masing-masing ustadzah untuk keperluan input santri baru
+    let namaAdmin = userData.nama || userData.name || "";
+    if (namaAdmin.includes("Valyne") || namaAdmin.includes("Meylan")) {
+        window.userClass = "TK-SD (Sunan Muria)";
+    } else if (namaAdmin.includes("Salwa")) {
+        window.userClass = "TK-SD (Sunan Giri)";
+    } else {
+        // Jika userData.class bernilai 'MADIN', otomatis ditambahi ' (Sunan Gresik)'
+        let userCls = userData.class || "TK-SD (Sunan Giri)";
+        if (userCls === 'MADIN') {
+            userCls = "MADIN (Sunan Gresik)";
+        }
+        window.userClass = userCls;
+    }
 
-                    const classInputContainer = document.getElementById('classInputContainer');
-                    const studentClassInput = document.getElementById('studentClass');
+    const classInputContainer = document.getElementById('classInputContainer');
+    const studentClassInput = document.getElementById('studentClass');
 
-                    // Sembunyikan pilihan kelas di form agar Admin tidak salah input kelas lain
-                    if (classInputContainer) classInputContainer.classList.add('d-none');
-                    if (studentClassInput) studentClassInput.value = window.userClass;
-                }
+    // Sembunyikan pilihan kelas di form agar Admin tidak salah input kelas lain
+    if (classInputContainer) classInputContainer.classList.add('d-none');
+    if (studentClassInput) studentClassInput.value = window.userClass;
+}
 
                 // ARAHKAN KE HALAMAN & MUNCULKAN TOMBOL PLUS
                 if (currentRole === 'admin' || currentRole === 'superadmin') {
