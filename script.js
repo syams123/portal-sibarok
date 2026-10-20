@@ -732,19 +732,19 @@ function ensureMadinUiSupport() {
 }
 
 // --- FITUR ADMIN (USTADZAH) ---
-
-/// 1. Simpan Data Santri (Create/Update)
+// 1. Simpan Data Santri (Create/Update)
 async function saveStudent() {
     const id = document.getElementById('studentId').value;
-    const name = document.getElementById('stdName').value;
+    const name = document.getElementById('stdName').value.trim();
     const gender = document.getElementById('stdGender').value;
     const jilid = document.getElementById('stdJilid').value;
-    const parentEmail = document.getElementById('stdParentEmail').value;
+    // Email dirapikan (huruf kecil, tanpa spasi) agar cocok dengan email akun Firebase wali
+    const parentEmail = document.getElementById('stdParentEmail').value.trim().toLowerCase();
     const parentPhone = document.getElementById('stdParentPhone').value;
     const photoFile = document.getElementById('stdPhoto').files[0];
     const joinDateValue = document.getElementById('stdJoinDate').value;
 
-    // --- LOGIKA PERBAIKAN DI SINI ---
+    // --- LOGIKA KELAS & PENGAJAR ---
     let sClass = "";
     let teacher = "";
 
@@ -776,12 +776,21 @@ async function saveStudent() {
         }
     }
 
+    // --- VALIDASI ---
+    if (!name) {
+        Swal.fire("Peringatan", "Nama santri wajib diisi!", "warning");
+        return;
+    }
+
     if (!joinDateValue && !id) {
         Swal.fire("Peringatan", "Silakan isi tanggal aktif santri terlebih dahulu!", "warning");
         return;
     }
 
     let photoUrl = "";
+
+    // Tampilkan loading setelah validasi lolos (upload foto bisa memakan waktu)
+    document.getElementById('loading').classList.remove('d-none');
 
     try {
         if (photoFile) {
@@ -813,7 +822,7 @@ async function saveStudent() {
             const snapshot = await db.collection('students').get();
             const urutan = String(snapshot.size + 1).padStart(2, '0');
             
-            // Format NIS sesuai permintaan: Tahun + Tanggal + Bulan + Urutan
+            // Format NIS: Tahun + Tanggal + Bulan + Urutan
             studentData.nis = `${tahun}${tanggal}${bulan}${urutan}`;
             studentData.grades = {}; 
             studentData.infaqStatus = false;
@@ -823,9 +832,20 @@ async function saveStudent() {
         }
 
         const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
-        modal.hide();
+        if (modal) modal.hide();
         renderStudents();
         document.getElementById('studentForm').reset();
+
+        // Notifikasi sukses
+        Swal.fire({
+            icon: 'success',
+            title: id ? 'Data Diperbarui' : 'Santri Berhasil Ditambahkan',
+            text: id 
+                ? `Data ${name} berhasil diperbarui.` 
+                : `${name} sudah terdaftar. NIS: ${studentData.nis}`,
+            timer: 2500,
+            showConfirmButton: false
+        });
         
     } catch (error) {
         Swal.fire("Error", "Error: " + error.message, "error");
