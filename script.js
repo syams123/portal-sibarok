@@ -1562,19 +1562,19 @@ async function terapkanGerbangRapor(studentId, data) {
 
 // --- FITUR WALI SANTRI ---
 let childListenerUnsubscribe = null;
+let notifListenerUnsubscribe = null; // Tambahkan penampung unsubscribe notifikasi
 
 async function loadChildData(email, selectedId = null) {
     const loader = document.getElementById('loading');
     
     // Matikan antena sebelumnya (jika ada) mencegah lag/dobel saat wali ganti anak
-    if (childListenerUnsubscribe) {
-        childListenerUnsubscribe();
-    }
+    if (childListenerUnsubscribe) childListenerUnsubscribe();
+    if (notifListenerUnsubscribe) notifListenerUnsubscribe();
     
     // 1. ANTENA REAL-TIME: Nilai Rapor, Infaq, Foto, dan Profil
     childListenerUnsubscribe = db.collection('students').where('parentEmail', '==', email)        
     .onSnapshot((snapshot) => {
-            // MATIKAN LOADER SEGERA SAAT DATA TIBA (Menghilangkan stuck "Memuat")
+            // MATIKAN LOADER SEGERA SAAT DATA TIBA
             if (loader) loader.classList.add('d-none');
 
             if (snapshot.empty) {
@@ -1584,55 +1584,46 @@ async function loadChildData(email, selectedId = null) {
             }
 
             // =======================================================
-            // 🌟 AWAL SISIPAN: LOGIKA PEMILIH ANAK (MULTI-CHILD) 🌟
+            // LOGIKA PEMILIH ANAK (MULTI-CHILD)
             // =======================================================
             let docSnap = snapshot.docs[0]; // Default: Tampilkan anak pertama
 
             if (snapshot.size > 1) {
-                // 1. Jika ada ID yang dipilih lewat tombol, gunakan data anak tersebut
                 if (selectedId) {
                     const foundDoc = snapshot.docs.find(d => d.id === selectedId);
                     if (foundDoc) docSnap = foundDoc;
                 }
 
-                // 2. Buat wadah tombol navigasi secara otomatis jika belum ada
                 let navDiv = document.getElementById('multiChildNav');
                 if (!navDiv) {
                     navDiv = document.createElement('div');
                     navDiv.id = 'multiChildNav';
                     navDiv.className = 'mb-3';
                     const dashboard = document.getElementById('parentDashboard');
-                    if (dashboard) dashboard.prepend(navDiv); // Taruh paling atas di dalam dashboard
+                    if (dashboard) dashboard.prepend(navDiv);
                 }
 
-                // 3. Render tombol-tombol nama anak
                 let btnHtml = '<p class="small fw-bold mb-2 text-success"> Pilih Data Anak:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
 
-snapshot.forEach((doc) => {
-    const childData = doc.data();
-    const isSelected = (doc.id === docSnap.id);
-    
-    // Gunakan warna hijau (success) pengganti biru (primary)
-    const btnStyle = isSelected ? 'btn-success shadow-sm' : 'btn-outline-success';
-    
-    // Nama lengkap dengan proteksi truncate agar tetap rapi di mobile
-    const fullName = childData.name || "Tanpa Nama";
-    
-    btnHtml += `
-        <button class="btn btn-sm ${btnStyle} rounded-pill px-3" onclick="loadChildData('${email}', '${doc.id}')">
-            <span class="text-truncate-name">${fullName}</span>
-        </button>`;
-});
+                snapshot.forEach((doc) => {
+                    const childData = doc.data();
+                    const isSelected = (doc.id === docSnap.id);
+                    const btnStyle = isSelected ? 'btn-success shadow-sm' : 'btn-outline-success';
+                    const fullName = childData.name || "Tanpa Nama";
+                    
+                    btnHtml += `
+                        <button class="btn btn-sm ${btnStyle} rounded-pill px-3" onclick="loadChildData('${email}', '${doc.id}')">
+                            <span class="text-truncate-name">${fullName}</span>
+                        </button>`;
+                });
 
-btnHtml += '</div><hr class="mt-1 mb-3">';
-
-if(navDiv) navDiv.innerHTML = btnHtml;
+                btnHtml += '</div><hr class="mt-1 mb-3">';
+                if(navDiv) navDiv.innerHTML = btnHtml;
             }
-            // =======================================================
-            // 🌟 AKHIR SISIPAN 🌟
-            // =======================================================
 
-            // KODE ASLI KAKAK DI BAWAH INI TETAP UTUH 100% TANPA DIUBAH
+            // =======================================================
+            // DATA SANTRI AKTIF
+            // =======================================================
             const data = docSnap.data();
             const studentId = docSnap.id; 
             window.activeChildId = studentId;
@@ -1642,11 +1633,8 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             let bulanIndex = tgl.getMonth();
             let tahunIni = tgl.getFullYear();
 
-            // Jika tanggal 25 ke atas, majukan ke bulan berikutnya
             if (tanggalHariIni >= 25) {
                 bulanIndex = bulanIndex + 1;
-                
-                // Jika melebihi Desember (11), reset ke Januari (0) dan majukan tahunnya
                 if (bulanIndex > 11) {
                     bulanIndex = 0;
                     tahunIni = tahunIni + 1;
@@ -1675,9 +1663,8 @@ if(navDiv) navDiv.innerHTML = btnHtml;
             // --- B. Sinkronisasi Nilai, Absensi, & TTD ---
             const reportDiv = document.getElementById('childReportCard');
             if (reportDiv) {
-                let contentHtml = ''; // Variabel ini harus menampung SEMUANYA
+                let contentHtml = '';
 
-                // 1. Tambah Nilai
                 if (data.grades) {
                     for (const [subj, grade] of Object.entries(data.grades)) {
                         contentHtml += `
@@ -1688,16 +1675,14 @@ if(navDiv) navDiv.innerHTML = btnHtml;
                     }
                 }
 
-                // Tambahkan ini di bagian render dasbor wali santri
-if (data.notes) {
-    contentHtml += `
-        <div class="mt-4 p-3 bg-light rounded border border-success border-opacity-25">
-            <h6 class="fw-bold text-success small mb-2"><i class="fas fa-edit"></i> Catatan Ustadzah:</h6>
-            <p class="mb-0 small text-muted" style="font-style: italic; line-height: 1.5;">"${data.notes}"</p>
-        </div>
-    `;
-}
-                // 2. Tambah Absensi (Sesuai keinginan Kakak)
+                if (data.notes) {
+                    contentHtml += `
+                        <div class="mt-4 p-3 bg-light rounded border border-success border-opacity-25">
+                            <h6 class="fw-bold text-success small mb-2"><i class="fas fa-edit"></i> Catatan Ustadzah:</h6>
+                            <p class="mb-0 small text-muted" style="font-style: italic; line-height: 1.5;">"${data.notes}"</p>
+                        </div>`;
+                }
+
                 contentHtml += `
                     <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
                         <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
@@ -1705,9 +1690,7 @@ if (data.notes) {
                                 Kehadiran Santri
                             </h6>
                         </div>
-                    </div>`;
-
-                contentHtml += `
+                    </div>
                     <div class="grade-row d-flex justify-content-between border-bottom py-2">
                         <span>Sakit</span>
                         <span class="badge bg-danger">${data.absensiSakit || 0}</span>
@@ -1721,24 +1704,22 @@ if (data.notes) {
                         <span class="badge bg-secondary">${data.absensiLain || 0}</span>
                     </div>`;
 
-                // 3. Logika Wali Kelas
-                let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc."; // Ustadzah Fika
-        let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
-        
-        // Sesuaikan variabel penampung kelas agar fleksibel di 3 fungsi berbeda
-        const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
+                // Logika Wali Kelas
+                let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
+                let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
+                
+                const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
 
-        if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
-            namaWaliKelas = "Salwa Kamilatuz Zakiyah";
-            linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
-        } else if (kelasAktif.includes("Sunan Muria")) {
-            namaWaliKelas = "Meylan Gabby Ovalyne";
-            linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png"; // INFO: Jangan lupa ganti URL ini dengan link Imgur TTD asli Ustadzah Valyne jika sudah ada
-        }
+                if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
+                    namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+                    linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
+                } else if (kelasAktif.includes("Sunan Muria")) {
+                    namaWaliKelas = "Meylan Gabby Ovalyne";
+                    linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png";
+                }
 
                 const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-                // 4. Tambah Bagian TTD (Digabung ke contentHtml)
                 contentHtml += `
                 <div id="signatureWrapper" class="mt-4">
                     <div class="row text-center align-items-start g-0">
@@ -1770,57 +1751,82 @@ if (data.notes) {
                 </div>
                 <div id="signatureInputArea"></div>`;
 
-                // 5. Masukkan SEMUA ke dalam HTML sekaligus
                 reportDiv.innerHTML = contentHtml;
 
-                // 6. Jalankan fungsi TTD
                 if (typeof checkSignatureStatus === 'function') {
                     checkSignatureStatus(docSnap.id, data);
                 }
             }
 
-            // --- AKHIR ---
-            const ldr = document.getElementById('loading');
-            if (ldr) ldr.classList.add('d-none');
-            
             // --- C. Sinkronisasi Status Infaq Otomatis ---
             const statusText = document.getElementById('childInfaqStatus');
             const btnCetak = document.getElementById('btnCetakKuitansi');
             const cardInfaq = document.getElementById('cardInfaq'); 
             
             if (data.infaqStatus === true || data.infaqStatus === "Lunas") {
-                // Tampilan Lunas
                 if(statusText) { statusText.innerText = "Lunas"; statusText.className = "text-success fw-bold"; }
                 if(btnCetak) btnCetak.classList.remove('d-none');
-                
-                // Ganti Border ke Hijau
                 if(cardInfaq) {
                     cardInfaq.classList.remove('border-danger');
                     cardInfaq.classList.add('border-success');
                 }
             } else {
-                // Tampilan Belum Lunas
                 if(statusText) { statusText.innerText = "Belum Lunas"; statusText.className = "text-danger fw-bold"; }
                 if(btnCetak) btnCetak.classList.add('d-none');
-                
-                // Ganti Border ke Merah
                 if(cardInfaq) {
                     cardInfaq.classList.remove('border-success');
                     cardInfaq.classList.add('border-danger');
                 }
             }   
 
-            // --- GERBANG RAPOR: kunci rapor jika infaq Oktober/Februari belum lunas ---
-            terapkanGerbangRapor(studentId, data);
+            // 🌟 EKSEKUSI GERBANG RAPOR SECARA REAL-TIME 🌟
+            if (typeof terapkanGerbangRapor === 'function') {
+                terapkanGerbangRapor(studentId, data);
+            }
 
             // --- D. UPDATE OTOMATIS: Riwayat Pembayaran ---
             if (typeof loadPaymentHistory === 'function') loadPaymentHistory(studentId);
 
-            if (typeof playBeep === 'function') playBeep();
+            // --- E. ANTENA REAL-TIME: Notifikasi Lonceng (DIPINDAHKAN KE DALAM SCOPE YANG AMAN) ---
+            if (data.name) {
+                if (notifListenerUnsubscribe) notifListenerUnsubscribe(); // Hentikan listener notifikasi sebelumnya
+                
+                notifListenerUnsubscribe = db.collection('notifications')
+                .where('parentEmail', '==', email)
+                .where('studentName', '==', data.name)
+                .orderBy('timestamp', 'desc')
+                .limit(5)
+                .onSnapshot((notifSnapshot) => {
+                    const notifCount = document.getElementById('notifCount');
+                    const notifList = document.getElementById('notifList');
+                    
+                    if (!notifSnapshot.empty) {
+                        if(notifCount) {
+                            notifCount.innerText = notifSnapshot.size;
+                            notifCount.classList.remove('d-none');
+                        }
+                        if(notifList) {
+                            notifList.innerHTML = '';
+                            notifSnapshot.forEach(doc => {
+                                const n = doc.data();
+                                notifList.innerHTML += `
+                                    <div class="list-group-item p-2 small">
+                                        <b class="text-success">${n.title || 'Info'}</b><br>${n.message}
+                                    </div>`;
+                            });
+                        }
+                    } else {
+                        if(notifCount) notifCount.classList.add('d-none');
+                        if(notifList) notifList.innerHTML = '<div class="p-3 text-center small text-muted">Tidak ada notifikasi untuk ananda ini.</div>';
+                    }
+                });
+            }
+
         }, (error) => {
             console.error("Error Snapshot:", error);
             if (loader) loader.classList.add('d-none');
         });
+}
 
     // 2. ANTENA REAL-TIME: Notifikasi Lonceng
     db.collection('notifications')
