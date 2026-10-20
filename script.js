@@ -46,7 +46,22 @@ let currentRole = null; // 'admin' atau 'parent' atau 'superadmin'
 let studentsData = [];
 let statusSebelumnya = null;
 // Inisialisasi variabel global di bagian atas script
-let currentView = 'grid'; 
+let currentView = 'grid';
+
+// --- DAFTAR SECURE QUESTIONS (KEISLAMAN/AL-QUR'AN) ---
+const secureQuestionsList = [
+    { id: 1, question: "Apa bunyi rukun Islam ketiga?", answer: "zakat" },
+    { id: 2, question: "Sifat wajib bagi Allah Qidam artinya?", answer: "terdahulu" }, // atau "awal"
+    { id: 3, question: "Apa bunyi rukun Iman keenam?", answer: "qada dan qadar" },
+    { id: 4, question: "Allah Berbeda Dengan yang Baru adalah arti sifat Allah yang berbunyi?", answer: "mukhalafatu lil hawaditsi" },
+    { id: 5, question: "Kitab suci yang diturunkan kepada Nabi Muhammad SAW adalah?", answer: "al quran" },
+    { id: 6, question: "Nabi dan Rasul pertama yang diciptakan Allah SWT adalah Nabi?", answer: "adam" }
+];
+
+// Helper untuk membersihkan teks jawaban (menghapus spasi lebih & huruf kecil semua)
+function cleanAnswer(text) {
+    return (text || "").toString().trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+}
 
 // --- AUTHENTICATION ---
 
@@ -1826,7 +1841,7 @@ async function loadChildData(email, selectedId = null) {
             console.error("Error Snapshot:", error);
             if (loader) loader.classList.add('d-none');
         });
-}
+
 
     // 2. ANTENA REAL-TIME: Notifikasi Lonceng
     db.collection('notifications')
@@ -2041,6 +2056,12 @@ async function loadProfile() {
     }
 
 function showRegisterModal() {
+    const randomIndex = Math.floor(Math.random() * secureQuestionsList.length);
+    const selectedQ = secureQuestionsList[randomIndex];
+
+    document.getElementById('displaySecurityQuestion').innerText = selectedQ.question;
+    document.getElementById('regQuestionId').value = selectedQ.id;
+    document.getElementById('regSecurityAnswer').value = "";
     new bootstrap.Modal(document.getElementById('registerModal')).show();
 }
 
@@ -2048,31 +2069,32 @@ function showRegisterModal() {
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Pastikan ID ini sesuai dengan yang ada di tag <input> HTML Kakak
     const nama = document.getElementById('regNama').value;
     const email = document.getElementById('regEmail').value; 
     const password = document.getElementById('regParentPassword').value;
+    const qId = parseInt(document.getElementById('regQuestionId').value);
+    const userAnswer = document.getElementById('regSecurityAnswer').value;
 
-    if (!nama || !email || !password) {
+    if (!nama || !email || !password || !userAnswer) {
         Swal.fire("Peringatan", "Harap isi semua kolom!", "warning");
         return;
     }
 
-    // Tampilkan Loading
     Swal.showLoading();
 
     try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         
-        // Simpan ke Firestore
+        // Simpan data user beserta Pertanyaan Keamanan di Firestore
         await db.collection('users').doc(userCredential.user.uid).set({
             nama: nama, 
             email: email, 
-            role: 'parent', // Kunci agar masuk ke Dashboard Wali
+            role: 'parent',
+            securityQuestionId: qId,
+            securityAnswer: cleanAnswer(userAnswer), // Disimpan dengan format clean agar validasi fleksibel
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // PAKSA LOGOUT agar sistem tidak bingung antara session daftar & session login
         await auth.signOut();
 
         Swal.fire("Berhasil", "Pendaftaran Berhasil! Silakan Login dengan email dan password tersebut.", "success").then(() => {
@@ -3054,48 +3076,78 @@ async function tandaiDibaca(id, type, nama) {
 }
 
 async function forgotPassword() {
-    // 1. Ganti prompt() dengan Swal.fire input
+    // 1. Minta Email
     const { value: email } = await Swal.fire({
         title: 'Lupa Password?',
-        text: 'Masukkan Email terdaftar untuk reset password:',
-        input: 'email', // Validasi format email otomatis
+        text: 'Masukkan Email terdaftar Anda:',
+        input: 'email',
         inputPlaceholder: 'nama@email.com',
         showCancelButton: true,
-        confirmButtonText: 'Kirim Link Reset',
+        confirmButtonText: 'Lanjutkan',
         cancelButtonText: 'Batal',
-        confirmButtonColor: '#198754', // Hijau menyesuaikan TPQ Al-Mubarok
-        // Pastikan SweetAlert mengikuti Dark Mode jika sedang aktif
-        background: document.body.classList.contains('dark-mode') ? '#1e1e1e' : '#fff',
-        color: document.body.classList.contains('dark-mode') ? '#fff' : '#000',
+        confirmButtonColor: '#198754'
     });
 
-    // Jika user menekan cancel atau tidak mengisi email
     if (!email) return;
 
     const loader = document.getElementById('loading');
     if (loader) loader.classList.remove('d-none');
 
     try {
+        // Cek data user di Firestore
+        const userSnap = await db.collection('users').where('email', '==', email).limit(1).get();
+
+        if (userSnap.empty) {
+            if (loader) loader.classList.add('d-none');
+            Swal.fire("Error", "Email tidak terdaftar!", "error");
+            return;
+        }
+
+        const userData = userSnap.docs[0].data();
+
+        // Jika user memiliki Secure Question (Wali Santri)
+        if (userData.securityQuestionId && userData.securityAnswer) {
+            const qObj = secureQuestionsList.find(q => q.id === userData.securityQuestionId);
+            const questionText = qObj ? qObj.question : "Pertanyaan Keamanan Khusus";
+
+            if (loader) loader.classList.add('d-none');
+
+            // 2. Minta Jawaban Pertanyaan Keamanan
+            const { value: ansInput } = await Swal.fire({
+                title: 'Pertanyaan Keamanan',
+                text: questionText,
+                input: 'text',
+                inputPlaceholder: 'Ketik jawaban Anda di sini...',
+                showCancelButton: true,
+                confirmButtonText: 'Verifikasi & Kirim Reset',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#198754'
+            });
+
+            if (!ansInput) return;
+
+            // Validasi Jawaban
+            if (cleanAnswer(ansInput) !== userData.securityAnswer) {
+                Swal.fire("Jawaban Salah", "Jawaban pertanyaan keamanan yang Anda masukkan tidak cocok!", "error");
+                return;
+            }
+        }
+
+        // 3. Kirim Reset Password jika jawaban cocok (atau jika akun admin tanpa secure question)
+        if (loader) loader.classList.remove('d-none');
         await auth.sendPasswordResetEmail(email);
         
         if (loader) loader.classList.add('d-none');
         Swal.fire({
             title: "Berhasil",
-            text: "Link reset password telah dikirim ke email. Silakan cek Inbox atau folder Spam.",
+            text: "Verifikasi berhasil! Link reset password telah dikirim ke email Anda. Silakan cek Inbox/Spam.",
             icon: "success",
             confirmButtonColor: '#198754'
         });
+
     } catch (error) {
         if (loader) loader.classList.add('d-none');
-        
-        let msg = "Gagal mengirim email reset.";
-        if (error.code === 'auth/user-not-found') {
-            msg = "Email tidak terdaftar!";
-        } else if (error.code === 'auth/invalid-email') {
-            msg = "Format email salah!";
-        }
-        
-        Swal.fire("Error", msg, "error");
+        Swal.fire("Error", "Terjadi kesalahan: " + error.message, "error");
     }
 }
 
