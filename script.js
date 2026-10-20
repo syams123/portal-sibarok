@@ -1535,23 +1535,26 @@ async function terapkanGerbangRapor(studentId, data) {
 
     const token = ++_gerbangRaporToken;
     const target = hitungTargetInfaqRapor();
-    const cacheKey = `${studentId}|${target.periode}`;
 
-    // Sudah terbukti lunas / ada izin manual -> buka tanpa kedip
-    if (data.rapotDibuka === true || _gerbangRaporLunas[cacheKey]) {
+    // 1. Izin manual dari ustadzah -> buka tanpa kunci
+    if (data.rapotDibuka === true) {
         setBlurRapor(reportDiv, false);
         setBannerGerbangRapor(false);
         return;
     }
 
-    // Sambil menunggu cek database, kaburkan dulu isi rapor
-    setBlurRapor(reportDiv, true);
+    // 2. Jika infaqStatus di dokumen santri secara tegas false/tidak lunas -> LANGSUNG KUNCI UTUH
+    if (data.infaqStatus === false || data.infaqStatus === 'Belum' || !data.infaqStatus) {
+        setBlurRapor(reportDiv, true);
+        setBannerGerbangRapor(true, target, data.name);
+        return;
+    }
 
+    // 3. Jika infaqStatus bernilai true, verifikasi ketersediaan dokumen di sub-collection 'payments'
     const lunas = await cekInfaqUntukRapor(studentId, data, target);
-    if (token !== _gerbangRaporToken) return; // ada pemanggilan yang lebih baru, abaikan
+    if (token !== _gerbangRaporToken) return; // Mengabaikan proses jika ada request yang lebih baru
 
     if (lunas) {
-        _gerbangRaporLunas[cacheKey] = true;
         setBlurRapor(reportDiv, false);
         setBannerGerbangRapor(false);
     } else {
@@ -1860,7 +1863,6 @@ async function loadChildData(email, selectedId = null) {
             if(notifList) notifList.innerHTML = '<div class="p-3 text-center small text-muted">Tidak ada notifikasi untuk ananda ini.</div>';
         }
     });
-}
 
 // --- SINKRONISASI TANDA TANGAN ---
 const tglDisplay = document.getElementById('tglTTDDisplay');
