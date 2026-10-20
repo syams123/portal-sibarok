@@ -2629,7 +2629,7 @@ async function approvePembayaran(id, nama) {
 }
 
 window.resetPembayaran = async function(id, nama) {
-    const info = hitungPeriodeInfaq(); // Mendapatkan "Mei 2026"
+    const info = hitungPeriodeInfaq(); 
     const bulanTarget = info.periode;
 
     const result = await Swal.fire({
@@ -2643,37 +2643,44 @@ window.resetPembayaran = async function(id, nama) {
 
     if (!result.isConfirmed) return;
 
-    document.getElementById('loading').classList.remove('d-none');
+    const loader = document.getElementById('loading');
+    if (loader) loader.classList.remove('d-none');
 
     try {
         const studentRef = db.collection('students').doc(id);
         const batch = db.batch();
 
-        // 1. KUNCI UTAMA: Hapus dokumen spesifik bulan ini di sub-collection
+        // 1. Hapus semua riwayat pembayaran di sub-collection
         const snapHistory = await studentRef.collection('payments').get();
-snapHistory.forEach(doc => {
-    batch.delete(doc.ref);
-});
+        snapHistory.forEach(doc => {
+            batch.delete(doc.ref);
+        });
 
-        // 2. Bersihkan semua pemicu di dokumen utama (Wajib agar lonceng mati)
+        // 2. Bersihkan field di dokumen utama santri
         batch.update(studentRef, {
             infaqStatus: false,
-            paymentMethod: firebase.firestore.FieldValue.delete(), // Hapus metode bayar
-            lastConfirmation: firebase.firestore.FieldValue.delete(), // Hapus tgl konfirmasi
+            paymentMethod: firebase.firestore.FieldValue.delete(),
+            lastConfirmation: firebase.firestore.FieldValue.delete(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Eksekusi sekaligus
         await batch.commit();
 
-        document.getElementById('loading').classList.add('d-none');
-        Swal.fire("Berhasil", `Riwayat ${bulanTarget} telah dibersihkan.`, "success");
+        // 3. KUNCI UTAMA: Hapus cache gerbang rapor di memori browser
+        const cacheKey = `${id}|${bulanTarget}`;
+        if (typeof _gerbangRaporLunas !== 'undefined') {
+            delete _gerbangRaporLunas[cacheKey];
+        }
+
+        if (loader) loader.classList.add('d-none');
+        Swal.fire("Berhasil", `Riwayat pembayaran ${nama} telah di-reset.`, "success");
         
-        // Render ulang daftar kartu
+        // Refresh daftar santri & riwayat
         if (typeof renderStudents === "function") renderStudents();
+        if (typeof window.loadPaymentHistory === "function") window.loadPaymentHistory(id);
 
     } catch (error) {
-        document.getElementById('loading').classList.add('d-none');
+        if (loader) loader.classList.add('d-none');
         Swal.fire("Gagal", "Error: " + error.message, "error");
     }
 };
