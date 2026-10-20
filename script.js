@@ -1565,304 +1565,271 @@ async function terapkanGerbangRapor(studentId, data) {
 
 // --- FITUR WALI SANTRI ---
 let childListenerUnsubscribe = null;
-let notifListenerUnsubscribe = null; // Tambahkan penampung unsubscribe notifikasi
+let notifListenerUnsubscribe = null; // Penampung unsubscribe listener notifikasi
 
 async function loadChildData(email, selectedId = null) {
     const loader = document.getElementById('loading');
     
-    // Matikan antena sebelumnya (jika ada) mencegah lag/dobel saat wali ganti anak
+    // Matikan listener sebelumnya jika ada (mencegah memory leak / listener ganda)
     if (childListenerUnsubscribe) childListenerUnsubscribe();
     if (notifListenerUnsubscribe) notifListenerUnsubscribe();
     
     // 1. ANTENA REAL-TIME: Nilai Rapor, Infaq, Foto, dan Profil
     childListenerUnsubscribe = db.collection('students').where('parentEmail', '==', email)        
     .onSnapshot((snapshot) => {
-            // MATIKAN LOADER SEGERA SAAT DATA TIBA
-            if (loader) loader.classList.add('d-none');
+        // MATIKAN LOADER SEGERA SAAT DATA TIBA
+        if (loader) loader.classList.add('d-none');
 
-            if (snapshot.empty) {
+        if (snapshot.empty) {
+            const dashboard = document.getElementById('parentDashboard');
+            if (dashboard) dashboard.innerHTML = '<div class="alert alert-warning">Data santri tidak ditemukan.</div>';
+            return;
+        }
+
+        // =======================================================
+        // LOGIKA PEMILIH ANAK (MULTI-CHILD)
+        // =======================================================
+        let docSnap = snapshot.docs[0]; // Default: Tampilkan anak pertama
+
+        if (snapshot.size > 1) {
+            if (selectedId) {
+                const foundDoc = snapshot.docs.find(d => d.id === selectedId);
+                if (foundDoc) docSnap = foundDoc;
+            }
+
+            let navDiv = document.getElementById('multiChildNav');
+            if (!navDiv) {
+                navDiv = document.createElement('div');
+                navDiv.id = 'multiChildNav';
+                navDiv.className = 'mb-3';
                 const dashboard = document.getElementById('parentDashboard');
-                if(dashboard) dashboard.innerHTML = '<div class="alert alert-warning">Data santri tidak ditemukan.</div>';
-                return;
+                if (dashboard) dashboard.prepend(navDiv);
             }
 
-            // =======================================================
-            // LOGIKA PEMILIH ANAK (MULTI-CHILD)
-            // =======================================================
-            let docSnap = snapshot.docs[0]; // Default: Tampilkan anak pertama
+            let btnHtml = '<p class="small fw-bold mb-2 text-success"> Pilih Data Anak:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
 
-            if (snapshot.size > 1) {
-                if (selectedId) {
-                    const foundDoc = snapshot.docs.find(d => d.id === selectedId);
-                    if (foundDoc) docSnap = foundDoc;
-                }
+            snapshot.forEach((doc) => {
+                const childData = doc.data();
+                const isSelected = (doc.id === docSnap.id);
+                const btnStyle = isSelected ? 'btn-success shadow-sm' : 'btn-outline-success';
+                const fullName = childData.name || "Tanpa Nama";
+                
+                btnHtml += `
+                    <button class="btn btn-sm ${btnStyle} rounded-pill px-3" onclick="loadChildData('${email}', '${doc.id}')">
+                        <span class="text-truncate-name">${fullName}</span>
+                    </button>`;
+            });
 
-                let navDiv = document.getElementById('multiChildNav');
-                if (!navDiv) {
-                    navDiv = document.createElement('div');
-                    navDiv.id = 'multiChildNav';
-                    navDiv.className = 'mb-3';
-                    const dashboard = document.getElementById('parentDashboard');
-                    if (dashboard) dashboard.prepend(navDiv);
-                }
+            btnHtml += '</div><hr class="mt-1 mb-3">';
+            if (navDiv) navDiv.innerHTML = btnHtml;
+        }
 
-                let btnHtml = '<p class="small fw-bold mb-2 text-success"> Pilih Data Anak:</p><div class="d-flex gap-2 overflow-auto pb-2" style="white-space: nowrap;">';
+        // =======================================================
+        // DATA SANTRI AKTIF
+        // =======================================================
+        const data = docSnap.data();
+        const studentId = docSnap.id; 
+        window.activeChildId = studentId;
+        
+        const tgl = new Date();
+        const tanggalHariIni = tgl.getDate();
+        let bulanIndex = tgl.getMonth();
+        let tahunIni = tgl.getFullYear();
 
-                snapshot.forEach((doc) => {
-                    const childData = doc.data();
-                    const isSelected = (doc.id === docSnap.id);
-                    const btnStyle = isSelected ? 'btn-success shadow-sm' : 'btn-outline-success';
-                    const fullName = childData.name || "Tanpa Nama";
-                    
-                    btnHtml += `
-                        <button class="btn btn-sm ${btnStyle} rounded-pill px-3" onclick="loadChildData('${email}', '${doc.id}')">
-                            <span class="text-truncate-name">${fullName}</span>
-                        </button>`;
-                });
-
-                btnHtml += '</div><hr class="mt-1 mb-3">';
-                if(navDiv) navDiv.innerHTML = btnHtml;
+        if (tanggalHariIni >= 25) {
+            bulanIndex = bulanIndex + 1;
+            if (bulanIndex > 11) {
+                bulanIndex = 0;
+                tahunIni = tahunIni + 1;
             }
+        }
 
-            // =======================================================
-            // DATA SANTRI AKTIF
-            // =======================================================
-            const data = docSnap.data();
-            const studentId = docSnap.id; 
-            window.activeChildId = studentId;
-            
-            const tgl = new Date();
-            const tanggalHariIni = tgl.getDate();
-            let bulanIndex = tgl.getMonth();
-            let tahunIni = tgl.getFullYear();
+        const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const namaBulanFix = daftarBulan[bulanIndex];
+        
+        const displayBulan = document.getElementById('currentMonthDisplay');
+        if (displayBulan) {
+            displayBulan.innerText = "Bulan " + namaBulanFix + " " + tahunIni;
+        }
 
-            if (tanggalHariIni >= 25) {
-                bulanIndex = bulanIndex + 1;
-                if (bulanIndex > 11) {
-                    bulanIndex = 0;
-                    tahunIni = tahunIni + 1;
-                }
-            }
+        // --- A. Sinkronisasi Foto & Profil ---
+        const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
 
-            const daftarBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const namaBulanFix = daftarBulan[bulanIndex];
-            
-            const displayBulan = document.getElementById('currentMonthDisplay');
-            if (displayBulan) {
-                displayBulan.innerText = "Bulan " + namaBulanFix + " " + tahunIni;
-            }
+        if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = fotoSantri;
+        if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
+        if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
 
-            // --- A. Sinkronisasi Foto & Profil ---
-            const fotoSantri = data.photo || (data.gender === 'Perempuan' ? 'https://i.imgur.com/NcNQ9R3.jpeg' : 'https://i.imgur.com/HPPr16Q.jpeg');
+        if (document.getElementById('childJilidDisplay')) {
+            document.getElementById('childJilidDisplay').innerText = formatLevelLabel(data.jilid, data.class);
+        }
 
-            if (document.getElementById('childPhotoDisplay')) document.getElementById('childPhotoDisplay').src = fotoSantri;
-            if (document.getElementById('childNameDisplay')) document.getElementById('childNameDisplay').innerText = data.name || "-";
-            if (document.getElementById('childClassDisplay')) document.getElementById('childClassDisplay').innerText = data.class || "-";
+        // --- B. Sinkronisasi Nilai, Absensi, & TTD ---
+        const reportDiv = document.getElementById('childReportCard');
+        if (reportDiv) {
+            let contentHtml = '';
 
-            if (document.getElementById('childJilidDisplay')) {
-                document.getElementById('childJilidDisplay').innerText = formatLevelLabel(data.jilid, data.class);
-            }
-
-            // --- B. Sinkronisasi Nilai, Absensi, & TTD ---
-            const reportDiv = document.getElementById('childReportCard');
-            if (reportDiv) {
-                let contentHtml = '';
-
-                if (data.grades) {
-                    for (const [subj, grade] of Object.entries(data.grades)) {
-                        contentHtml += `
-                            <div class="grade-row d-flex justify-content-between border-bottom py-2">
-                                <span>${subj}</span>
-                                <span class="badge bg-primary badge-grade">${grade}</span>
-                            </div>`;
-                    }
-                }
-
-                if (data.notes) {
+            if (data.grades) {
+                for (const [subj, grade] of Object.entries(data.grades)) {
                     contentHtml += `
-                        <div class="mt-4 p-3 bg-light rounded border border-success border-opacity-25">
-                            <h6 class="fw-bold text-success small mb-2"><i class="fas fa-edit"></i> Catatan Ustadzah:</h6>
-                            <p class="mb-0 small text-muted" style="font-style: italic; line-height: 1.5;">"${data.notes}"</p>
+                        <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                            <span>${subj}</span>
+                            <span class="badge bg-primary badge-grade">${grade}</span>
                         </div>`;
                 }
+            }
 
+            if (data.notes) {
                 contentHtml += `
-                    <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
-                        <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
-                            <h6 class="fw-bold mb-0 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
-                                Kehadiran Santri
-                            </h6>
-                        </div>
-                    </div>
-                    <div class="grade-row d-flex justify-content-between border-bottom py-2">
-                        <span>Sakit</span>
-                        <span class="badge bg-danger">${data.absensiSakit || 0}</span>
-                    </div>
-                    <div class="grade-row d-flex justify-content-between border-bottom py-2">
-                        <span>Izin</span>
-                        <span class="badge bg-warning text-dark">${data.absensiIzin || 0}</span>
-                    </div>
-                    <div class="grade-row d-flex justify-content-between border-bottom py-2">
-                        <span>Lain-lain</span>
-                        <span class="badge bg-secondary">${data.absensiLain || 0}</span>
+                    <div class="mt-4 p-3 bg-light rounded border border-success border-opacity-25">
+                        <h6 class="fw-bold text-success small mb-2"><i class="fas fa-edit"></i> Catatan Ustadzah:</h6>
+                        <p class="mb-0 small text-muted" style="font-style: italic; line-height: 1.5;">"${data.notes}"</p>
                     </div>`;
+            }
 
-                // Logika Wali Kelas
-                let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
-                let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
-                
-                const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
-
-                if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
-                    namaWaliKelas = "Salwa Kamilatuz Zakiyah";
-                    linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
-                } else if (kelasAktif.includes("Sunan Muria")) {
-                    namaWaliKelas = "Meylan Gabby Ovalyne";
-                    linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png";
-                }
-
-                const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-
-                contentHtml += `
-                <div id="signatureWrapper" class="mt-4">
-                    <div class="row text-center align-items-start g-0">
-                        <div class="col-4">
-                            <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
-                            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
-                            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                                <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto;">
-                            </div>
-                            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
-                        </div>
-                        <div class="col-4">
-                            <p class="small mb-0">&nbsp;</p>
-                            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
-                            <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                                <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto;">
-                            </div>
-                            <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
-                        </div>
-                        <div class="col-4">
-                            <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
-                            <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
-                            <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
-                                ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
-                            </div>
-                            <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">${data.parentName || "( Nama Wali Santri )"}</p>
-                        </div>
+            contentHtml += `
+                <div class="mt-4 mb-2" style="margin-left: -1rem; margin-right: -1rem;"> 
+                    <div class="py-2 px-3 bg-secondary bg-opacity-25 border-top border-bottom border-secondary border-opacity-25">
+                        <h6 class="fw-bold mb-0 text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
+                            Kehadiran Santri
+                        </h6>
                     </div>
                 </div>
-                <div id="signatureInputArea"></div>`;
+                <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                    <span>Sakit</span>
+                    <span class="badge bg-danger">${data.absensiSakit || 0}</span>
+                </div>
+                <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                    <span>Izin</span>
+                    <span class="badge bg-warning text-dark">${data.absensiIzin || 0}</span>
+                </div>
+                <div class="grade-row d-flex justify-content-between border-bottom py-2">
+                    <span>Lain-lain</span>
+                    <span class="badge bg-secondary">${data.absensiLain || 0}</span>
+                </div>`;
 
-                reportDiv.innerHTML = contentHtml;
-
-                if (typeof checkSignatureStatus === 'function') {
-                    checkSignatureStatus(docSnap.id, data);
-                }
-            }
-
-            // --- C. Sinkronisasi Status Infaq Otomatis ---
-            const statusText = document.getElementById('childInfaqStatus');
-            const btnCetak = document.getElementById('btnCetakKuitansi');
-            const cardInfaq = document.getElementById('cardInfaq'); 
+            // Logika Wali Kelas
+            let namaWaliKelas = "Hafi Dzotur Rofi'ah, Lc.";
+            let linkTtdWaliKelas = "https://i.imgur.com/APp2Mt6.png"; 
             
-            if (data.infaqStatus === true || data.infaqStatus === "Lunas") {
-                if(statusText) { statusText.innerText = "Lunas"; statusText.className = "text-success fw-bold"; }
-                if(btnCetak) btnCetak.classList.remove('d-none');
-                if(cardInfaq) {
-                    cardInfaq.classList.remove('border-danger');
-                    cardInfaq.classList.add('border-success');
-                }
-            } else {
-                if(statusText) { statusText.innerText = "Belum Lunas"; statusText.className = "text-danger fw-bold"; }
-                if(btnCetak) btnCetak.classList.add('d-none');
-                if(cardInfaq) {
-                    cardInfaq.classList.remove('border-success');
-                    cardInfaq.classList.add('border-danger');
-                }
-            }   
+            const kelasAktif = (typeof kelasSantri !== 'undefined') ? kelasSantri : (typeof kelasAnak !== 'undefined' ? kelasAnak : (data.class || ""));
 
-            // 🌟 EKSEKUSI GERBANG RAPOR SECARA REAL-TIME 🌟
-            if (typeof terapkanGerbangRapor === 'function') {
-                terapkanGerbangRapor(studentId, data);
+            if (kelasAktif.includes("Sunan Bonang") || kelasAktif.includes("Sunan Giri")) {
+                namaWaliKelas = "Salwa Kamilatuz Zakiyah";
+                linkTtdWaliKelas = "https://i.imgur.com/pOg9hxn.png"; 
+            } else if (kelasAktif.includes("Sunan Muria")) {
+                namaWaliKelas = "Meylan Gabby Ovalyne";
+                linkTtdWaliKelas = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGn6Hk_nWUbbcVhUAFplEskFVYBnC9t8IJf2PtQwYTo2V95DEvaDF3PVAS5ZqpUI1oPuXdcN9eeTnxPH0bWo6_DeQ3BIG1l8A3_L_1zf_kc7AtODrm6xychIRC1HyC008xj_yZpzgSiNj-ndfv4hwyMPtVJpWQYskWhQVlk3_bVzfO57Ty0f2kDbWz83n7/s1600/ttd%20valyne-Photoroom.png";
             }
 
-            // --- D. UPDATE OTOMATIS: Riwayat Pembayaran ---
-            if (typeof loadPaymentHistory === 'function') loadPaymentHistory(studentId);
+            const tglSekarang = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            // --- E. ANTENA REAL-TIME: Notifikasi Lonceng (DIPINDAHKAN KE DALAM SCOPE YANG AMAN) ---
-            if (data.name) {
-                if (notifListenerUnsubscribe) notifListenerUnsubscribe(); // Hentikan listener notifikasi sebelumnya
-                
-                notifListenerUnsubscribe = db.collection('notifications')
-                .where('parentEmail', '==', email)
-                .where('studentName', '==', data.name)
-                .orderBy('timestamp', 'desc')
-                .limit(5)
-                .onSnapshot((notifSnapshot) => {
-                    const notifCount = document.getElementById('notifCount');
-                    const notifList = document.getElementById('notifList');
-                    
-                    if (!notifSnapshot.empty) {
-                        if(notifCount) {
-                            notifCount.innerText = notifSnapshot.size;
-                            notifCount.classList.remove('d-none');
-                        }
-                        if(notifList) {
-                            notifList.innerHTML = '';
-                            notifSnapshot.forEach(doc => {
-                                const n = doc.data();
-                                notifList.innerHTML += `
-                                    <div class="list-group-item p-2 small">
-                                        <b class="text-success">${n.title || 'Info'}</b><br>${n.message}
-                                    </div>`;
-                            });
-                        }
-                    } else {
-                        if(notifCount) notifCount.classList.add('d-none');
-                        if(notifList) notifList.innerHTML = '<div class="p-3 text-center small text-muted">Tidak ada notifikasi untuk ananda ini.</div>';
-                    }
-                });
+            contentHtml += `
+            <div id="signatureWrapper" class="mt-4">
+                <div class="row text-center align-items-start g-0">
+                    <div class="col-4">
+                        <p class="small mb-0" style="font-size: 0.7rem;">Mengetahui,</p>
+                        <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Kepala TPQ</p>
+                        <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                            <img src="https://i.imgur.com/APp2Mt6.png" style="max-height: 45px; width: auto;">
+                        </div>
+                        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">Hafi Dzotur Rofi'ah, Lc.</p>
+                    </div>
+                    <div class="col-4">
+                        <p class="small mb-0">&nbsp;</p>
+                        <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Kelas</p>
+                        <div style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                            <img src="${linkTtdWaliKelas}" style="max-height: 45px; width: auto;">
+                        </div>
+                        <p class="small fw-bold mb-0" style="text-decoration: underline; font-size: 0.65rem;">${namaWaliKelas}</p>
+                    </div>
+                    <div class="col-4">
+                        <p class="small mb-1" style="font-size: 0.6rem;">Sidoarjo, ${tglSekarang}</p>
+                        <p class="small fw-bold mb-2" style="font-size: 0.75rem;">Wali Santri,</p>
+                        <div id="boxSignatureResult" style="min-height: 50px;" class="d-flex align-items-center justify-content-center">
+                            ${data.reportSignature ? `<img src="${data.reportSignature}" style="max-height: 45px; width: auto;">` : `<span style="font-size: 8px; color: #ccc;">(Belum TTD)</span>`}
+                        </div>
+                        <p class="small fw-bold mb-0" style="font-size: 0.65rem; text-decoration: underline;">${data.parentName || "( Nama Wali Santri )"}</p>
+                    </div>
+                </div>
+            </div>
+            <div id="signatureInputArea"></div>`;
+
+            reportDiv.innerHTML = contentHtml;
+
+            if (typeof checkSignatureStatus === 'function') {
+                checkSignatureStatus(docSnap.id, data);
             }
+        }
 
-        }, (error) => {
-            console.error("Error Snapshot:", error);
-            if (loader) loader.classList.add('d-none');
-        });
-
-    // 2. ANTENA REAL-TIME: Notifikasi Lonceng
-    db.collection('notifications')
-    .where('parentEmail', '==', email)
-    .where('studentName', '==', data.name) // KUNCI: Filter berdasarkan nama anak yang sedang aktif
-    .orderBy('timestamp', 'desc')
-    .limit(5)
-    .onSnapshot((notifSnapshot) => {
-        const notifCount = document.getElementById('notifCount');
-        const notifList = document.getElementById('notifList');
+        // --- C. Sinkronisasi Status Infaq Otomatis ---
+        const statusText = document.getElementById('childInfaqStatus');
+        const btnCetak = document.getElementById('btnCetakKuitansi');
+        const cardInfaq = document.getElementById('cardInfaq'); 
         
-        if (!notifSnapshot.empty) {
-            if(notifCount) {
-                notifCount.innerText = notifSnapshot.size;
-                notifCount.classList.remove('d-none');
-            }
-            if(notifList) {
-                notifList.innerHTML = '';
-                notifSnapshot.forEach(doc => {
-                    const n = doc.data();
-                    // Tampilan notifikasi hanya untuk anak yang dipilih
-                    notifList.innerHTML += `
-                        <div class="list-group-item p-2 small">
-                            <b class="text-success">${n.title || 'Info'}</b><br>${n.message}
-                        </div>`;
-                });
+        if (data.infaqStatus === true || data.infaqStatus === "Lunas") {
+            if (statusText) { statusText.innerText = "Lunas"; statusText.className = "text-success fw-bold"; }
+            if (btnCetak) btnCetak.classList.remove('d-none');
+            if (cardInfaq) {
+                cardInfaq.classList.remove('border-danger');
+                cardInfaq.classList.add('border-success');
             }
         } else {
-            // Jika tidak ada notifikasi untuk anak ini, sembunyikan badge
-            if(notifCount) notifCount.classList.add('d-none');
-            if(notifList) notifList.innerHTML = '<div class="p-3 text-center small text-muted">Tidak ada notifikasi untuk ananda ini.</div>';
+            if (statusText) { statusText.innerText = "Belum Lunas"; statusText.className = "text-danger fw-bold"; }
+            if (btnCetak) btnCetak.classList.add('d-none');
+            if (cardInfaq) {
+                cardInfaq.classList.remove('border-success');
+                cardInfaq.classList.add('border-danger');
+            }
+        }   
+
+        // 🌟 EKSEKUSI GERBANG RAPOR SECARA REAL-TIME 🌟
+        if (typeof terapkanGerbangRapor === 'function') {
+            terapkanGerbangRapor(studentId, data);
         }
+
+        // --- D. UPDATE OTOMATIS: Riwayat Pembayaran ---
+        if (typeof loadPaymentHistory === 'function') loadPaymentHistory(studentId);
+
+        // --- E. ANTENA REAL-TIME: Notifikasi Lonceng ---
+        if (data.name) {
+            if (notifListenerUnsubscribe) notifListenerUnsubscribe(); // Hentikan listener notifikasi sebelumnya
+            
+            notifListenerUnsubscribe = db.collection('notifications')
+            .where('parentEmail', '==', email)
+            .where('studentName', '==', data.name)
+            .orderBy('timestamp', 'desc')
+            .limit(5)
+            .onSnapshot((notifSnapshot) => {
+                const notifCount = document.getElementById('notifCount');
+                const notifList = document.getElementById('notifList');
+                
+                if (!notifSnapshot.empty) {
+                    if (notifCount) {
+                        notifCount.innerText = notifSnapshot.size;
+                        notifCount.classList.remove('d-none');
+                    }
+                    if (notifList) {
+                        notifList.innerHTML = '';
+                        notifSnapshot.forEach(doc => {
+                            const n = doc.data();
+                            notifList.innerHTML += `
+                                <div class="list-group-item p-2 small">
+                                    <b class="text-success">${n.title || 'Info'}</b><br>${n.message}
+                                </div>`;
+                        });
+                    }
+                } else {
+                    if (notifCount) notifCount.classList.add('d-none');
+                    if (notifList) notifList.innerHTML = '<div class="p-3 text-center small text-muted">Tidak ada notifikasi untuk ananda ini.</div>';
+                }
+            });
+        }
+
+    }, (error) => {
+        console.error("Error Snapshot:", error);
+        if (loader) loader.classList.add('d-none');
     });
-  }
+}
 
 // --- SINKRONISASI TANDA TANGAN ---
 const tglDisplay = document.getElementById('tglTTDDisplay');
