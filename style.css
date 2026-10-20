@@ -974,3 +974,93 @@ body.dark-mode .btn-buku-besar-mini:hover .badge-action {
     background: #10b981;
     color: #ffffff;
 }
+
+/* ==========================================================================
+   PEMUSATAN LOGIN, REGISTER & WAITING ROOM (Desktop / Tablet / Mobile)
+   Tempel di PALING BAWAH style.css
+   Tidak perlu mengubah portal.html
+   ========================================================================== */
+
+/* --- 1. HALAMAN LOGIN & WAITING ROOM: tengah horizontal + vertikal --- */
+#loginSection,
+#waitingRoom {
+    min-height: 100vh;      /* cadangan untuk browser lama */
+    min-height: 100dvh;     /* tinggi layar sebenarnya di HP (tanpa bar browser) */
+    max-width: 100%;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    align-items: center;        /* tengah vertikal */
+    justify-content: center;    /* tengah horizontal */
+}
+
+/* display:flex hanya saat section tidak disembunyikan,
+   supaya class d-none dari script.js tetap bekerja */
+#loginSection:not(.d-none),
+#waitingRoom:not(.d-none) {
+    display: flex;
+}
+
+/* Row & kolom: lebar kartu seragam di semua ukuran layar */
+#loginSection > .row,
+#waitingRoom > .row {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    justify-content: center;
+}
+
+#loginSection > .row > [class*="col-"],
+#waitingRoom > .row > [class*="col-"] {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 440px;           /* nyaman di desktop & tablet */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Hilangkan margin atas bawaan kartu (mt-4 / mt-5) yang membuat kartu turun/naik */
+#loginSection .card,
+#waitingRoom .card {
+    margin-top: 0 !important;
+}
+
+/* --- 2. MODAL REGISTER (Wali Santri & Ustadz/ah): tengah layar --- */
+#registerModal .modal-dialog,
+#registerAdminModal .modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#registerModal .modal-content,
+#registerAdminModal .modal-content {
+    width: 100%;
+}
+
+/* --- 3. HP kecil --- */
+@media (max-width: 576px) {
+    #loginSection,
+    #waitingRoom {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    #loginSection > .row > [class*="col-"],
+    #waitingRoom > .row > [class*="col-"] {
+        max-width: 100%;
+    }
+
+    #registerModal .modal-dialog,
+    #registerAdminModal .modal-dialog {
+        min-height: calc(100% - 1rem);
+        margin: 0.5rem auto;
+    }
+
+    /* Tombol tutorial lebih ke pojok agar tidak menutupi kartu */
+    .floating-tutorial {
+        bottom: 16px;
+        right: 16px;
+    }
+}
