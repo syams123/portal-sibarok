@@ -1829,7 +1829,6 @@ async function loadChildData(email, selectedId = null) {
             console.error("Error Snapshot:", error);
             if (loader) loader.classList.add('d-none');
         });
-}
 
     // 2. ANTENA REAL-TIME: Notifikasi Lonceng
     db.collection('notifications')
@@ -1863,6 +1862,7 @@ async function loadChildData(email, selectedId = null) {
             if(notifList) notifList.innerHTML = '<div class="p-3 text-center small text-muted">Tidak ada notifikasi untuk ananda ini.</div>';
         }
     });
+  }
 
 // --- SINKRONISASI TANDA TANGAN ---
 const tglDisplay = document.getElementById('tglTTDDisplay');
